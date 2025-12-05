@@ -1,0 +1,11 @@
+{
+  "name": "knockout-app",
+  "version": "1.0.0",
+  "description": "Tournament App Backend",
+  "main": "api/index.js",
+  "dependencies": {
+    "mysql2": "^3.6.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  }
+}
