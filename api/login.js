@@ -1,38 +1,30 @@
 const pool = require('../db');
 
-export default async function handler(req, res) {
-    // CORS হেডার সেট করা (যাতে সব জায়গা থেকে রিকোয়েস্ট করা যায়)
+module.exports = async (req, res) => {
+    // CORS হেডার
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // প্রিফ্লাইট রিকোয়েস্ট হ্যান্ডেল করা
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
 
-    // মেথড চেক
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed. Use POST.' });
     }
 
     const { email, password } = req.body;
 
-    // ইনপুট ভ্যালিডেশন
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required.' });
     }
 
     try {
-        // ডেটাবেস কুয়েরি
-        console.log("Attempting login for:", email);
         const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
 
         if (rows.length > 0) {
             const user = rows[0];
-
-            // পাসওয়ার্ড চেক (সরাসরি তুলনা - আপাতত)
-            // পরে আমরা bcrypt যোগ করব
             if (user.password === password) {
                 return res.status(200).json({
                     success: true,
@@ -60,4 +52,4 @@ export default async function handler(req, res) {
             details: error.message
         });
     }
-}
+};
