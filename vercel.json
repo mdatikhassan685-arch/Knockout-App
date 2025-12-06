@@ -3,6 +3,6 @@
     { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/home", "destination": "/home.html" },
     { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/", "destination": "/public/index.html" }
+    { "source": "/", "destination": "/index.html" }
   ]
 }
