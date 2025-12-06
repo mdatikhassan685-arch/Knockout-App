@@ -40,11 +40,10 @@
     </div>
 
     <!-- Hidden Admin Button (Top Right) -->
-    <div class="absolute top-4 right-4">
-        <button onclick="toggleAdminPanel()" class="text-white text-2xl opacity-00 hover:opacity-100 transition-opacity" title="Admin Access">
-            <i class="fa-solid fa-user-shield"></i>
-        </button>
-    </div>
+    <!-- Invisible Admin Button -->
+<div class="absolute top-0 right-0 p-4 z-50">
+    <button onclick="toggleAdminPanel()" class="w-10 h-10 bg-transparent cursor-default focus:outline-none"></button>
+</div>
 
     <!-- Admin Login Modal -->
     <div id="adminModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
