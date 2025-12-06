@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Details - Knockout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Rajdhani', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-900 text-white pb-24">
+
+    <!-- Header Image -->
+    <div class="relative w-full h-60">
+        <img id="tImage" src="" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
+        <a href="/home" class="absolute top-4 left-4 bg-black/50 p-2 rounded-full text-white hover:bg-black/80 transition">
+            <i class="fa-solid fa-arrow-left text-xl"></i>
+        </a>
+    </div>
+
+    <!-- Content -->
+    <div class="px-5 -mt-10 relative z-10">
+        <h1 id="tTitle" class="text-3xl font-bold mb-1 text-white drop-shadow-lg">Loading...</h1>
+        <p id="tInfo" class="text-blue-400 text-sm font-semibold mb-4">...</p>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-3 gap-3 mb-6 text-center bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-lg">
+            <div>
+                <p class="text-[10px] text-gray-400 uppercase">Prize Pool</p>
+                <p id="tPrize" class="text-xl font-bold text-yellow-400">৳0</p>
+            </div>
+            <div class="border-l border-slate-600">
+                <p class="text-[10px] text-gray-400 uppercase">Entry Fee</p>
+                <p id="tFee" class="text-xl font-bold text-green-400">৳0</p>
+            </div>
+            <div class="border-l border-slate-600">
+                <p class="text-[10px] text-gray-400 uppercase">Type</p>
+                <p id="tType" class="text-xl font-bold text-blue-400">-</p>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-6">
+            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                <span>Joined Teams</span>
+                <span id="tSlots" class="text-white font-bold">0 / 0</span>
+            </div>
+            <div class="w-full bg-slate-700 rounded-full h-2">
+                <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-slate-700 mb-4">
+            <button class="flex-1 py-2 text-blue-500 border-b-2 border-blue-500 font-bold">Details</button>
+            <button class="flex-1 py-2 text-gray-500">Rules</button>
+            <button class="flex-1 py-2 text-gray-500">Schedule</button>
+        </div>
+
+        <div id="tabDetails" class="text-sm text-gray-300 leading-relaxed">
+            <!-- Description or details here -->
+            <p>Join this exciting tournament and show your skills!</p>
+        </div>
+    </div>
+
+    <!-- Fixed Join Button -->
+    <div class="fixed bottom-0 w-full glass p-4 border-t border-slate-700 shadow-2xl">
+        <button id="joinBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-900/50 transition transform active:scale-95 flex justify-center items-center gap-2">
+            JOIN TOURNAMENT
+        </button>
+    </div>
+
+    <script>
+        async function loadDetails() {
+            // URL থেকে আইডি বের করা (যেমন: /tournament/12)
+            const urlParams = new URLSearchParams(window.location.search);
+            const tournamentId = urlParams.get('id');
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            if (!tournamentId || !user) {
+                window.location.href = '/home';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/tournament/details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tournamentId, userId: user.id })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const t = data.tournament;
+                    document.getElementById('tImage').src = t.image || 'https://via.placeholder.com/400x200';
+                    document.getElementById('tTitle').innerText = t.title;
+                    document.getElementById('tInfo').innerText = `Reg: ${new Date(t.registration_start).toDateString()}`;
+                    document.getElementById('tPrize').innerText = '৳' + t.prize_pool;
+                    document.getElementById('tFee').innerText = t.entry_fee == 0 ? 'FREE' : '৳' + t.entry_fee;
+                    document.getElementById('tType').innerText = t.match_type;
+                    
+                    // Slots & Progress
+                    const totalSlots = t.max_teams || 100;
+                    document.getElementById('tSlots').innerText = `${data.joinedCount} / ${totalSlots}`;
+                    const percent = (data.joinedCount / totalSlots) * 100;
+                    document.getElementById('progressBar').style.width = percent + '%';
+
+                    // Button Logic
+                    const btn = document.getElementById('joinBtn');
+                    if (data.isJoined) {
+                        btn.innerText = "ALREADY JOINED";
+                        btn.className = "w-full bg-slate-700 text-gray-400 font-bold py-3 rounded-xl cursor-not-allowed";
+                        btn.disabled = true;
+                    } else {
+                        btn.onclick = () => {
+                            // Register Page-এ পাঠানো
+                            window.location.href = `/register-team.html?id=${t.id}`;
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        loadDetails();
+    </script>
+</body>
+</html>
