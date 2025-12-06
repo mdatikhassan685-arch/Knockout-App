@@ -7,9 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body class="bg-blue-900 flex items-center justify-center min-h-screen">
+<body class="bg-blue-900 flex items-center justify-center min-h-screen relative">
 
-    <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
+    <!-- User Login Box -->
+    <div class="bg-white p-8 rounded-lg shadow-2xl w-96 z-10">
         <div class="text-center mb-6">
             <i class="fa-solid fa-gamepad text-6xl text-blue-600"></i>
             <h1 class="text-3xl font-bold text-gray-800 mt-2">Knockout</h1>
@@ -34,61 +35,114 @@
         </form>
 
         <p class="text-center text-sm text-gray-600 mt-4">
-            Don't have an account? <a href="signup.html" class="text-blue-600 hover:underline">Sign Up</a>
+            Don't have an account? <a href="/signup" class="text-blue-600 hover:underline">Sign Up</a>
         </p>
     </div>
 
+    <!-- Hidden Admin Button (Top Right) -->
+    <div class="absolute top-4 right-4">
+        <button onclick="toggleAdminPanel()" class="text-white text-2xl opacity-30 hover:opacity-100 transition-opacity" title="Admin Access">
+            <i class="fa-solid fa-user-shield"></i>
+        </button>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-lg w-80 shadow-2xl border-t-4 border-red-600">
+            <h2 class="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-lock text-red-600"></i> Admin Access
+            </h2>
+            <input type="email" id="adminEmail" placeholder="Admin Email" class="w-full border p-2 rounded mb-3 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+            <input type="password" id="adminToken" placeholder="Secret Token" class="w-full border p-2 rounded mb-3 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+            
+            <p id="adminMsg" class="text-red-500 text-xs mb-2 text-center hidden font-bold"></p>
+            
+            <button onclick="adminLogin()" class="w-full bg-red-600 text-white py-2 rounded font-bold hover:bg-red-700 transition">Enter Panel</button>
+            <button onclick="toggleAdminPanel()" class="mt-3 text-sm text-gray-500 w-full text-center hover:text-gray-700">Cancel</button>
+        </div>
+    </div>
+
     <script>
+        // User Login Logic
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            const btn = this.querySelector('button');
+            const msg = document.getElementById('errorMsg');
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('errorMsg');
-            const submitBtn = this.querySelector('button');
-
-            // লোডিং অবস্থা দেখানো
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            submitBtn.disabled = true;
-            errorMsg.classList.add('hidden');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            btn.disabled = true;
+            msg.classList.add('hidden');
 
             try {
-                // সরাসরি '/api/login' পাথে রিকোয়েস্ট পাঠানো হচ্ছে
-                const response = await fetch('/api/login', {
+                const res = await fetch('/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
                 });
+                const data = await res.json();
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    // লগইন সফল হলে ইউজারের তথ্য লোকাল স্টোরেজে রাখা
+                if (res.ok) {
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    
-                    // অ্যাডমিন বা ইউজার অনুযায়ী রিডাইরেক্ট
-                    if(data.user.role === 'admin') {
-                        window.location.href = '/admin-dashboard.html';
-                    } else {
-                        window.location.href = '/home';
-                    }
+                    window.location.href = '/home';
                 } else {
-                    // এরর দেখানো (ভুল পাসওয়ার্ড বা ইউজার না পাওয়া)
-                    errorMsg.innerText = data.error || 'Login failed';
-                    errorMsg.classList.remove('hidden');
+                    msg.innerText = data.error || 'Login failed';
+                    msg.classList.remove('hidden');
                 }
-
-            } catch (error) {
-                console.error('Error:', error);
-                errorMsg.innerText = 'Network error. Please try again.';
-                errorMsg.classList.remove('hidden');
+            } catch (err) {
+                msg.innerText = 'Network Error';
+                msg.classList.remove('hidden');
             } finally {
-                // বাটন আগের অবস্থায় ফিরিয়ে আনা
-                submitBtn.innerHTML = 'Login';
-                submitBtn.disabled = false;
+                btn.innerHTML = 'Login';
+                btn.disabled = false;
             }
         });
-    </script>
 
+        // Admin Logic
+        function toggleAdminPanel() {
+            document.getElementById('adminModal').classList.toggle('hidden');
+        }
+
+        async function adminLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const token = document.getElementById('adminToken').value;
+            const msg = document.getElementById('adminMsg');
+            const btn = document.querySelector('#adminModal button');
+
+            if(!email || !token) {
+                msg.innerText = "Please fill all fields";
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            btn.innerText = "Checking...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/admin-login', { // এই পাথটি ২য় ধাপে তৈরি হবে
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, token })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('admin', JSON.stringify(data.admin));
+                    window.location.href = '/admin/dashboard'; // ৩য় ধাপে তৈরি হবে
+                } else {
+                    msg.innerText = "Invalid Email or Token!";
+                    msg.classList.remove('hidden');
+                }
+            } catch (err) {
+                msg.innerText = "Connection Failed!";
+                msg.classList.remove('hidden');
+            } finally {
+                btn.innerText = "Enter Panel";
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
