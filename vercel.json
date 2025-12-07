@@ -1,11 +1,15 @@
 {
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/admin/dashboard", "destination": "/admin-dashboard.html" },
-    { "source": "/tournament-details", "destination": "/tournament-details.html" },
-    { "source": "/register-team", "destination": "/register-team.html" },
-    { "source": "/home", "destination": "/home.html" },
-    { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/login", "destination": "/public/index.html" },
+    { "source": "/signup", "destination": "/public/signup.html" },
+    { "source": "/home", "destination": "/public/home.html" },
+    { "source": "/wallet", "destination": "/public/wallet.html" },
+    { "source": "/admin/dashboard", "destination": "/public/admin-dashboard.html" },
+    { "source": "/tournament-details", "destination": "/public/tournament-details.html" },
+    { "source": "/register-team", "destination": "/public/register-team.html" },
+    
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
