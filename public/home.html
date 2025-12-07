@@ -4,104 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knockout - Esports</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Gaming Font -->
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         body { font-family: 'Rajdhani', sans-serif; }
-        .glass {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .neon-text {
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-        }
-        .card-gradient {
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-        }
+        .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); }
+        .card-gradient { background: linear-gradient(145deg, #1e293b, #0f172a); }
     </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen pb-24">
 
-    <!-- Glass Header -->
+    <!-- Header -->
     <div class="glass fixed top-0 w-full z-50 px-4 py-3 flex justify-between items-center shadow-lg">
         <div class="flex items-center gap-2">
-            <i class="fa-solid fa-gamepad text-3xl text-blue-500 neon-text"></i>
-            <h1 class="text-2xl font-bold tracking-wider text-white">KNOCKOUT</h1>
+            <i class="fa-solid fa-gamepad text-3xl text-blue-500"></i>
+            <h1 class="text-2xl font-bold tracking-wider">KNOCKOUT</h1>
         </div>
         <div class="flex gap-4 items-center">
-            <!-- Balance Badge -->
-            <div class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-full flex items-center gap-2 shadow-md">
+            <div onclick="window.location.href='/wallet'" class="bg-slate-800 border border-slate-700 px-3 py-1 rounded-full flex items-center gap-2 shadow-md cursor-pointer">
                 <i class="fa-solid fa-coins text-yellow-400"></i>
                 <span id="balance" class="font-bold text-yellow-100">0</span>
             </div>
-            <!-- Notification -->
-            <div class="relative cursor-pointer">
-                <i class="fa-regular fa-bell text-xl hover:text-blue-400 transition"></i>
-                <span id="notifCount" class="absolute -top-1 -right-1 bg-red-500 text-[10px] w-4 h-4 flex items-center justify-center rounded-full hidden">0</span>
-            </div>
+            <i class="fa-regular fa-bell text-xl hover:text-blue-400 transition cursor-pointer"></i>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="pt-20 px-4 space-y-6">
         
-        <!-- Welcome / Banner Area -->
-        <div id="bannerArea" class="w-full h-44 rounded-2xl overflow-hidden shadow-2xl relative group">
-            <div class="w-full h-full bg-slate-800 animate-pulse flex items-center justify-center">
-                <span class="text-slate-600">Loading Arena...</span>
+        <!-- Banner -->
+        <div id="bannerArea" class="w-full h-44 rounded-2xl overflow-hidden shadow-2xl bg-slate-800 flex items-center justify-center">
+            <p class="text-slate-500 font-bold tracking-widest">LOADING EVENTS...</p>
+        </div>
+
+        <!-- Leaderboard Button (Only this remains) -->
+        <button onclick="window.location.href='/leaderboard'" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl font-bold shadow-lg hover:bg-slate-700 transition flex items-center justify-between px-6">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-trophy text-yellow-500 text-xl"></i>
+                <span>Leaderboard</span>
             </div>
-        </div>
+            <i class="fa-solid fa-chevron-right text-slate-500"></i>
+        </button>
 
-        <!-- Action Buttons -->
-        <div class="grid grid-cols-2 gap-4">
-            <button class="bg-gradient-to-r from-blue-600 to-blue-500 p-3 rounded-xl font-bold shadow-lg hover:scale-105 transition transform flex items-center justify-center gap-2">
-                <i class="fa-solid fa-plus-circle"></i> Add Money
-            </button>
-            <button class="bg-slate-800 border border-slate-700 p-3 rounded-xl font-bold shadow-lg hover:bg-slate-700 transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-trophy text-yellow-500"></i> Leaderboard
-            </button>
-        </div>
-
-        <!-- Live Tournaments -->
+        <!-- Tournaments -->
         <div>
             <div class="flex justify-between items-end mb-4">
-                <h2 class="text-xl font-bold border-l-4 border-blue-500 pl-3 neon-text">Upcoming Matches</h2>
-                <a href="#" class="text-sm text-blue-400 hover:text-white">View All</a>
+                <h2 class="text-xl font-bold border-l-4 border-blue-500 pl-3">Upcoming Matches</h2>
             </div>
-
             <div id="tournamentList" class="space-y-5">
-                <!-- Skeleton Loader (Loading State) -->
-                <div class="card-gradient p-4 rounded-2xl shadow-lg border border-slate-700 animate-pulse">
-                    <div class="h-32 bg-slate-700 rounded-xl mb-3"></div>
-                    <div class="h-6 bg-slate-700 rounded w-3/4 mb-2"></div>
-                    <div class="h-4 bg-slate-700 rounded w-1/2"></div>
-                </div>
+                <p class="text-center text-slate-500 py-10">Loading matches...</p>
             </div>
         </div>
     </div>
 
-    <!-- Modern Bottom Navigation -->
+    <!-- Bottom Navigation (3 Items Only) -->
     <div class="fixed bottom-0 w-full bg-slate-900 border-t border-slate-800 flex justify-around py-3 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
-        <div class="flex flex-col items-center text-blue-500 cursor-pointer">
-            <i class="fa-solid fa-house text-xl mb-1 neon-text"></i>
+        <div onclick="window.location.href='/home'" class="flex flex-col items-center text-blue-500 cursor-pointer">
+            <i class="fa-solid fa-house text-xl mb-1"></i>
             <span class="text-[10px] font-bold tracking-widest">HOME</span>
         </div>
-        <div class="flex flex-col items-center text-gray-500 hover:text-white transition cursor-pointer">
-            <i class="fa-solid fa-fire text-xl mb-1"></i>
-            <span class="text-[10px] font-bold tracking-widest">LIVE</span>
-        </div>
-        <div class="flex flex-col items-center text-gray-500 hover:text-white transition cursor-pointer">
+        <div onclick="window.location.href='/wallet'" class="flex flex-col items-center text-gray-500 hover:text-white transition cursor-pointer">
             <i class="fa-solid fa-wallet text-xl mb-1"></i>
             <span class="text-[10px] font-bold tracking-widest">WALLET</span>
         </div>
-        <div class="flex flex-col items-center text-gray-500 hover:text-white transition cursor-pointer">
+        <div onclick="window.location.href='/profile'" class="flex flex-col items-center text-gray-500 hover:text-white transition cursor-pointer">
             <i class="fa-solid fa-user-ninja text-xl mb-1"></i>
             <span class="text-[10px] font-bold tracking-widest">PROFILE</span>
         </div>
@@ -110,10 +77,7 @@
     <script>
         async function loadHomeData() {
             const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                window.location.href = '/login';
-                return;
-            }
+            if (!user) { window.location.href = '/login'; return; }
 
             try {
                 const res = await fetch('/api/user/home', {
@@ -124,80 +88,49 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    // Balance
                     document.getElementById('balance').innerText = data.user.wallet_balance;
-                    
-                    // Notification
-                    if (data.unread_notif > 0) {
-                        const badge = document.getElementById('notifCount');
-                        badge.innerText = data.unread_notif;
-                        badge.classList.remove('hidden');
-                    }
 
-                    // Banner Logic
+                    // Banner
                     const bannerArea = document.getElementById('bannerArea');
                     if (data.banners.length > 0) {
-                        bannerArea.innerHTML = `
-                            <img src="${data.banners[0].image}" class="w-full h-full object-cover transform hover:scale-110 transition duration-700">
-                            <div class="absolute bottom-0 w-full bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent p-3">
-                                <p class="font-bold text-sm">Featured Event</p>
-                            </div>
-                        `;
+                        bannerArea.innerHTML = `<img src="${data.banners[0].image}" class="w-full h-full object-cover">`;
                     } else {
-                        bannerArea.innerHTML = `<div class="w-full h-full bg-slate-800 flex items-center justify-center"><p class="text-slate-500 font-bold tracking-widest">NO EVENT</p></div>`;
+                        bannerArea.innerHTML = `<p class="text-slate-500 font-bold tracking-widest">NO EVENT</p>`;
                     }
 
-                    // Tournament List Logic
+                    // Tournaments
                     const list = document.getElementById('tournamentList');
                     list.innerHTML = '';
-                    
                     if (data.tournaments.length === 0) {
-                        list.innerHTML = `<p class="text-center text-slate-500 py-10">No matches found. Check back later!</p>`;
+                        list.innerHTML = `<p class="text-center text-slate-500 py-10">No matches found.</p>`;
                     }
-
                     data.tournaments.forEach(t => {
-                        // Status Badge Color
                         let statusColor = t.status === 'open' ? 'bg-green-500' : 'bg-red-500';
-
                         list.innerHTML += `
                             <div class="card-gradient rounded-2xl overflow-hidden shadow-lg border border-slate-700 relative group">
-                                <div class="relative h-36 overflow-hidden">
-                                    <img src="${t.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                                    <div class="absolute top-2 right-2 ${statusColor} text-white text-[10px] font-bold px-2 py-1 rounded shadow-md uppercase">
-                                        ${t.status}
-                                    </div>
+                                <div class="relative h-36">
+                                    <img src="${t.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover">
+                                    <div class="absolute top-2 right-2 ${statusColor} text-white text-[10px] font-bold px-2 py-1 rounded uppercase">${t.status}</div>
                                     <div class="absolute bottom-0 w-full bg-gradient-to-t from-slate-900 to-transparent p-3">
-                                        <h3 class="font-bold text-lg leading-tight text-white">${t.title}</h3>
+                                        <h3 class="font-bold text-lg text-white">${t.title}</h3>
                                         <p class="text-xs text-gray-300 mt-1">${t.match_type} • Map: ${t.map || 'Random'}</p>
                                     </div>
                                 </div>
-                                
-                                <div class="p-3">
-                                    <div class="flex justify-between items-center bg-slate-800 p-2 rounded-lg mb-3">
-                                        <div class="text-center">
-                                            <p class="text-[10px] text-gray-400 uppercase">Entry</p>
-                                            <p class="font-bold text-green-400 text-lg">৳${t.entry_fee}</p>
-                                        </div>
-                                        <div class="h-8 w-[1px] bg-slate-600"></div>
-                                        <div class="text-center">
-                                            <p class="text-[10px] text-gray-400 uppercase">Prize Pool</p>
-                                            <p class="font-bold text-yellow-400 text-lg">৳${t.prize_pool}</p>
-                                        </div>
+                                <div class="p-3 flex justify-between items-center bg-slate-800 m-2 rounded-xl">
+                                    <div>
+                                        <p class="text-[10px] text-gray-400 uppercase">Entry</p>
+                                        <p class="font-bold text-green-400">৳${t.entry_fee}</p>
                                     </div>
-
-                                    <button onclick="window.location.href='/tournament-details?id=${t.id}'" class="...">
-    JOIN NOW <i class="fa-solid fa-arrow-right"></i>
-</button>
+                                    <button onclick="window.location.href='/tournament-details?id=${t.id}'" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg text-sm shadow-lg transition active:scale-95">
+                                        JOIN
+                                    </button>
                                 </div>
                             </div>
                         `;
                     });
                 }
-            } catch (error) {
-                console.error(error);
-            }
+            } catch (error) { console.error(error); }
         }
-
         loadHomeData();
     </script>
 </body>
