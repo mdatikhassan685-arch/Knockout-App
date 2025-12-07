@@ -80,6 +80,45 @@
     </div>
 
     <script>
+        async function submitWithdraw() {
+            const amount = document.getElementById('withAmount').value;
+            const method = document.getElementById('method').value;
+            const acc = document.getElementById('accNum').value;
+
+            if(!amount || !acc) return alert("Please fill all fields");
+
+            const btn = document.querySelector('#withdrawModal button');
+            btn.innerHTML = "Processing...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/user/wallet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'withdraw', 
+                        userId: user.id, 
+                        amount: amount, 
+                        method: method, 
+                        accountNumber: acc 
+                    })
+                });
+
+                const data = await res.json();
+                
+                if(data.success) {
+                    alert("Withdrawal Request Sent!");
+                    location.reload();
+                } else {
+                    alert(data.error || "Failed");
+                }
+            } catch (err) {
+                alert("Network Error");
+            } finally {
+                btn.innerHTML = "Request Withdraw";
+                btn.disabled = false;
+            }
+        }
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) window.location.href = '/';
 
