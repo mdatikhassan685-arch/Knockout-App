@@ -7,6 +7,7 @@
     { "source": "/admin/payments", "destination": "/admin-payments.html" },
     { "source": "/admin/users", "destination": "/admin-users.html" },
     { "source": "/admin/create-tournament", "destination": "/admin-create-tournament.html" },
+    { "source": "/admin/users", "destination": "/admin-users.html" }
     
     { "source": "/wallet", "destination": "/wallet.html" },
     { "source": "/profile", "destination": "/profile.html" },
