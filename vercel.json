@@ -6,7 +6,8 @@
     { "source": "/admin/deposits", "destination": "/admin-deposits.html" },
     { "source": "/admin/users", "destination": "/admin-users.html" },
     { "source": "/admin/categories", "destination": "/admin-categories.html" },
-    
+
+    { "source": "/category-details", "destination": "/category-details.html" }
     { "source": "/wallet", "destination": "/wallet.html" },
     { "source": "/tournament-details", "destination": "/tournament-details.html" },
     { "source": "/register-team", "destination": "/register-team.html" },
