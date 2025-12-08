@@ -35,15 +35,15 @@
             <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
             <h3 class="text-xl font-bold text-white mb-4">Add New Category</h3>
             
-            <!-- Inputs -->
             <div class="space-y-3">
+                <!-- Title Input -->
                 <input type="text" id="catTitle" placeholder="Category Name" class="w-full bg-gray-900 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-blue-500">
                 
-                <!-- Image Upload -->
+                <!-- Image URL Input -->
                 <div>
-                    <label class="block text-gray-400 text-xs mb-1 ml-1">Category Image</label>
-                    <input type="file" id="imageFile" class="w-full bg-gray-900 text-white border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-blue-500" accept="image/*">
-                    <p id="uploadStatus" class="text-xs text-yellow-500 mt-1 hidden font-semibold">Uploading...</p>
+                    <label class="block text-gray-400 text-xs mb-1 ml-1">Image Link (URL)</label>
+                    <input type="text" id="catImage" placeholder="https://i.ibb.co/..." class="w-full bg-gray-900 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-blue-500 text-sm">
+                    <p class="text-[10px] text-gray-500 mt-1 ml-1">Tip: Upload image to <a href="https://imgbb.com" target="_blank" class="text-blue-400 hover:underline">ImgBB</a> and paste the link here.</p>
                 </div>
                 
                 <!-- Type Selection -->
@@ -66,9 +66,6 @@
     <script>
         const admin = JSON.parse(localStorage.getItem('admin'));
         if (!admin) window.location.href = '/';
-
-        // ⭐ আপনার ImgBB API Key এখানে দিন
-        const IMGBB_API_KEY = 'db87f6269e1a42b04c596dbbd1a87917'; 
 
         async function loadCategories() {
             try {
@@ -97,8 +94,12 @@
                         ? '<span class="bg-blue-600/80 backdrop-blur text-xs px-2 py-1 rounded font-bold shadow">OFFICIAL</span>' 
                         : '<span class="bg-green-600/80 backdrop-blur text-xs px-2 py-1 rounded font-bold shadow">NORMAL</span>';
 
+                    // Link Logic (পরের ধাপের জন্য)
+                    // let link = c.is_official ? `/admin/official-tournaments?catId=${c.id}` : `/admin/normal-matches?catId=${c.id}`;
+                    let link = '#'; // আপাতত
+
                     list.innerHTML += `
-                        <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 group cursor-pointer relative hover:border-blue-500 transition" onclick="window.location.href='/admin/manage-tournaments?catId=${c.id}'">
+                        <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 group cursor-pointer relative hover:border-blue-500 transition" onclick="window.location.href='${link}'">
                             <img src="${c.image || 'https://via.placeholder.com/400x200'}" class="w-full h-32 object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100">
                             <div class="absolute top-2 right-2 z-10">${badge}</div>
                             <div class="absolute bottom-0 w-full bg-gradient-to-t from-gray-900 to-transparent p-3 pt-10">
@@ -113,79 +114,43 @@
             } catch (err) { console.error(err); }
         }
 
-        async function uploadImage() {
-            const fileInput = document.getElementById('imageFile');
-            const file = fileInput.files[0];
-            if (!file) return null;
-
-            const formData = new FormData();
-            formData.append('image', file);
-
-            const status = document.getElementById('uploadStatus');
-            status.classList.remove('hidden');
-            status.innerText = 'Uploading image...';
-
-            try {
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    status.innerText = 'Upload Successful!';
-                    status.className = 'text-xs text-green-500 mt-1 font-bold';
-                    return data.data.url;
-                } else {
-                    throw new Error('Upload failed');
-                }
-            } catch (error) {
-                status.innerText = 'Image upload failed!';
-                status.className = 'text-xs text-red-500 mt-1 font-bold';
-                return null;
-            }
-        }
-
         async function createCategory() {
             const title = document.getElementById('catTitle').value;
+            const image = document.getElementById('catImage').value;
             const type = document.querySelector('input[name="type"]:checked').value;
             const btn = document.getElementById('createBtn');
 
-            if(!title) return alert("Enter Category Name");
+            if(!title || !image) return alert("Please fill all fields");
 
             btn.innerText = "Processing...";
             btn.disabled = true;
 
-            const imageUrl = await uploadImage();
-            
-            if(!imageUrl) {
+            try {
+                const res = await fetch('/api/admin/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'create', title, image, type, adminId: admin.id })
+                });
+                
+                const data = await res.json();
+                if(data.success) {
+                    closeModal();
+                    loadCategories();
+                    document.getElementById('catTitle').value = '';
+                    document.getElementById('catImage').value = '';
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (error) {
+                alert("Network Error");
+            } finally {
                 btn.innerText = "Create Category";
                 btn.disabled = false;
-                return alert("Please select an image.");
             }
-
-            const res = await fetch('/api/admin/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'create', title, image: imageUrl, type, adminId: admin.id })
-            });
-            
-            const data = await res.json();
-            if(data.success) {
-                closeModal();
-                loadCategories();
-                document.getElementById('catTitle').value = '';
-                document.getElementById('imageFile').value = '';
-                document.getElementById('uploadStatus').classList.add('hidden');
-            } else {
-                alert("Error: " + data.error);
-            }
-            btn.innerText = "Create Category";
-            btn.disabled = false;
         }
 
         async function deleteCategory(id) {
-            if(!confirm("Delete this category? All tournaments inside will be hidden.")) return;
+            if(!confirm("Delete this category?")) return;
             await fetch('/api/admin/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
