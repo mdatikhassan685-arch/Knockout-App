@@ -1,4 +1,5 @@
-const pool = require('../db');
+const db = require('../db');
+const bcrypt = require('bcryptjs'); // নিশ্চিত করুন package.json-এ এটি আছে
 
 module.exports = async (req, res) => {
     // CORS Headers...
@@ -7,57 +8,36 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const { email, password } = req.body;
 
     try {
-        const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+        const [users] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
 
-        if (rows.length > 0) {
-            const user = rows[0];
-
-            // ১. ব্লক চেক
-            if (user.status === 'blocked') {
-                return res.status(403).json({ error: 'Your account is permanently BLOCKED.' });
-            }
-
-            // ২. সাসপেনশন চেক (Auto Reactivate Logic)
-            if (user.status === 'suspended') {
-                const now = new Date();
-                const suspendDate = new Date(user.suspended_until);
-
-                if (suspendDate > now) {
-                    // এখনো সময় বাকি আছে
-                    return res.status(403).json({ 
-                        error: `Account Suspended until ${suspendDate.toLocaleString()}` 
-                    });
-                } else {
-                    // সময় শেষ, অটোমেটিক অ্যাক্টিভ করা হচ্ছে
-                    await pool.execute('UPDATE users SET status = "active", suspended_until = NULL WHERE id = ?', [user.id]);
-                    user.status = 'active'; // লোকাল অবজেক্ট আপডেট
-                }
-            }
-
-            // ৩. পাসওয়ার্ড চেক
-            if (user.password === password) {
-                return res.status(200).json({
-                    success: true,
-                    message: 'Login successful',
-                    user: {
-                        id: user.id,
-                        username: user.username,
-                        email: user.email,
-                        role: user.role,
-                        balance: user.wallet_balance
-                    }
-                });
-            } else {
-                return res.status(401).json({ error: 'Invalid password' });
-            }
-        } else {
+        if (users.length === 0) {
             return res.status(404).json({ error: 'User not found' });
         }
+
+        const user = users[0];
+
+        // ১. Bcrypt চেক
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        // ২. যদি Bcrypt ফেল করে, তবে প্লেইন টেক্সট চেক (ব্যাকআপ)
+        // এটি পুরনো ইউজারদের লগইন করতে সাহায্য করবে
+        if (!isMatch && user.password !== password) {
+            return res.status(401).json({ error: 'Invalid password' });
+        }
+
+        // সফল হলে
+        return res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            user: { id: user.id, username: user.username, role: user.role }
+        });
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error.message });
     }
 };
