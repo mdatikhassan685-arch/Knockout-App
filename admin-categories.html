@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Rajdhani', sans-serif; }</style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4">
+
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center">
+            <a href="/admin/dashboard" class="bg-gray-800 p-2 rounded-lg hover:bg-gray-700 mr-4 border border-gray-600"><i class="fa-solid fa-arrow-left"></i></a>
+            <h1 class="text-2xl font-bold text-blue-400">Categories</h1>
+        </div>
+        <button onclick="openModal()" class="bg-green-600 px-4 py-2 rounded-lg font-bold shadow hover:bg-green-500 flex items-center gap-2">
+            <i class="fa-solid fa-folder-plus"></i> New
+        </button>
+    </div>
+
+    <!-- Category List -->
+    <div id="catList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p class="text-center text-gray-500 col-span-2 py-10">Loading...</p>
+    </div>
+
+    <!-- Add Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-sm border border-gray-600 shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            <h3 class="text-xl font-bold text-white mb-4">Add New Category</h3>
+            
+            <input type="text" id="catTitle" placeholder="Category Name" class="w-full bg-gray-900 border border-gray-600 p-3 rounded mb-3 text-white">
+            <input type="text" id="catImage" placeholder="Image URL" class="w-full bg-gray-900 border border-gray-600 p-3 rounded mb-3 text-white">
+            
+            <div class="flex gap-2 mb-4">
+                <label class="flex items-center gap-2 bg-gray-900 p-2 rounded w-1/2 cursor-pointer border border-gray-700">
+                    <input type="radio" name="type" value="official" checked class="accent-blue-500"> Official
+                </label>
+                <label class="flex items-center gap-2 bg-gray-900 p-2 rounded w-1/2 cursor-pointer border border-gray-700">
+                    <input type="radio" name="type" value="normal" class="accent-green-500"> Normal
+                </label>
+            </div>
+
+            <button onclick="createCategory()" class="w-full bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-500">Create Category</button>
+        </div>
+    </div>
+
+    <script>
+        const admin = JSON.parse(localStorage.getItem('admin'));
+        if (!admin) window.location.href = '/';
+
+        async function loadCategories() {
+            const res = await fetch('/api/admin/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'list', adminId: admin.id })
+            });
+            const data = await res.json();
+            
+            const list = document.getElementById('catList');
+            list.innerHTML = '';
+
+            if (data.categories.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500 col-span-2">No categories found.</p>';
+                return;
+            }
+
+            data.categories.forEach(c => {
+                let badge = c.is_official 
+                    ? '<span class="bg-yellow-600 text-xs px-2 py-1 rounded font-bold">OFFICIAL</span>' 
+                    : '<span class="bg-green-600 text-xs px-2 py-1 rounded font-bold">NORMAL</span>';
+
+                // অন ক্লিক করলে টুর্নামেন্ট লিস্ট পেজে যাবে (পরে বানাব)
+                list.innerHTML += `
+                    <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 group cursor-pointer relative" onclick="window.location.href='/admin/manage-tournaments?catId=${c.id}'">
+                        <img src="${c.image || 'https://via.placeholder.com/400x200'}" class="w-full h-32 object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute top-2 right-2">${badge}</div>
+                        <div class="p-4 flex justify-between items-center bg-gray-800 relative z-10">
+                            <h3 class="font-bold text-lg text-white">${c.title}</h3>
+                            <button onclick="event.stopPropagation(); deleteCategory(${c.id})" class="text-red-500 hover:text-red-400 p-2"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function createCategory() {
+            const title = document.getElementById('catTitle').value;
+            const image = document.getElementById('catImage').value;
+            const type = document.querySelector('input[name="type"]:checked').value;
+
+            if(!title) return alert("Enter title");
+
+            const res = await fetch('/api/admin/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create', title, image, type, adminId: admin.id })
+            });
+            const data = await res.json();
+            if(data.success) {
+                closeModal();
+                loadCategories();
+            }
+        }
+
+        async function deleteCategory(id) {
+            if(!confirm("Delete this category? All tournaments inside will be hidden.")) return;
+            await fetch('/api/admin/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', catId: id, adminId: admin.id })
+            });
+            loadCategories();
+        }
+
+        function openModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        loadCategories();
+    </script>
+</body>
+</html>
