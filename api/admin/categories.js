@@ -1,7 +1,7 @@
 const pool = require('../../db');
 
 module.exports = async (req, res) => {
-    // CORS Headers...
+    // CORS Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,19 +16,22 @@ module.exports = async (req, res) => {
         const [admin] = await pool.execute('SELECT role FROM users WHERE id = ?', [adminId]);
         if (!admin[0] || admin[0].role !== 'admin') return res.status(403).json({ error: 'Unauthorized' });
 
-        // ২. ক্যাটাগরি তৈরি (Add Category)
+        // ২. ক্যাটাগরি তৈরি (FIXED)
         if (action === 'create') {
             const isOfficial = type === 'official' ? 1 : 0;
             const isNormal = type === 'normal' ? 1 : 0;
-
+            
+            // match_type এর জন্য 'Category' বা ফাঁকা স্ট্রিং পাঠানো হচ্ছে
             await pool.execute(
-                'INSERT INTO tournaments (title, image, is_category, is_official, is_normal) VALUES (?, ?, 1, ?, ?)',
+                `INSERT INTO tournaments (
+                    title, image, is_category, is_official, is_normal, match_type
+                ) VALUES (?, ?, 1, ?, ?, 'Category')`, 
                 [title, image, isOfficial, isNormal]
             );
             return res.json({ success: true, message: 'Category Created!' });
         }
 
-        // ৩. ক্যাটাগরি লিস্ট (Get All Categories)
+        // ৩. ক্যাটাগরি লিস্ট
         if (action === 'list') {
             const [rows] = await pool.query('SELECT * FROM tournaments WHERE is_category = 1 ORDER BY id DESC');
             return res.json({ success: true, categories: rows });
@@ -36,8 +39,6 @@ module.exports = async (req, res) => {
 
         // ৪. ক্যাটাগরি ডিলিট
         if (action === 'delete') {
-            // ক্যাটাগরি এবং তার ভেতরের সব টুর্নামেন্ট ডিলিট (Cascade Logic)
-            // আপাতত শুধু ক্যাটাগরি ডিলিট করছি
             await pool.execute('DELETE FROM tournaments WHERE id = ?', [catId]);
             return res.json({ success: true, message: 'Category Deleted' });
         }
