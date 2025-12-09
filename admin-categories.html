@@ -32,50 +32,39 @@
     </div>
 
     <script>
-        // --- Authentication Check (Client Side) ---
-        // Ensures user is logged in before loading dashboard data.
-        function checkAdminAuth() {
-            const adminToken = localStorage.getItem('adminToken');
-            if (!adminToken) {
-                window.location.href = '/index.html';
-            }
-        }
+        // Check for Admin Session (Token or Cookie) before proceeding
+        // You should have a function here to verify admin login status
 
         async function loadCategories() {
             try {
+                // Remove existing content and show loading indicator
                 const categoriesList = document.getElementById('categoriesList');
                 categoriesList.innerHTML = `
                     <div class="animate-pulse bg-gray-800 rounded-lg h-12 border border-gray-700"></div>
                     <div class="animate-pulse bg-gray-800 rounded-lg h-12 border border-gray-700"></div>
                 `;
 
-                const adminToken = localStorage.getItem('adminToken');
-                if (!adminToken) throw new Error("Authentication token missing. Please log in again.");
-
+                // API Call to fetch categories from backend
                 const res = await fetch('/api/admin', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}` // Send token for authentication
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type: 'list_categories' }) // Request type parameter
                 });
 
+                // Check HTTP Status (e.g., 200 OK, 401 Unauthorized, 500 Server Error)
                 if (!res.ok) {
                     const errorDetails = await res.json();
-                    if (res.status === 401 || res.status === 403) {
-                        localStorage.removeItem('adminToken');
-                        window.location.href = '/index.html'; // Redirect on auth failure
-                    }
                     throw new Error(errorDetails.error || `HTTP error! status: ${res.status}`);
                 }
 
                 const data = await res.json();
 
+                // Check backend specific success flag (data.success)
                 if (!data.success) {
                     throw new Error(data.error || 'API call failed without specific error message.');
                 }
 
+                // --- UI Update Logic ---
                 categoriesList.innerHTML = ''; // Clear skeleton loader
 
                 if (data.categories && data.categories.length > 0) {
@@ -107,10 +96,7 @@
         }
 
         // --- Event Listeners and Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAdminAuth();
-            loadCategories();
-        });
+        document.addEventListener('DOMContentLoaded', loadCategories);
 
         // --- Placeholder functions for Edit/Delete ---
         function editCategory(id) {
