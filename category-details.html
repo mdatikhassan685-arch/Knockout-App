@@ -27,22 +27,38 @@
     </div>
 
     <script>
+        // আপনার API কল লজিক
         async function loadTournaments() {
             const urlParams = new URLSearchParams(window.location.search);
             const catId = urlParams.get('id');
             if(!catId) { window.location.href = '/home'; return; }
 
             try {
-                const res = await fetch('/api/user/category-tournaments', {
+                // ****** এখানে পরিবর্তনটি করা হয়েছে ******
+                const res = await fetch('/api/user', { // API URL পরিবর্তন করা হয়েছে
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ catId })
+                    body: JSON.stringify({
+                        type: 'category-tournaments', // Back-end কে বলার জন্য type প্যারামিটার যোগ করা হয়েছে
+                        catId: catId // categoryId প্যারামিটার
+                    })
                 });
+                // **************************************
                 
-                if (!res.ok) throw new Error('Failed to fetch');
+                // Response check for non-OK status codes
+                if (!res.ok) {
+                    const errorDetails = await res.json();
+                    throw new Error(errorDetails.error || 'Failed to fetch');
+                }
                 
                 const data = await res.json();
 
+                // Check for successful data response (added for robustness)
+                if(!data.success) {
+                    throw new Error(data.error || 'Unknown error from server');
+                }
+
+                // UI update logic (unchanged)
                 document.getElementById('catTitle').innerText = data.category.title;
                 const list = document.getElementById('tList');
                 list.innerHTML = '';
@@ -99,7 +115,7 @@
                 });
             } catch (err) {
                 console.error(err);
-                document.getElementById('tList').innerHTML = '<p class="text-center text-red-500">Error loading data.</p>';
+                document.getElementById('tList').innerHTML = '<p class="text-center text-red-500">Error loading data. Please try again later.</p>';
             }
         }
         loadTournaments();
