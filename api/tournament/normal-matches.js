@@ -1,6 +1,7 @@
 const pool = require('../../db');
 
 module.exports = async (req, res) => {
+    // CORS Headers...
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -10,7 +11,6 @@ module.exports = async (req, res) => {
     const { catId, userId } = req.body;
 
     try {
-        // ১. ম্যাচ লিস্ট আনা
         const [matches] = await pool.execute(`
             SELECT t.*, 
             (SELECT COUNT(*) FROM participants WHERE tournament_id = t.id) as joined_count,
