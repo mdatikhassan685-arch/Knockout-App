@@ -144,7 +144,7 @@
                         bannerArea.innerHTML = `<div class="w-full h-full bg-slate-800 flex flex-col items-center justify-center text-slate-600"><i class="fa-solid fa-image text-3xl mb-2"></i><p class="text-xs font-bold tracking-widest">NO BANNERS</p></div>`;
                     }
 
-                    // Category List
+                    // Category List Logic (Updated)
                     const list = document.getElementById('categoryList');
                     list.innerHTML = '';
                     
@@ -157,8 +157,13 @@
                         let badgeColor = c.is_official ? 'bg-yellow-500 text-black' : 'bg-blue-600 text-white';
                         let glowClass = c.is_official ? 'shadow-yellow-500/20' : 'shadow-blue-500/20';
 
+                        // Link Logic
+                        let link = c.is_official 
+                            ? `/category-details?id=${c.id}` 
+                            : `/normal-matches?id=${c.id}`;
+
                         list.innerHTML += `
-                            <div class="card-gradient rounded-2xl overflow-hidden shadow-lg ${glowClass} border border-slate-700 relative group cursor-pointer hover:border-blue-500/50 transition active:scale-95" onclick="window.location.href='/category-details?id=${c.id}'">
+                            <div class="card-gradient rounded-2xl overflow-hidden shadow-lg ${glowClass} border border-slate-700 relative group cursor-pointer hover:border-blue-500/50 transition active:scale-95" onclick="window.location.href='${link}'">
                                 <div class="relative h-40 overflow-hidden">
                                     <img src="${c.image || 'https://via.placeholder.com/400x200'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                     
@@ -173,7 +178,7 @@
                                             ${c.title} <i class="fa-solid fa-chevron-right text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition transform translate-x-[-5px] group-hover:translate-x-0"></i>
                                         </h3>
                                         <p class="text-[11px] text-gray-300 mt-1 flex items-center gap-1 opacity-80">
-                                            <i class="fa-solid fa-layer-group text-blue-400"></i> Tap to view tournaments
+                                            <i class="fa-solid fa-layer-group text-blue-400"></i> Tap to view matches
                                         </p>
                                     </div>
                                 </div>
