@@ -1,19 +1,13 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/admin/dashboard", "destination": "/admin-dashboard.html" },
-    { "source": "/admin/deposits", "destination": "/admin-deposits.html" },
-    { "source": "/admin/users", "destination": "/admin-users.html" },
-    { "source": "/admin/categories", "destination": "/admin-categories.html" },
-
-    { "source": "/normal-matches", "destination": "/normal-match-list.html" },
-    { "source": "/category-details", "destination": "/category-details.html" },
-    { "source": "/wallet", "destination": "/wallet.html" },
-    { "source": "/tournament-details", "destination": "/tournament-details.html" },
-    { "source": "/register-team", "destination": "/register-team.html" },
+    { "source": "/api/auth/:action", "destination": "/api/auth.js" },
+    { "source": "/api/user/:action", "destination": "/api/user.js" },
+    
     { "source": "/home", "destination": "/home.html" },
     { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/category-details", "destination": "/category-details.html" },
+    { "source": "/tournament-details", "destination": "/tournament-details.html" },
     { "source": "/", "destination": "/index.html" }
   ]
 }
