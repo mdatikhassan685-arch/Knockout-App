@@ -1,22 +1,9 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/auth/:action", "destination": "/api/auth.js" },
-    { "source": "/api/user/:action", "destination": "/api/user.js" },
+    { "source": "/api/auth", "destination": "/api/auth.js" },
+    { "source": "/api/user", "destination": "/api/user.js" },
     { "source": "/api/admin", "destination": "/api/admin.js" },
-    
-    { "source": "/admin/dashboard", "destination": "/admin-dashboard.html" },
-    { "source": "/admin/categories", "destination": "/admin-categories.html" },
-    { "source": "/admin/users", "destination": "/admin-users.html" },
-    { "source": "/admin/payments", "destination": "/admin-payments.html" },
-    
-    { "source": "/category-details", "destination": "/category-details.html" },
-    { "source": "/tournament-details", "destination": "/tournament-details.html" },
-    { "source": "/normal-matches", "destination": "/normal-match-list.html" },
-    
-    { "source": "/home", "destination": "/home.html" },
-    { "source": "/signup", "destination": "/signup.html" },
-    { "source": "/wallet", "destination": "/wallet.html" },
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/$1" }
   ]
 }
