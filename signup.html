@@ -3,37 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knockout Signup</title>
+    <title>Signup - Knockout</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; background: #1a1a2e; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; position: relative; }
-        .lang-box { position: absolute; top: 20px; right: 20px; }
-        select { padding: 5px; border-radius: 5px; background: #16213e; color: white; border: 1px solid #e94560; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         
-        .box { background: #16213e; padding: 20px; border-radius: 10px; width: 300px; text-align: center; }
-        input { width: 90%; padding: 10px; margin: 8px 0; border-radius: 5px; border: none; background: #0f3460; color: white; }
-        button { width: 100%; padding: 10px; background: #e94560; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .link { margin-top: 15px; display: block; color: #ccc; text-decoration: none; font-size: 14px; }
+        /* Language Dropdown */
+        .lang-box { position: absolute; top: 20px; right: 20px; }
+        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 5px 10px; border-radius: 8px; outline: none; }
+
+        /* Signup Card */
+        .box { width: 100%; max-width: 350px; padding: 30px; background: #1e293b; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; border: 1px solid #334155; margin: 20px; }
+        
+        h2 { margin: 0 0 20px; font-weight: 600; color: white; }
+
+        /* Input Fields */
+        .input-group { position: relative; margin-bottom: 15px; text-align: left; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 14px; }
+        
+        input { width: 100%; padding: 14px 14px 14px 40px; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: white; box-sizing: border-box; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #e11d48; box-shadow: 0 0 10px rgba(225, 29, 72, 0.2); }
+
+        /* Buttons (Red/Pink Theme for Signup) */
+        button { width: 100%; padding: 14px; background: linear-gradient(135deg, #e11d48, #be123c); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); margin-top: 10px; }
+        button:active { transform: scale(0.98); }
+
+        /* Links */
+        .links { margin-top: 20px; font-size: 13px; color: #94a3b8; }
+        .links a { color: #e11d48; text-decoration: none; font-weight: bold; }
+        
+        #msg { margin-top: 10px; font-size: 13px; min-height: 20px; }
     </style>
 </head>
 <body>
 
     <div class="lang-box">
         <select id="langSelect" onchange="changeLanguage(this.value)">
-            <option value="bn">🇧🇩 বাংলা</option>
-            <option value="en">🇺🇸 English</option>
+            <option value="en">English</option>
+            <option value="bn">বাংলা</option>
         </select>
     </div>
 
     <div class="box">
-        <h2 data-key="signup_title">নতুন একাউন্ট খুলুন</h2>
-        <input type="text" id="name" data-key="name_ph" placeholder="নাম">
-        <input type="email" id="email" data-key="email_ph" placeholder="ইমেইল">
-        <input type="number" id="phone" data-key="phone_ph" placeholder="মোবাইল">
-        <input type="password" id="pass" data-key="pass_ph" placeholder="পাসওয়ার্ড">
+        <h2 data-key="signup_title">Create Account</h2>
         
-        <button onclick="signup()" data-key="register_btn">রেজিস্টার</button>
-        <a href="/" class="link" data-key="login_link_text">লগইন করুন</a>
-        <p id="msg" style="color: yellow; font-size: 14px; margin-top: 10px;"></p>
+        <div class="input-group">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="name" data-key="name_ph" placeholder="Full Name">
+        </div>
+
+        <div class="input-group">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="email" data-key="email_ph" placeholder="Email">
+        </div>
+
+        <div class="input-group">
+            <i class="fa-solid fa-phone"></i>
+            <input type="number" id="phone" data-key="phone_ph" placeholder="Phone Number">
+        </div>
+        
+        <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="pass" data-key="pass_ph" placeholder="Password">
+        </div>
+
+        <button onclick="signup()" data-key="register_btn">REGISTER</button>
+
+        <div class="links">
+            <span data-key="have_account">Already have an account?</span>
+            <a href="/" data-key="login_link">Login</a>
+        </div>
+        
+        <p id="msg"></p>
     </div>
 
     <script src="lang.js"></script>
@@ -44,19 +85,9 @@
             const phone = document.getElementById('phone').value;
             const password = document.getElementById('pass').value;
             const msg = document.getElementById('msg');
-            
-            // Language logic for JS alerts
-            const lang = localStorage.getItem('appLang') || 'bn';
-            const texts = (lang === 'bn') ? 
-                { fill: "সব ঘর পূরণ করুন", wait: "অপেক্ষা করুন...", success: "সফল! লগইন করুন" } : 
-                { fill: "Please fill all fields", wait: "Please wait...", success: "Success! Please Login" };
 
-            if(!name || !email || !phone || !password) {
-                msg.innerText = texts.fill;
-                return;
-            }
-
-            msg.innerText = texts.wait;
+            msg.style.color = 'yellow';
+            msg.innerText = "Processing...";
 
             try {
                 const res = await fetch('/api/auth', {
@@ -66,14 +97,14 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    msg.style.color = "green";
-                    msg.innerText = texts.success;
-                    setTimeout(() => { window.location.href = '/'; }, 2000);
+                    msg.style.color = '#4ade80';
+                    msg.innerText = "Success! Redirecting...";
+                    setTimeout(() => window.location.href = '/', 2000);
                 } else {
-                    msg.style.color = "red";
+                    msg.style.color = '#ef4444';
                     msg.innerText = data.error;
                 }
-            } catch (err) { msg.innerText = "Server Error"; }
+            } catch (err) { msg.innerText = "Connection Error"; }
         }
     </script>
 </body>
