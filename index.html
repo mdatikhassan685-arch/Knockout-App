@@ -4,36 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Knockout</title>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; position: relative; }
         
-        /* 🔥 ADMIN BUTTON (TOP LEFT) 🔥 */
-        .admin-btn { 
+        /* 🔥 অদৃশ্য এডমিন বাটন (MAGIC BUTTON) 🔥 */
+        .admin-trigger { 
             position: absolute; 
-            top: 20px; 
-            left: 20px; 
-            background: rgba(30, 41, 59, 0.8); 
-            border: 1px solid #334155; 
-            color: #94a3b8; 
-            width: 45px; 
-            height: 45px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer; 
-            z-index: 100; 
-            font-size: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: 0.3s;
-        }
-        /* বাটনটি চাপলে বা মাউস নিলে রঙ বদলাবে */
-        .admin-btn:hover, .admin-btn:active {
-            background: #e11d48;
-            color: white;
-            border-color: #e11d48;
+            top: 0; 
+            left: 0; 
+            width: 60px;   /* আঙ্গুল দিয়ে চাপার জন্য যথেষ্ট বড় */
+            height: 60px; 
+            background: transparent; /* কোনো রং নেই */
+            opacity: 0;    /* ১০০% অদৃশ্য */
+            z-index: 9999; /* সবার উপরে থাকবে */
+            cursor: default; /* মাউস কার্সারও চেঞ্জ হবে না */
         }
 
         /* Language Dropdown */
@@ -50,8 +35,8 @@
         .links { margin-top: 20px; font-size: 14px; color: #94a3b8; }
         .links a { color: #3b82f6; text-decoration: none; font-weight: bold; }
 
-        /* ADMIN MODAL (POPUP) */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 200; backdrop-filter: blur(5px); }
+        /* ADMIN MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(5px); }
         .modal-box { background: #0f172a; padding: 25px; border-radius: 15px; width: 300px; text-align: center; border: 1px solid #e11d48; }
         .modal-box h3 { color: #e11d48; margin-top: 0; }
         .close-btn { background: #334155; margin-top: 10px; }
@@ -59,12 +44,10 @@
 </head>
 <body>
 
-    <!-- 🔥 ১. এডমিন বাটন (শিল্ড আইকন) 🔥 -->
-    <div class="admin-btn" onclick="openAdmin()">
-        <i class="fa-solid fa-user-shield"></i>
-    </div>
+    <!-- 🔥 অদৃশ্য বাটন (এখানে ক্লিক করলে এডমিন খুলবে) 🔥 -->
+    <div class="admin-trigger" onclick="openAdmin()"></div>
 
-    <!-- ভাষা বাটন -->
+    <!-- ভাষা -->
     <div class="lang-box">
         <select id="langSelect" onchange="changeLanguage(this.value)">
             <option value="en">English</option>
@@ -92,22 +75,20 @@
     <!-- এডমিন পপ-আপ -->
     <div class="modal-overlay" id="adminModal">
         <div class="modal-box">
-            <h3><i class="fa-solid fa-lock"></i> ADMIN ACCESS</h3>
+            <h3><i class="fa-solid fa-lock"></i> SECRET ADMIN</h3>
             <input type="email" id="adm-email" placeholder="Admin Email">
             <input type="password" id="adm-token" placeholder="Secret Token">
-            <button onclick="adminLogin()" style="background: #e11d48;">ENTER DASHBOARD</button>
-            <button class="close-btn" onclick="closeAdmin()">CANCEL</button>
+            <button onclick="adminLogin()" style="background: #e11d48;">ACCESS</button>
+            <button class="close-btn" onclick="closeAdmin()">CLOSE</button>
             <p id="adm-msg" style="margin-top:10px; font-size:13px;"></p>
         </div>
     </div>
 
     <script src="lang.js"></script>
     <script>
-        // পপ-আপ খোলা/বন্ধ করা
         function openAdmin() { document.getElementById('adminModal').style.display = 'flex'; }
         function closeAdmin() { document.getElementById('adminModal').style.display = 'none'; }
 
-        // ১. সাধারণ লগইন
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('pass').value;
@@ -126,10 +107,9 @@
                     localStorage.setItem('user', JSON.stringify(data.user));
                     window.location.href = '/home';
                 } else { msg.style.color = 'red'; msg.innerText = data.error; }
-            } catch(e) { msg.innerText = "Server Error"; }
+            } catch(e) { msg.innerText = "Error"; }
         }
 
-        // ২. এডমিন লগইন
         async function adminLogin() {
             const email = document.getElementById('adm-email').value;
             const token = document.getElementById('adm-token').value;
@@ -144,7 +124,7 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    msg.style.color = 'green'; msg.innerText = "Verified! 🚀";
+                    msg.style.color = 'green'; msg.innerText = "Welcome Boss! 🕶️";
                     localStorage.setItem('user', JSON.stringify(data.user));
                     setTimeout(() => window.location.href = '/admin', 1000);
                 } else { msg.style.color = 'red'; msg.innerText = data.error; }
