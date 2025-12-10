@@ -3,52 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knockout Home</title>
-    <!-- আইকনের জন্য FontAwesome লিংক -->
+    <title>Home - Knockout</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Modern Dark Theme */
-        body { font-family: 'Segoe UI', sans-serif; background: #0b1120; color: white; margin: 0; padding: 0; padding-bottom: 80px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0b1120; color: white; margin: 0; padding-bottom: 80px; }
         
         /* Header */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #111827; box-shadow: 0 2px 10px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 20px; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #111827; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .logo { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
         .logo i { color: #3b82f6; }
-        
-        .header-right { display: flex; align-items: center; gap: 15px; }
-        .balance-pill { background: #1f2937; padding: 5px 12px; border-radius: 20px; border: 1px solid #374151; display: flex; align-items: center; gap: 5px; font-weight: bold; color: #facc15; }
-        .notif-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+        .balance-pill { background: #1f2937; padding: 5px 12px; border-radius: 20px; border: 1px solid #374151; color: #facc15; font-weight: bold; font-size: 14px; }
 
-        /* Main Container */
+        /* Announcement Bar (Running Text) */
+        .notice-container { background: #fff3cd; color: #856404; padding: 8px 10px; font-size: 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #ffeeba; }
+        .notice-icon { color: #e11d48; animation: bell 1s infinite; }
+        @keyframes bell { 0% {transform: rotate(-15deg);} 50% {transform: rotate(15deg);} 100% {transform: rotate(-15deg);} }
+        marquee { font-weight: 500; }
+
         .container { padding: 20px; }
 
-        /* Banner Placeholder */
-        .banner { background: #1f2937; height: 160px; border-radius: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #6b7280; margin-bottom: 20px; border: 1px dashed #374151; }
-        .banner i { font-size: 40px; margin-bottom: 10px; }
+        /* Banner Area */
+        .banner { background: #1f2937; height: 160px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6b7280; border: 1px dashed #374151; margin-bottom: 25px; overflow: hidden; position: relative; }
+        .banner img { width: 100%; height: 100%; object-fit: cover; display: none; } /* ইমেজ থাকলে দেখাবে */
 
-        /* Action Buttons (Add Money & Leaderboard) */
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .action-btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; color: white; }
-        .btn-blue { background: #2563eb; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+        /* Action Buttons */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .action-btn { border: none; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-blue { background: #2563eb; }
         .btn-dark { background: #1f2937; border: 1px solid #374151; }
 
-        /* Section Title */
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-left: 4px solid #2563eb; padding-left: 10px; }
-        .section-title { font-size: 18px; font-weight: bold; }
-        .view-all { color: #6b7280; font-size: 12px; text-decoration: none; }
+        /* Dynamic Games List */
+        .section-title { font-size: 18px; font-weight: bold; border-left: 4px solid #2563eb; padding-left: 10px; margin-bottom: 15px; }
+        
+        .game-card { background: #1e293b; border-radius: 15px; padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; border: 1px solid #374151; }
+        .game-icon { width: 50px; height: 50px; border-radius: 10px; background: #0f172a; object-fit: cover; }
+        .game-info h3 { margin: 0; font-size: 16px; }
+        .game-info span { font-size: 12px; color: #94a3b8; }
+        .join-btn { margin-left: auto; background: #e11d48; color: white; border: none; padding: 6px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
-        /* Game Card */
-        .game-card { background: #1e293b; border-radius: 15px; overflow: hidden; margin-bottom: 20px; position: relative; border: 1px solid #374151; }
-        .card-img { width: 100%; height: 140px; background: #0f172a; display: flex; align-items: center; justify-content: center; color: #475569; }
-        .card-info { padding: 15px; }
-        .badge { position: absolute; top: 10px; right: 10px; background: #facc15; color: black; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; }
-        .game-title { font-size: 16px; font-weight: bold; margin: 0; }
-        .game-sub { color: #94a3b8; font-size: 12px; margin-top: 5px; display: block; }
-
-        /* Bottom Navigation */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #111827; border-top: 1px solid #374151; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
-        .nav-item { color: #6b7280; text-align: center; font-size: 12px; text-decoration: none; background: none; border: none; cursor: pointer; }
-        .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; }
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #111827; border-top: 1px solid #374151; display: flex; justify-content: space-around; padding: 12px 0; }
+        .nav-item { color: #6b7280; text-align: center; font-size: 11px; background: none; border: none; cursor: pointer; }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: #3b82f6; }
     </style>
 </head>
@@ -56,104 +52,107 @@
 
     <!-- Header -->
     <div class="header">
-        <div class="logo">
-            <i class="fa-solid fa-gamepad"></i> KNOCKOUT
-        </div>
-        <div class="header-right">
-            <div class="balance-pill">
-                <i class="fa-solid fa-coins"></i> <span id="bal">0.00</span>
-            </div>
-            <button class="notif-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
-        </div>
+        <div class="logo"><i class="fa-solid fa-gamepad"></i> KNOCKOUT</div>
+        <div class="balance-pill"><i class="fa-solid fa-coins"></i> <span id="bal">...</span></div>
+    </div>
+
+    <!-- Announcement Bar (Dynamic) -->
+    <div class="notice-container" id="notice-box" style="display: none;">
+        <i class="fa-solid fa-bullhorn notice-icon"></i>
+        <marquee id="notice-text">Welcome to Knockout Esports!</marquee>
     </div>
 
     <div class="container">
-        <!-- Language Selector (Hidden but functional) -->
-        <select id="langSelect" style="display:none;" onchange="changeLanguage(this.value)">
-            <option value="bn">BN</option>
-            <option value="en">EN</option>
-        </select>
-
-        <!-- Banner Area -->
-        <div class="banner">
-            <i class="fa-regular fa-image"></i>
-            <span data-key="no_banner">NO BANNERS</span>
+        <!-- Dynamic Banner -->
+        <div class="banner" id="banner-box">
+            <img id="banner-img" src="" alt="Banner">
+            <div id="no-banner">
+                <i class="fa-regular fa-image" style="font-size: 30px; margin-bottom: 5px;"></i>
+                <span>NO BANNERS</span>
+            </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="action-grid">
             <button class="action-btn btn-blue" onclick="window.location.href='/wallet'">
-                <i class="fa-solid fa-plus-circle"></i> <span data-key="add_money">Add Money</span>
+                <i class="fa-solid fa-plus-circle"></i> Add Money
             </button>
             <button class="action-btn btn-dark">
-                <i class="fa-solid fa-trophy"></i> <span data-key="leaderboard">Leaderboard</span>
+                <i class="fa-solid fa-trophy"></i> Leaderboard
             </button>
         </div>
 
-        <!-- Games Section -->
-        <div class="section-header">
-            <span class="section-title" data-key="avail_games">Available Games</span>
-            <a href="#" class="view-all" data-key="view_all">Select a game</a>
+        <!-- Games Section (Controlled by Admin) -->
+        <div class="section-title">Available Games</div>
+        <div id="games-list">
+            <!-- এখানে এডমিন গেম যোগ করলে দেখাবে, এখন ফাঁকা -->
+            <p style="text-align: center; color: #6b7280; margin-top: 20px;">
+                No games available right now.<br>Please wait for Admin update.
+            </p>
         </div>
-
-        <!-- Game Card (Free Fire) -->
-        <div class="game-card" onclick="alert('Tournament List coming soon!')">
-            <span class="badge">OFFICIAL</span>
-            <div class="card-img">
-                <!-- ইমেজ লিংক পরে বসাবো, আপাতত আইকন -->
-                <i class="fa-solid fa-fire fa-3x"></i>
-            </div>
-            <div class="card-info">
-                <h3 class="game-title">FREE FIRE OFFICIAL TOURNAMENT</h3>
-                <span class="game-sub" data-key="tap_view">Tap to view tournaments</span>
-            </div>
-        </div>
-        
-        <!-- Game Card (Ludo) -->
-        <div class="game-card">
-             <span class="badge">LUDO</span>
-            <div class="card-img">
-                 <i class="fa-solid fa-dice fa-3x"></i>
-            </div>
-            <div class="card-info">
-                <h3 class="game-title">LUDO KING MATCHES</h3>
-                <span class="game-sub" data-key="tap_view">Tap to view tournaments</span>
-            </div>
-        </div>
-
     </div>
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <button class="nav-item active" onclick="window.location.href='/home'">
-            <i class="fa-solid fa-house"></i> <span data-key="nav_home">Home</span>
-        </button>
-        <button class="nav-item">
-            <i class="fa-solid fa-fire"></i> <span data-key="nav_live">Live</span>
+        <button class="nav-item active">
+            <i class="fa-solid fa-house"></i> Home
         </button>
         <button class="nav-item" onclick="window.location.href='/wallet'">
-            <i class="fa-solid fa-wallet"></i> <span data-key="nav_wallet">Wallet</span>
+            <i class="fa-solid fa-wallet"></i> Wallet
         </button>
         <button class="nav-item">
-            <i class="fa-solid fa-user"></i> <span data-key="nav_profile">Profile</span>
+            <i class="fa-solid fa-user"></i> Profile
         </button>
     </div>
 
-    <script src="lang.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
-        
-        if (!user) {
-            window.location.href = '/'; 
-        } else {
-            // ব্যালেন্স আপডেট
-            document.getElementById('bal').innerText = user.balance;
+        if (!user) window.location.href = '/';
+
+        async function loadHomeData() {
+            try {
+                const res = await fetch('/api/user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'get_home_data', userId: user.id })
+                });
+                const data = await res.json();
+
+                // 1. Balance
+                document.getElementById('bal').innerText = data.balance;
+
+                // 2. Announcement (যদি এডমিন দিয়ে থাকে)
+                if(data.notice) {
+                    document.getElementById('notice-box').style.display = 'flex';
+                    document.getElementById('notice-text').innerText = data.notice;
+                }
+
+                // 3. Banner (ভবিষ্যতে এডমিন যোগ করবে)
+                // আপাতত No Banner দেখাবে
+
+                // 4. Categories (Games)
+                const list = document.getElementById('games-list');
+                
+                if (data.categories.length > 0) {
+                    list.innerHTML = ''; // "No games" লেখাটি মুছে ফেলবে
+                    data.categories.forEach(cat => {
+                        list.innerHTML += `
+                            <div class="game-card">
+                                <img src="${cat.image_url}" class="game-icon" onerror="this.src='https://via.placeholder.com/50'">
+                                <div class="game-info">
+                                    <h3>${cat.title}</h3>
+                                    <span>Tap to join tournaments</span>
+                                </div>
+                                <button class="join-btn">JOIN</button>
+                            </div>
+                        `;
+                    });
+                }
+
+            } catch (err) { console.log(err); }
         }
 
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = '/';
-        }
+        loadHomeData();
     </script>
 </body>
 </html>
