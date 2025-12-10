@@ -4,6 +4,11 @@
     { "source": "/api/auth", "destination": "/api/auth.js" },
     { "source": "/api/user", "destination": "/api/user.js" },
     { "source": "/api/admin", "destination": "/api/admin.js" },
+    
+    { "source": "/signup", "destination": "/signup.html" },
+    { "source": "/home", "destination": "/home.html" },
+    { "source": "/wallet", "destination": "/wallet.html" },
+    
     { "source": "/(.*)", "destination": "/$1" }
   ]
 }
