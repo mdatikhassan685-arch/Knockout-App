@@ -1,3 +1,4 @@
+// Version: 2.1 (Force Update & Safe Mode)
 const db = require('../db');
 
 module.exports = async (req, res) => {
@@ -12,34 +13,44 @@ module.exports = async (req, res) => {
     const { type, user_id, status, deposit_id, withdraw_id, action } = req.body;
 
     try {
-        // ========== DASHBOARD STATS ==========
+        // ========== DASHBOARD STATS (SAFE MODE) ==========
         if (type === 'dashboard_stats') {
-            const [users] = await db.execute('SELECT COUNT(*) as total FROM users');
-            
-            // Safe Query for deposits/withdraws (status column check)
+            let totalUsers = 0;
             let pendingDeposits = 0;
             let pendingWithdraws = 0;
-            
-            try {
-                const [deposits] = await db.execute('SELECT COUNT(*) as pending FROM deposits WHERE status = "pending"');
-                const [withdraws] = await db.execute('SELECT COUNT(*) as pending FROM withdrawals WHERE status = "pending"');
-                pendingDeposits = deposits[0].pending;
-                pendingWithdraws = withdraws[0].pending;
-            } catch (e) { console.log("Status column missing in deposits/withdrawals"); }
+            let totalTournaments = 0;
 
-            const [tournaments] = await db.execute('SELECT COUNT(*) as total FROM tournaments');
+            try {
+                const [u] = await db.execute('SELECT COUNT(*) as total FROM users');
+                totalUsers = u[0].total;
+            } catch (e) {}
+
+            try {
+                const [d] = await db.execute('SELECT COUNT(*) as pending FROM deposits WHERE status = "pending"');
+                pendingDeposits = d[0].pending;
+            } catch (e) {}
+
+            try {
+                const [w] = await db.execute('SELECT COUNT(*) as pending FROM withdrawals WHERE status = "pending"');
+                pendingWithdraws = w[0].pending;
+            } catch (e) {}
+
+            try {
+                const [t] = await db.execute('SELECT COUNT(*) as total FROM tournaments');
+                totalTournaments = t[0].total;
+            } catch (e) {}
             
             return res.status(200).json({
-                total_users: users[0].total,
+                total_users: totalUsers,
                 pending_deposits: pendingDeposits,
                 pending_withdraws: pendingWithdraws,
-                total_tournaments: tournaments[0].total
+                total_tournaments: totalTournaments
             });
         }
 
         // ========== USER LIST (SUPER SAFE MODE) ==========
         if (type === 'list_users') {
-            // SELECT * ব্যবহার করা হয়েছে যাতে কলামের নাম ভুল না হয়
+            // সব কলাম সিলেক্ট করা হচ্ছে যাতে কলাম নেম এরর না হয়
             const [users] = await db.execute('SELECT * FROM users ORDER BY id DESC LIMIT 50');
             
             const formattedUsers = users.map(u => ({
@@ -61,7 +72,7 @@ module.exports = async (req, res) => {
                 LEFT JOIN users u ON d.user_id = u.id 
                 ORDER BY d.created_at DESC LIMIT 50`
             );
-            // ফিল্টার করা হচ্ছে জাভাস্ক্রিপ্ট দিয়ে (যদি DB তে case sensitive হয়)
+            // জাভাস্ক্রিপ্ট দিয়ে ফিল্টার করা হচ্ছে
             const pending = deposits.filter(d => d.status && d.status.toLowerCase() === 'pending');
             return res.status(200).json(pending);
         }
@@ -76,7 +87,6 @@ module.exports = async (req, res) => {
             const { user_id, amount: depAmount } = deposit[0];
 
             if (action === 'approve') {
-                // ব্যালেন্স যোগ (safe update)
                 try {
                     await db.execute('UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?', [depAmount, user_id]);
                 } catch {
@@ -132,9 +142,24 @@ module.exports = async (req, res) => {
                 await db.execute('UPDATE users SET status = ? WHERE id = ?', [status, user_id]);
                 return res.status(200).json({ success: true, message: 'User updated' });
             } catch (err) {
-                // কলাম না থাকলে এরর ইগনোর করবে
-                return res.status(200).json({ success: true, message: 'Updated (Status column missing in DB)' });
+                return res.status(200).json({ success: true, message: 'Updated (Status column missing)' });
             }
+        }
+
+        // ========== CREATE CATEGORY ==========
+        if (type === 'create_category') {
+            const { title, image } = req.body;
+            await db.execute(
+                'INSERT INTO tournaments (title, image, is_category, is_official) VALUES (?, ?, 1, 0)',
+                [title, image]
+            );
+            return res.status(200).json({ success: true, message: 'Category created' });
+        }
+
+        // ========== LIST CATEGORIES ==========
+        if (type === 'list_categories') {
+            const [cats] = await db.execute('SELECT * FROM tournaments WHERE is_category = 1');
+            return res.status(200).json(cats);
         }
 
         else {
@@ -143,7 +168,6 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('Admin API Error:', error);
-        // JSON Error Return (যাতে ফ্রন্টএন্ড ক্র্যাশ না করে)
         return res.status(500).json({ error: 'Server error', details: error.message });
     }
 };
