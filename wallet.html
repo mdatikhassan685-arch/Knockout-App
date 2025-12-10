@@ -65,8 +65,8 @@
             <input type="text" id="dep_sender" placeholder="Sender Number" class="w-full bg-gray-700 p-3 rounded-lg mb-3 text-white outline-none border border-gray-600 focus:border-blue-500">
             <input type="text" id="dep_trx" placeholder="Transaction ID" class="w-full bg-gray-700 p-3 rounded-lg mb-4 text-white outline-none border border-gray-600 focus:border-blue-500">
             <div class="flex gap-3">
-                <button onclick="closeModal('depositModal')" class="flex-1 bg-gray-700 py-2 rounded-lg">Cancel</button>
-                <button onclick="submitDeposit()" class="flex-1 bg-blue-600 py-2 rounded-lg font-bold">Submit</button>
+                <button onclick="closeModal('depositModal')" class="flex-1 bg-gray-700 py-2 rounded-lg hover:bg-gray-600">Cancel</button>
+                <button onclick="submitDeposit()" class="flex-1 bg-blue-600 py-2 rounded-lg font-bold hover:bg-blue-700">Submit</button>
             </div>
         </div>
     </div>
@@ -82,13 +82,13 @@
             </select>
             <input type="text" id="wd_account" placeholder="Your Account Number" class="w-full bg-gray-700 p-3 rounded-lg mb-4 text-white outline-none border border-gray-600 focus:border-blue-500">
             <div class="flex gap-3">
-                <button onclick="closeModal('withdrawModal')" class="flex-1 bg-gray-700 py-2 rounded-lg">Cancel</button>
-                <button onclick="submitWithdraw()" class="flex-1 bg-green-600 py-2 rounded-lg font-bold">Withdraw</button>
+                <button onclick="closeModal('withdrawModal')" class="flex-1 bg-gray-700 py-2 rounded-lg hover:bg-gray-600">Cancel</button>
+                <button onclick="submitWithdraw()" class="flex-1 bg-green-600 py-2 rounded-lg font-bold hover:bg-green-700">Withdraw</button>
             </div>
         </div>
     </div>
 
-    <!-- Bottom Nav (Same as Home) -->
+    <!-- Bottom Nav -->
     <nav class="fixed bottom-0 w-full bg-gray-900 border-t border-gray-800 flex justify-around py-3 z-40">
         <a href="/home" class="text-gray-500 hover:text-blue-500 flex flex-col items-center transition">
             <i class="fa-solid fa-house text-xl mb-1"></i><span class="text-xs">Home</span>
@@ -122,7 +122,6 @@
                 
                 if (res.ok) {
                     document.getElementById('balance').innerText = parseFloat(data.balance).toFixed(2);
-                    
                     const list = document.getElementById('transactions');
                     if (data.transactions.length > 0) {
                         list.innerHTML = data.transactions.map(t => `
@@ -147,23 +146,38 @@
             const amount = document.getElementById('dep_amount').value;
             const sender = document.getElementById('dep_sender').value;
             const trx = document.getElementById('dep_trx').value;
+            
+            // বাটন ডিজেবল করা যাতে ডাবল ক্লিক না হয়
+            const btn = event.target;
+            btn.innerText = "Submitting...";
+            btn.disabled = true;
 
-            if(!amount || !sender || !trx) return alert("All fields required");
+            if(!amount || !sender || !trx) {
+                alert("All fields required");
+                btn.innerText = "Submit";
+                btn.disabled = false;
+                return;
+            }
 
-            const res = await fetch('/api/user', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    type: 'deposit', 
-                    user_id: user.id, 
-                    amount, 
-                    sender_number: sender, 
-                    trx_id: trx 
-                })
-            });
-            const data = await res.json();
-            alert(data.message || data.error);
-            closeModal('depositModal');
+            try {
+                const res = await fetch('/api/user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'deposit', user_id: user.id, amount, sender_number: sender, trx_id: trx })
+                });
+                const data = await res.json();
+                alert(data.message || data.error);
+                if(data.success) {
+                    closeModal('depositModal');
+                    // ইনপুট ক্লিয়ার করা
+                    document.getElementById('dep_amount').value = '';
+                    document.getElementById('dep_sender').value = '';
+                    document.getElementById('dep_trx').value = '';
+                }
+            } catch(e) { alert("Network Error"); }
+            
+            btn.innerText = "Submit";
+            btn.disabled = false;
         }
 
         async function submitWithdraw() {
@@ -171,22 +185,34 @@
             const method = document.getElementById('wd_method').value;
             const account = document.getElementById('wd_account').value;
 
-            if(!amount || !account) return alert("All fields required");
+            const btn = event.target;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
 
-            const res = await fetch('/api/user', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    type: 'withdraw', 
-                    user_id: user.id, 
-                    amount, 
-                    method, 
-                    account_number: account 
-                })
-            });
-            const data = await res.json();
-            alert(data.message || data.error);
-            closeModal('withdrawModal');
+            if(!amount || !account) {
+                alert("All fields required");
+                btn.innerText = "Withdraw";
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'withdraw', user_id: user.id, amount, method, account_number: account })
+                });
+                const data = await res.json();
+                alert(data.message || data.error);
+                if(data.success) {
+                    closeModal('withdrawModal');
+                    document.getElementById('wd_amount').value = '';
+                    document.getElementById('wd_account').value = '';
+                }
+            } catch(e) { alert("Network Error"); }
+
+            btn.innerText = "Withdraw";
+            btn.disabled = false;
         }
 
         loadWallet();
