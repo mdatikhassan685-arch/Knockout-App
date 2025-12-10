@@ -10,7 +10,12 @@ module.exports = async (req, res) => {
 
     const { type, ...data } = req.body;
 
-    try {
+    try { // ========== GET PENDING DEPOSITS ==========
+        if (type === 'list_deposits') {
+            const [deposits] = await db.execute('SELECT * FROM deposits WHERE status = "pending" ORDER BY created_at DESC LIMIT 10');
+            return res.status(200).json(deposits);
+        }
+        
         // ========== 1. DASHBOARD STATS (Total Users, Balance) ==========
         if (type === 'get_stats') {
             const [users] = await db.execute('SELECT COUNT(*) as total FROM users');
