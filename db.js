@@ -1,7 +1,6 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// গ্লোবাল কানেকশন পুল
 let pool;
 
 if (!pool) {
@@ -10,7 +9,7 @@ if (!pool) {
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
-        port: process.env.DB_PORT || 4000, // এখানে পরিবর্তন করা হয়েছে
+        port: parseInt(process.env.DB_PORT || 4000), // Parse Int added
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
@@ -22,5 +21,4 @@ if (!pool) {
 }
 
 const db = pool.promise();
-
 module.exports = db;
