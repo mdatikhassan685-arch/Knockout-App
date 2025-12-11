@@ -138,12 +138,35 @@ module.exports = async (req, res) => {
 
         // ========== UPDATE USER STATUS ==========
         if (type === 'update_user_status') {
-            try {
-                await db.execute('UPDATE users SET status = ? WHERE id = ?', [status, user_id]);
-                return res.status(200).json({ success: true, message: 'User updated' });
-            } catch (err) {
-                return res.status(200).json({ success: true, message: 'Updated (Status column missing)' });
+            let suspendUntil = null;
+            
+            // সাসপেন্ডের তারিখ হিসাব করা
+            if (status === 'suspended' && req.body.suspend_days) {
+                const days = parseInt(req.body.suspend_days);
+                const date = new Date();
+                date.setDate(date.getDate() + days);
+                suspendUntil = date.toISOString().slice(0, 19).replace('T', ' ');
             }
+
+            try {
+                // suspended_until কলামটি আপডেট করা হবে
+                await db.execute(
+                    'UPDATE users SET status = ?, suspended_until = ? WHERE id = ?', 
+                    [status, suspendUntil, user_id]
+                );
+                return res.status(200).json({ success: true, message: 'Status updated' });
+            } catch (err) {
+                // যদি suspended_until কলাম না থাকে, শুধু স্ট্যাটাস আপডেট হবে
+                await db.execute('UPDATE users SET status = ? WHERE id = ?', [status, user_id]);
+                return res.status(200).json({ success: true, message: 'Status updated (Duration ignored)' });
+            }
+        }
+
+        // ========== ADMIN ADD MONEY (নতুন ফিচার) ==========
+        if (type === 'admin_add_money') {
+            await db.execute('UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?', [amount, user_id]);
+            await db.execute('INSERT INTO transactions (user_id, amount, type) VALUES (?, ?, "Admin Gift")', [user_id, amount]);
+            return res.status(200).json({ success: true });
         }
 
         // ========== CREATE CATEGORY ==========
