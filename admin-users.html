@@ -18,6 +18,31 @@
         <p class="text-center text-gray-500 mt-10">Loading users...</p>
     </div>
 
+    <!-- Status Change Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 p-6 rounded-lg w-full max-w-sm border border-gray-700">
+            <h3 class="text-lg font-bold mb-4">Change User Status</h3>
+            <input type="hidden" id="target_user_id">
+            
+            <label class="block text-sm text-gray-400 mb-2">Select Action</label>
+            <select id="new_status" onchange="toggleSuspendInput()" class="w-full bg-gray-700 p-2 rounded mb-4 text-white border border-gray-600">
+                <option value="active">Active</option>
+                <option value="suspended">Suspend (Temporary)</option>
+                <option value="blocked">Block (Permanent)</option>
+            </select>
+
+            <div id="suspend_days_box" class="hidden mb-4">
+                <label class="block text-sm text-gray-400 mb-2">Suspend Duration (Days)</label>
+                <input type="number" id="suspend_days" placeholder="Example: 7" class="w-full bg-gray-700 p-2 rounded text-white border border-gray-600">
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 bg-gray-600 py-2 rounded">Cancel</button>
+                <button onclick="saveStatus()" class="flex-1 bg-blue-600 py-2 rounded font-bold">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         async function loadUsers() {
             try {
@@ -30,38 +55,86 @@
                 
                 const list = document.getElementById('user_list');
                 if (users.length > 0) {
-                    list.innerHTML = users.map(u => `
+                    list.innerHTML = users.map(u => {
+                        let statusColor = 'bg-green-600';
+                        if(u.status === 'blocked') statusColor = 'bg-red-600';
+                        if(u.status === 'suspended') statusColor = 'bg-yellow-600';
+
+                        return `
                         <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow flex justify-between items-center">
                             <div>
                                 <h3 class="font-bold text-white">${u.username}</h3>
                                 <p class="text-xs text-gray-400">${u.email}</p>
-                                <p class="text-xs text-green-400 mt-1">Balance: ৳${parseFloat(u.wallet_balance || u.balance || 0).toFixed(2)}</p>
+                                <p class="text-xs text-blue-400 mt-1">Balance: ৳${parseFloat(u.wallet_balance).toFixed(2)}</p>
                             </div>
-                            <div class="flex gap-2">
-                                <button onclick="editUser(${u.id}, '${u.status}')" class="bg-blue-600 px-3 py-1 rounded text-xs font-bold capitalize">${u.status}</button>
+                            <div class="flex flex-col items-end gap-2">
+                                <button onclick="openStatusModal(${u.id}, '${u.status}')" class="${statusColor} px-3 py-1 rounded text-xs font-bold capitalize w-20 text-center">${u.status}</button>
+                                <button onclick="addMoney(${u.id})" class="bg-gray-700 px-3 py-1 rounded text-xs text-gray-300">Add ৳</button>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else {
                     list.innerHTML = '<p class="text-center text-gray-500">No users found.</p>';
                 }
             } catch (e) { console.error(e); }
         }
 
-        async function editUser(id, currentStatus) {
-            const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
-            if(!confirm(`Change status to ${newStatus}?`)) return;
+        // Modal Logic
+        function openStatusModal(id, status) {
+            document.getElementById('target_user_id').value = id;
+            document.getElementById('new_status').value = status;
+            toggleSuspendInput();
+            document.getElementById('statusModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('statusModal').style.display = 'none';
+        }
+
+        function toggleSuspendInput() {
+            const status = document.getElementById('new_status').value;
+            const box = document.getElementById('suspend_days_box');
+            if(status === 'suspended') box.classList.remove('hidden');
+            else box.classList.add('hidden');
+        }
+
+        async function saveStatus() {
+            const id = document.getElementById('target_user_id').value;
+            const status = document.getElementById('new_status').value;
+            const days = document.getElementById('suspend_days').value;
 
             const res = await fetch('/api/admin', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ type: 'update_user_status', user_id: id, status: newStatus })
+                body: JSON.stringify({ 
+                    type: 'update_user_status', 
+                    user_id: id, 
+                    status: status,
+                    suspend_days: days 
+                })
             });
+            
             const data = await res.json();
             if(data.success) {
-                alert("User updated!");
+                alert("Status Updated!");
+                closeModal();
                 loadUsers();
+            } else {
+                alert("Error: " + data.error);
             }
+        }
+
+        async function addMoney(id) {
+            const amount = prompt("Enter amount to add:");
+            if(!amount) return;
+
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'admin_add_money', user_id: id, amount: amount })
+            });
+            alert("Money Added!");
+            loadUsers();
         }
 
         loadUsers();
