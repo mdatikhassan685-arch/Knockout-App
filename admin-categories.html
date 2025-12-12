@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white pb-20">
+
+    <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50">
+        <a href="/admin" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left"></i></a>
+        <div class="text-xl font-bold">match Categories</div>
+    </header>
+
+    <!-- Add Category Form -->
+    <div class="p-4 bg-gray-800 m-4 rounded-xl border border-gray-700">
+        <h3 class="font-bold mb-3">Add New Match</h3>
+        <input type="text" id="cat_title" placeholder="Match Name (e.g. FreeFire)" class="w-full bg-gray-900 p-2 rounded mb-2 text-white border border-gray-600">
+        <input type="text" id="cat_img" placeholder="Image URL (Link)" class="w-full bg-gray-900 p-2 rounded mb-2 text-white border border-gray-600">
+        <button onclick="addCategory()" class="w-full bg-blue-600 py-2 rounded font-bold hover:bg-blue-700">Add Category</button>
+    </div>
+
+    <!-- Category List -->
+    <div class="p-4 grid grid-cols-2 gap-4" id="cat_list">
+        <p class="text-gray-500">Loading...</p>
+    </div>
+
+    <script>
+        async function loadCategories() {
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'get_categories' })
+            });
+            const data = await res.json();
+            
+            const container = document.getElementById('cat_list');
+            if(data.length > 0) {
+                container.innerHTML = data.map(c => `
+                    <div onclick="window.location.href='/admin-matches?cat_id=${c.id}&name=${c.title}'" class="bg-gray-800 p-3 rounded-xl border border-gray-700 active:scale-95 transition cursor-pointer hover:bg-gray-750 relative group">
+                        <img src="${c.image}" class="w-full h-24 object-cover rounded-lg mb-2">
+                        <h3 class="font-bold text-center">${c.title}</h3>
+                        <p class="text-xs text-center text-gray-400">Tap to add matches</p>
+                        <button onclick="deleteCategory(${c.id}, event)" class="absolute top-2 right-2 bg-red-600 w-6 h-6 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-gray-500 col-span-2 text-center">No games added yet.</p>';
+            }
+        }
+
+        async function addCategory() {
+            const title = document.getElementById('cat_title').value;
+            const img = document.getElementById('cat_img').value;
+            if(!title || !img) return alert("Fill all fields");
+
+            await fetch('/api/admin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'add_category', title, image: img })
+            });
+            
+            document.getElementById('cat_title').value = '';
+            document.getElementById('cat_img').value = '';
+            loadCategories();
+        }
+
+        async function deleteCategory(id, e) {
+            e.stopPropagation(); // Parent click stop করার জন্য
+            if(!confirm("Delete this category? All matches inside will be hidden.")) return;
+            
+            await fetch('/api/admin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'delete_category', id })
+            });
+            loadCategories();
+        }
+
+        loadCategories();
+    </script>
+</body>
+      </html>
