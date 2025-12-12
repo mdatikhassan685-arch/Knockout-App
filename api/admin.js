@@ -37,6 +37,21 @@ module.exports = async (req, res) => {
             await db.execute('DELETE FROM categories WHERE id = ?', [id]);
             return res.status(200).json({ success: true, message: 'Deleted' });
         }
+                // ✅ EDIT CATEGORY API (NEW)
+        if (type === 'edit_category') {
+            const { id, title, image, cat_type } = req.body;
+            
+            if (!id || !title || !image) {
+                return res.status(400).json({ error: 'All fields are required' });
+            }
+
+            await db.execute(
+                'UPDATE categories SET title = ?, image = ?, type = ? WHERE id = ?', 
+                [title, image, cat_type, id]
+            );
+
+            return res.status(200).json({ success: true, message: 'Category Updated!' });
+        }
 
         // =======================
         // 📊 DASHBOARD & USERS
