@@ -7,152 +7,177 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        /* স্ক্রলবার লুকানোর জন্য */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* কাস্টম ফন্ট স্টাইল */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     </style>
 </head>
-<body class="bg-gray-900 text-white pb-20 font-sans">
+<body class="bg-[#0f172a] text-white pb-24 select-none">
 
     <!-- Header -->
-    <header class="flex justify-between items-center p-4 bg-gray-800 shadow-md sticky top-0 z-50 border-b border-gray-700">
-        <div class="flex items-center gap-2">
-            <div class="bg-blue-600 w-9 h-9 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <i class="fa-solid fa-gamepad text-white"></i>
+    <header class="flex justify-between items-center p-4 bg-gray-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40">
+                <i class="fa-solid fa-gamepad text-white text-xl"></i>
             </div>
-            <div class="text-xl font-bold uppercase tracking-wider">Knockout</div>
+            <div>
+                <h1 class="text-xl font-black tracking-widest uppercase italic">Knockout</h1>
+                <p class="text-[10px] text-gray-400 font-bold -mt-1 tracking-wide">ESPORTS</p>
+            </div>
         </div>
         
         <div class="flex items-center gap-3">
-            <a href="/wallet" class="bg-gray-700/50 border border-gray-600 px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition hover:bg-gray-700">
+            <a href="/wallet" class="bg-gray-800 border border-gray-700 px-4 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition hover:bg-gray-700">
                 <i class="fa-solid fa-coins text-yellow-400"></i>
                 <span class="text-yellow-400 font-bold text-sm">৳ <span id="balance">0.00</span></span>
             </a>
-            <button class="relative text-gray-400 hover:text-white transition w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700">
-                <i class="fa-regular fa-bell text-lg"></i>
-                <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-gray-800"></span>
+            <button class="relative w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 hover:text-white text-gray-400 transition">
+                <i class="fa-regular fa-bell text-xl"></i>
+                <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-gray-800"></span>
             </button>
         </div>
     </header>
 
     <!-- Marquee Announcement -->
-    <div class="bg-blue-900/20 border-y border-blue-500/20 text-blue-200 text-xs py-2">
-        <marquee id="announcement" behavior="scroll" direction="left">Welcome to Knockout Esports! Join tournaments and win real money.</marquee>
+    <div class="bg-gradient-to-r from-blue-900/50 to-purple-900/50 border-y border-white/10 py-2">
+        <marquee id="announcement" behavior="scroll" direction="left" class="text-xs font-bold text-blue-200 tracking-wide">
+            Welcome to Knockout Esports! Join tournaments and win real money. Verify your account to start playing.
+        </marquee>
     </div>
 
     <!-- Banners Slider -->
-    <div class="p-4 overflow-x-auto whitespace-nowrap scrollbar-hide flex gap-3" id="banners">
-        <!-- Skeleton Loader (ডাটা লোড হওয়ার আগে এটা দেখাবে) -->
-        <div class="w-80 h-40 bg-gray-800 rounded-xl animate-pulse flex-shrink-0 border border-gray-700"></div>
+    <div class="p-4 overflow-x-auto whitespace-nowrap scrollbar-hide flex gap-4" id="banners">
+        <!-- Skeleton Loader -->
+        <div class="w-80 h-40 bg-gray-800 rounded-2xl animate-pulse border border-gray-700 flex-shrink-0"></div>
     </div>
 
     <!-- Quick Actions -->
     <div class="px-4 flex gap-3 mb-6">
-        <a href="/wallet" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 py-3 rounded-xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-blue-600/20 transition active:scale-95 text-sm">
+        <a href="/wallet" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 rounded-2xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-blue-600/20 active:scale-95 transition">
             <i class="fa-solid fa-plus-circle"></i> Add Money
         </a>
-        <a href="#" class="flex-1 bg-gray-800 hover:bg-gray-750 border border-gray-700 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition active:scale-95 text-sm">
+        <a href="#" class="flex-1 bg-gray-800 border border-gray-700 py-3.5 rounded-2xl flex items-center justify-center gap-2 font-bold active:scale-95 transition hover:bg-gray-750">
             <i class="fa-solid fa-trophy text-yellow-500"></i> Leaderboard
         </a>
     </div>
 
-    <!-- Available Tournaments Section -->
-    <div class="px-4 pb-4">
-        <div class="flex justify-between items-center mb-4">
-            <!-- ✅ TEXT CHANGED HERE -->
-            <h2 class="text-lg font-bold border-l-4 border-blue-500 pl-3">Available Tournaments</h2>
-            <button class="text-xs text-blue-400 hover:text-blue-300 transition">View All</button>
+    <!-- Tournaments Section (Poster Style) -->
+    <div class="px-4">
+        <div class="flex justify-between items-end mb-4">
+            <h2 class="text-xl font-bold border-l-4 border-blue-500 pl-3 leading-none">Available Games</h2>
+            <button class="text-xs text-blue-400 font-bold hover:text-white transition">See All</button>
         </div>
         
-        <div class="grid grid-cols-1 gap-4" id="categories">
-            <!-- Categories Loader -->
-            <div class="bg-gray-800 h-24 rounded-xl animate-pulse border border-gray-700"></div>
-            <div class="bg-gray-800 h-24 rounded-xl animate-pulse border border-gray-700"></div>
+        <!-- Categories Container -->
+        <div class="grid grid-cols-1 gap-5 pb-5" id="categories">
+            <!-- Loading Skeletons -->
+            <div class="w-full h-48 bg-gray-800 rounded-2xl animate-pulse"></div>
+            <div class="w-full h-48 bg-gray-800 rounded-2xl animate-pulse"></div>
         </div>
     </div>
 
-    <!-- Bottom Nav -->
-    <nav class="fixed bottom-0 w-full bg-gray-900/95 backdrop-blur border-t border-gray-800 flex justify-around py-3 z-40 pb-5">
-        <a href="/home" class="text-blue-500 flex flex-col items-center transition">
-            <i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px] font-bold">Home</span>
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-gray-800 flex justify-around py-3 z-40 pb-6">
+        <a href="/home" class="text-blue-500 flex flex-col items-center transition group">
+            <i class="fa-solid fa-house text-xl mb-1 group-active:scale-90 transition"></i>
+            <span class="text-[10px] font-bold">Home</span>
         </a>
-        <a href="#" class="text-gray-500 hover:text-blue-500 flex flex-col items-center transition">
-            <i class="fa-solid fa-fire text-xl mb-1"></i><span class="text-[10px] font-bold">Live</span>
+        <a href="#" class="text-gray-500 hover:text-white flex flex-col items-center transition group">
+            <i class="fa-solid fa-fire text-xl mb-1 group-active:scale-90 transition"></i>
+            <span class="text-[10px] font-bold">Live</span>
         </a>
-        <a href="/wallet" class="text-gray-500 hover:text-blue-500 flex flex-col items-center transition">
-            <i class="fa-solid fa-wallet text-xl mb-1"></i><span class="text-[10px] font-bold">Wallet</span>
+        <a href="/wallet" class="text-gray-500 hover:text-white flex flex-col items-center transition group">
+            <i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90 transition"></i>
+            <span class="text-[10px] font-bold">Wallet</span>
         </a>
-        <a href="/profile" class="text-gray-500 hover:text-blue-500 flex flex-col items-center transition">
-            <i class="fa-solid fa-user text-xl mb-1"></i><span class="text-[10px] font-bold">Profile</span>
+        <a href="/profile" class="text-gray-500 hover:text-white flex flex-col items-center transition group">
+            <i class="fa-solid fa-user text-xl mb-1 group-active:scale-90 transition"></i>
+            <span class="text-[10px] font-bold">Profile</span>
         </a>
     </nav>
 
+    <!-- JavaScript Logic -->
     <script>
-        // ১. ইউজার লগইন চেক
+        // Check User Login
         const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) window.location.href = '/index.html';
+        if (!user) window.location.href = '/';
 
         async function loadHomeData() {
             try {
-                // ২. ডাটাবেস থেকে ডাটা আনা
                 const res = await fetch('/api/user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type: 'home', user_id: user.id })
                 });
 
+                if (!res.ok) {
+                    console.error("API Error");
+                    return;
+                }
+
                 const data = await res.json();
 
-                if (res.ok) {
-                    // ব্যালেন্স আপডেট
-                    const balance = data.wallet !== undefined ? data.wallet : (user.wallet_balance || 0);
-                    document.getElementById('balance').innerText = parseFloat(balance).toFixed(2);
-                    
-                    // অ্যানাউন্সমেন্ট আপডেট
-                    if(data.announcement) document.getElementById('announcement').innerText = data.announcement;
+                // 1. Update Balance
+                const balance = data.wallet !== undefined ? data.wallet : (user.wallet_balance || 0);
+                document.getElementById('balance').innerText = parseFloat(balance).toFixed(2);
+                
+                // 2. Update Announcement
+                if(data.announcement) document.getElementById('announcement').innerText = data.announcement;
 
-                    // ৩. ব্যানার লোড করা (ডাটাবেস থেকে)
-                    const bannerContainer = document.getElementById('banners');
-                    if (data.banners && data.banners.length > 0) {
-                        bannerContainer.innerHTML = data.banners.map(b => 
-                            `<div class="w-80 h-40 rounded-xl overflow-hidden shadow-lg flex-shrink-0 relative border border-gray-700">
-                                <img src="${b.image}" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                            </div>`
-                        ).join('');
-                    } else {
-                        // যদি ব্যানার না থাকে
-                        bannerContainer.innerHTML = `
-                            <div class="w-full h-40 bg-gray-800/50 rounded-xl flex flex-col items-center justify-center text-gray-500 border border-gray-700 border-dashed">
-                                <i class="fa-regular fa-image text-3xl mb-2"></i>
-                                <span class="text-sm">No Offers Available</span>
-                            </div>`;
-                    }
+                // 3. Load Banners
+                const bannerContainer = document.getElementById('banners');
+                if (data.banners && data.banners.length > 0) {
+                    bannerContainer.innerHTML = data.banners.map(b => 
+                        `<div class="w-80 h-40 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 relative border border-gray-700 group">
+                            <img src="${b.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.src='https://placehold.co/600x400?text=No+Image'">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        </div>`
+                    ).join('');
+                } else {
+                    bannerContainer.innerHTML = `<div class="w-full h-24 flex items-center justify-center text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">No Offers Active</div>`;
+                }
 
-                    // ৪. ক্যাটাগরি/টুর্নামেন্ট লিস্ট লোড করা (ডাটাবেস থেকে)
-                    const catContainer = document.getElementById('categories');
-                    if (data.categories && data.categories.length > 0) {
-                        catContainer.innerHTML = data.categories.map(c => `
-                            <div onclick="window.location.href='/matches?cat_id=${c.id}'" class="bg-gray-800 p-3 rounded-xl shadow-lg border border-gray-700 active:scale-95 transition cursor-pointer flex gap-4 items-center hover:bg-gray-750 group">
-                                <img src="${c.image}" class="w-20 h-20 object-cover rounded-lg shadow-md group-hover:scale-105 transition duration-300">
-                                <div class="flex-1">
-                                    <h3 class="font-bold text-lg text-white mb-1 group-hover:text-blue-400 transition">${c.title}</h3>
-                                    <p class="text-xs text-gray-400 flex items-center gap-1"><i class="fa-solid fa-gamepad text-blue-500"></i> Tap to join matches</p>
-                                </div>
-                                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center group-hover:bg-blue-600 transition">
-                                    <i class="fa-solid fa-chevron-right text-gray-400 text-xs group-hover:text-white"></i>
+                // 4. Load Categories (UPDATED CARD DESIGN) 🌟
+                const catContainer = document.getElementById('categories');
+                if (data.categories && data.categories.length > 0) {
+                    catContainer.innerHTML = data.categories.map(c => `
+                        <div onclick="window.location.href='/matches?cat_id=${c.id}&name=${c.title}'" class="relative w-full h-52 bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-700 active:scale-95 transition cursor-pointer group">
+                            
+                            <!-- Full Background Image -->
+                            <img src="${c.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700 ease-in-out" onerror="this.src='https://placehold.co/600x400?text=Game+Image'">
+                            
+                            <!-- Dark Gradient Overlay (Text readability) -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
+
+                            <!-- Text Content (Bottom Left) -->
+                            <div class="absolute bottom-0 left-0 p-5 w-full">
+                                <h3 class="text-2xl font-black text-white uppercase tracking-wider drop-shadow-md leading-none mb-1.5">${c.title}</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="flex h-2 w-2 relative">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                    </span>
+                                    <p class="text-xs text-gray-300 font-bold uppercase tracking-wide">Tap to join matches</p>
                                 </div>
                             </div>
-                        `).join('');
-                    } else {
-                        // যদি টুর্নামেন্ট না থাকে
-                        catContainer.innerHTML = `
-                            <div class="text-center text-gray-500 py-10 bg-gray-800/30 rounded-xl border border-gray-700/50 border-dashed">
-                                <i class="fa-solid fa-trophy text-4xl mb-3 text-gray-600"></i>
-                                <p class="mb-1 font-semibold">No tournaments available</p>
-                                <p class="text-xs">Please wait for Admin update.</p>
-                            </div>`;
-                    }
+
+                            <!-- Play Icon (Hover Effect) -->
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-md w-14 h-14 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 border border-white/30">
+                                <i class="fa-solid fa-play text-white text-2xl ml-1"></i>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    catContainer.innerHTML = `
+                        <div class="text-center text-gray-500 py-10 bg-gray-800/30 rounded-2xl border border-gray-700/50 border-dashed">
+                            <i class="fa-solid fa-ghost text-4xl mb-3 opacity-50"></i>
+                            <p>No games available right now.</p>
+                        </div>`;
                 }
+
             } catch (err) {
                 console.error("Home Data Error:", err);
             }
