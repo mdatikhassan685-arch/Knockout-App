@@ -172,6 +172,44 @@ module.exports = async (req, res) => {
             await db.execute('UPDATE tournaments SET status = ? WHERE id = ?', [new_status, match_id]);
             return res.status(200).json({ success: true });
         }
+         // 🚫 KICK PLAYER MANAGEMENT
+        // ==========================================
+        
+        // ১. প্লেয়ারদের বিস্তারিত তথ্য আনা
+        if (type === 'get_match_players_details') {
+            const { match_id } = req.body;
+            const [players] = await db.execute(`
+                SELECT p.*, u.username 
+                FROM participants p 
+                JOIN users u ON p.user_id = u.id 
+                WHERE p.tournament_id = ?
+            `, [match_id]);
+            return res.status(200).json(players);
+        }
+
+        // ২. প্লেয়ার কিক করা (টাকা ফেরত সহ)
+        if (type === 'kick_participant') {
+            const { participant_id, match_id } = req.body;
+
+            // ১. ইউজারের তথ্য এবং ম্যাচের ফি বের করা
+            const [partData] = await db.execute('SELECT user_id FROM participants WHERE id = ?', [participant_id]);
+            if(partData.length === 0) return res.status(404).json({error: 'Player not found'});
+            const userId = partData[0].user_id;
+
+            const [matchData] = await db.execute('SELECT entry_fee FROM tournaments WHERE id = ?', [match_id]);
+            const refundAmount = parseFloat(matchData[0].entry_fee);
+
+            // ২. ডিলিট করা
+            await db.execute('DELETE FROM participants WHERE id = ?', [participant_id]);
+
+            // ৩. টাকা ফেরত দেওয়া (যদি ফি থাকে)
+            if(refundAmount > 0) {
+                await db.execute('UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?', [refundAmount, userId]);
+                await db.execute('INSERT INTO transactions (user_id, amount, type, created_at) VALUES (?, ?, "Refund (Kicked by Admin)", NOW())', [userId, refundAmount]);
+            }
+
+            return res.status(200).json({ success: true, message: 'Player Kicked & Refunded' });
+        }
 
         // ==========================================
         // 🏆 RESULT MANAGEMENT (FIXED SQL)
