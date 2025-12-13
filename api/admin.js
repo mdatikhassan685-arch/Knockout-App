@@ -166,17 +166,15 @@ module.exports = async (req, res) => {
             await db.execute('UPDATE tournaments SET room_id = ?, room_pass = ? WHERE id = ?', [room_id, room_pass, id]);
             return res.status(200).json({ success: true });
         }
-        // ✅ MATCH STATUS UPDATE
+
         if (type === 'update_match_status') {
             const { match_id, new_status } = req.body;
-            
             await db.execute('UPDATE tournaments SET status = ? WHERE id = ?', [new_status, match_id]);
-            
-            return res.status(200).json({ success: true, message: 'Status Updated' });
+            return res.status(200).json({ success: true });
         }
 
         // ==========================================
-        // RESULT MANAGEMENT
+        // 🏆 RESULT MANAGEMENT (FIXED SQL)
         // ==========================================
         if (type === 'get_match_participants') {
             const [players] = await db.execute(`
@@ -189,8 +187,9 @@ module.exports = async (req, res) => {
         }
 
         if (type === 'save_result') {
+            // ✅ FIX: 'rank' এর দুই পাশে ব্যাকটিক (`) ব্যবহার করা হয়েছে
             await db.execute(
-                'UPDATE participants SET kills = ?, rank = ?, prize_won = ? WHERE id = ?',
+                'UPDATE participants SET kills = ?, `rank` = ?, prize_won = ? WHERE id = ?',
                 [kills, rank, prize, participant_id]
             );
 
