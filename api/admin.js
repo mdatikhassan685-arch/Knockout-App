@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
 
     try {
         // ==========================================
-        // 📊 DASHBOARD STATS
+        // DASHBOARD STATS
         // ==========================================
         if (type === 'dashboard_stats') {
             const [users] = await db.execute('SELECT COUNT(*) as c FROM users');
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         }
 
         // ==========================================
-        // 👥 USER MANAGEMENT
+        // USER MANAGEMENT
         // ==========================================
         if (type === 'list_users') {
             const [users] = await db.execute('SELECT id, username, email, wallet_balance, status FROM users ORDER BY id DESC');
@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
         }
 
         // ==========================================
-        // 💰 DEPOSIT & WITHDRAW
+        // DEPOSIT & WITHDRAW
         // ==========================================
         if (type === 'list_deposits') {
             const [rows] = await db.execute('SELECT d.*, u.username FROM deposits d JOIN users u ON d.user_id = u.id WHERE d.status = "pending" ORDER BY d.created_at DESC');
@@ -115,7 +115,7 @@ module.exports = async (req, res) => {
         }
 
         // ==========================================
-        // 🎮 CATEGORY MANAGEMENT
+        // CATEGORY MANAGEMENT
         // ==========================================
         if (type === 'get_categories') {
             const [rows] = await db.execute('SELECT * FROM categories ORDER BY id ASC');
@@ -139,7 +139,7 @@ module.exports = async (req, res) => {
         }
 
         // ==========================================
-        // 🔥 TOURNAMENT MANAGEMENT
+        // TOURNAMENT MANAGEMENT
         // ==========================================
         if (type === 'get_admin_matches') {
             const { category_id } = req.body;
@@ -168,7 +168,7 @@ module.exports = async (req, res) => {
         }
 
         // ==========================================
-        // 🏆 RESULT MANAGEMENT
+        // RESULT MANAGEMENT
         // ==========================================
         if (type === 'get_match_participants') {
             const [players] = await db.execute(`
@@ -204,9 +204,4 @@ module.exports = async (req, res) => {
         console.error("Admin API Error:", error);
         return res.status(500).json({ error: error.message });
     }
-};৩. ম্যাচ শেষ ঘোষণা করা
-        if (type === 'finish_match') {
-            const { match_id } = req.body;
-            await db.execute('UPDATE tournaments SET status = "completed" WHERE id = ?', [match_id]);
-            return res.status(200).json({ success: true });
-        };
+};
