@@ -33,11 +33,21 @@ module.exports = async (req, res) => {
             return res.status(200).json(matches);
         }
 
-        // ============================
-        // 2. JOIN MATCH
+       // ============================
+        // 2. JOIN MATCH (UPDATED with Level Check)
         // ============================
         if (type === 'join_match') {
-            if (!game_name) return res.status(400).json({ error: 'Game Name Required' });
+            const { category_id, user_id, tournament_id, game_name, game_uid, game_level } = req.body;
+
+            // ১. সব তথ্য আছে কিনা চেক
+            if (!game_name || !game_uid || !game_level) {
+                return res.status(400).json({ error: 'All fields (Name, UID, Level) are required!' });
+            }
+
+            // ২. লেভেল চেক (৪০ এর নিচে হলে বাদ)
+            if (parseInt(game_level) < 40) {
+                return res.status(400).json({ error: 'Sorry! Minimum Game Level 40 required to join.' });
+            }
 
             const [matchData] = await db.execute('SELECT entry_fee, total_spots FROM tournaments WHERE id = ?', [tournament_id]);
             if (matchData.length === 0) return res.status(404).json({ error: 'Match not found' });
@@ -53,9 +63,14 @@ module.exports = async (req, res) => {
             if (countJoin[0].c >= match.total_spots) return res.status(400).json({ error: 'Match is Full!' });
             if (parseFloat(user.wallet_balance) < parseFloat(match.entry_fee)) return res.status(400).json({ error: 'Insufficient Balance!' });
 
-            // ব্যালেন্স কাটা এবং জয়েন করানো
+            // ৩. টাকা কাটা এবং ডাটাবেসে ৩টি তথ্য সেভ করা
             await db.execute('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?', [match.entry_fee, user_id]);
-            await db.execute('INSERT INTO participants (user_id, tournament_id, game_name, created_at) VALUES (?, ?, ?, NOW())', [user_id, tournament_id, game_name]);
+            
+            await db.execute(
+                'INSERT INTO participants (user_id, tournament_id, game_name, game_uid, game_level, created_at) VALUES (?, ?, ?, ?, ?, NOW())', 
+                [user_id, tournament_id, game_name, game_uid, game_level]
+            );
+            
             await db.execute('INSERT INTO transactions (user_id, amount, type, created_at) VALUES (?, ?, "Match Join", NOW())', [user_id, match.entry_fee]);
 
             return res.status(200).json({ success: true, message: 'Joined Successfully' });
