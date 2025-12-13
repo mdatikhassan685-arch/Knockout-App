@@ -75,6 +75,22 @@ module.exports = async (req, res) => {
                 return res.status(403).json({ error: 'Not joined' });
             }
         }
+        // ============================
+        // 4. GET MATCH RESULT (Fix Rank Keyword)
+        // ============================
+        if (type === 'get_result_board') {
+            const { tournament_id } = req.body;
+            
+            // ✅ FIX: `rank` শব্দটিতে ব্যাকটিক ব্যবহার করা হয়েছে
+            const [results] = await db.execute(`
+                SELECT in_game_name, kills, \`rank\`, prize_won 
+                FROM participants 
+                WHERE tournament_id = ? 
+                ORDER BY \`rank\` ASC, kills DESC
+            `, [tournament_id]);
+            
+            return res.status(200).json(results);
+        }
 
     } catch (error) {
         console.error(error);
