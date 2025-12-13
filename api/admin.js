@@ -166,6 +166,14 @@ module.exports = async (req, res) => {
             await db.execute('UPDATE tournaments SET room_id = ?, room_pass = ? WHERE id = ?', [room_id, room_pass, id]);
             return res.status(200).json({ success: true });
         }
+        // ✅ MATCH STATUS UPDATE
+        if (type === 'update_match_status') {
+            const { match_id, new_status } = req.body;
+            
+            await db.execute('UPDATE tournaments SET status = ? WHERE id = ?', [new_status, match_id]);
+            
+            return res.status(200).json({ success: true, message: 'Status Updated' });
+        }
 
         // ==========================================
         // RESULT MANAGEMENT
