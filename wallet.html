@@ -6,8 +6,12 @@
     <title>Knockout - Wallet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .transaction-card { transition: all 0.2s ease; }
+        .transaction-card:active { transform: scale(0.98); }
+    </style>
 </head>
-<body class="bg-gray-900 text-white pb-24 select-none">
+<body class="bg-gray-900 text-white pb-24 select-none font-sans">
 
     <!-- Header -->
     <header class="p-4 bg-gray-800 shadow-md sticky top-0 z-40 flex items-center border-b border-gray-700">
@@ -20,10 +24,10 @@
         <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 shadow-xl text-center relative overflow-hidden border border-blue-500/30">
             <div class="absolute top-0 right-0 -mr-6 -mt-6 w-32 h-32 rounded-full bg-white opacity-10 blur-xl"></div>
             <p class="text-blue-100 text-xs mb-1 uppercase tracking-wider font-bold">Total Balance</p>
-            <h1 class="text-4xl font-black text-white drop-shadow-md">৳ <span id="balance">0.00</span></h1>
+            <h1 class="text-4xl font-black text-white drop-shadow-md">৳ <span id="balance">...</span></h1>
         </div>
 
-        <!-- Buttons -->
+        <!-- Action Buttons -->
         <div class="grid grid-cols-2 gap-4 mt-6">
             <button onclick="openModal('depositModal')" class="bg-gray-800 hover:bg-gray-750 p-4 rounded-xl flex flex-col items-center shadow-lg border border-gray-700 transition active:scale-95">
                 <div class="w-12 h-12 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mb-2">
@@ -44,9 +48,10 @@
     <!-- Transactions -->
     <div class="px-6 mt-2">
         <h3 class="font-bold text-lg mb-4 text-gray-300 flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left text-blue-500"></i> Recent Transactions
+            <i class="fa-solid fa-clock-rotate-left text-blue-500"></i> Transaction History
         </h3>
         <div id="transactions" class="space-y-3 pb-4">
+            <div class="bg-gray-800 h-16 rounded-xl animate-pulse border border-gray-700"></div>
             <div class="bg-gray-800 h-16 rounded-xl animate-pulse border border-gray-700"></div>
         </div>
     </div>
@@ -54,19 +59,19 @@
     <!-- DEPOSIT MODAL -->
     <div id="depositModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 border border-gray-600 shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">Add Money</h3>
+            <h3 class="text-xl font-bold mb-4 text-white">Add Money</h3>
             <div class="bg-blue-600/20 p-4 rounded-lg border border-blue-500/30 mb-5 text-sm text-blue-200">
-                <p>Send via <strong>Bkash/Nagad</strong> (Send Money)</p>
-                <p class="font-mono text-lg font-bold text-white my-1 select-all bg-black/30 px-2 py-1 rounded text-center">01322415927</p>
+                <p class="mb-1"><i class="fa-solid fa-circle-info text-blue-400"></i> Send money via <strong>Bkash/Nagad</strong></p>
+                <p class="font-mono text-lg font-bold text-white my-1 select-all bg-black/30 px-2 py-1 rounded text-center cursor-pointer">01322415927</p>
                 <p class="text-xs text-center opacity-70">Tap number to copy</p>
             </div>
             <form onsubmit="submitDeposit(event)">
-                <input type="number" id="dep_amount" placeholder="Amount" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white">
-                <input type="number" id="dep_sender" placeholder="Sender Number" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white">
-                <input type="text" id="dep_trx" placeholder="TrxID" required class="w-full bg-gray-900 p-3 rounded-lg mb-5 border border-gray-600 outline-none text-white uppercase">
+                <input type="number" id="dep_amount" placeholder="Amount" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-blue-500 transition">
+                <input type="number" id="dep_sender" placeholder="Sender Number" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-blue-500 transition">
+                <input type="text" id="dep_trx" placeholder="Transaction ID (TrxID)" required class="w-full bg-gray-900 p-3 rounded-lg mb-5 border border-gray-600 outline-none text-white uppercase focus:border-blue-500 transition">
                 <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('depositModal')" class="flex-1 bg-gray-700 py-3 rounded-xl font-bold">Cancel</button>
-                    <button type="submit" id="dep_btn" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold">Submit</button>
+                    <button type="button" onclick="closeModal('depositModal')" class="flex-1 bg-gray-700 py-3 rounded-xl font-bold hover:bg-gray-600 transition">Cancel</button>
+                    <button type="submit" id="dep_btn" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700 transition">Submit Request</button>
                 </div>
             </form>
         </div>
@@ -75,18 +80,18 @@
     <!-- WITHDRAW MODAL -->
     <div id="withdrawModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 border border-gray-600 shadow-2xl">
-            <h3 class="text-xl font-bold mb-4">Withdraw Money</h3>
-            <p class="text-xs text-yellow-400 mb-4 bg-yellow-400/10 p-2 rounded">Minimum withdrawal is 50 BDT.</p>
+            <h3 class="text-xl font-bold mb-4 text-white">Withdraw Money</h3>
+            <p class="text-xs text-yellow-400 mb-4 bg-yellow-400/10 p-2 rounded border border-yellow-400/20"><i class="fa-solid fa-triangle-exclamation"></i> Minimum withdrawal is 50 BDT.</p>
             <form onsubmit="submitWithdraw(event)">
-                <input type="number" id="wd_amount" placeholder="Amount" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white">
-                <select id="wd_method" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white">
+                <input type="number" id="wd_amount" placeholder="Amount" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-red-500 transition">
+                <select id="wd_method" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-red-500 transition">
                     <option value="bkash">Bkash</option>
                     <option value="nagad">Nagad</option>
                 </select>
-                <input type="number" id="wd_account" placeholder="Account Number" required class="w-full bg-gray-900 p-3 rounded-lg mb-5 border border-gray-600 outline-none text-white">
+                <input type="number" id="wd_account" placeholder="Account Number" required class="w-full bg-gray-900 p-3 rounded-lg mb-5 border border-gray-600 outline-none text-white focus:border-red-500 transition">
                 <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('withdrawModal')" class="flex-1 bg-gray-700 py-3 rounded-xl font-bold">Cancel</button>
-                    <button type="submit" id="wd_btn" class="flex-1 bg-green-600 py-3 rounded-xl font-bold">Withdraw</button>
+                    <button type="button" onclick="closeModal('withdrawModal')" class="flex-1 bg-gray-700 py-3 rounded-xl font-bold hover:bg-gray-600 transition">Cancel</button>
+                    <button type="submit" id="wd_btn" class="flex-1 bg-green-600 py-3 rounded-xl font-bold hover:bg-green-700 transition">Withdraw</button>
                 </div>
             </form>
         </div>
@@ -94,10 +99,10 @@
 
     <!-- Bottom Nav -->
     <nav class="fixed bottom-0 w-full bg-gray-900/95 backdrop-blur border-t border-gray-800 flex justify-around py-3 z-50 pb-5">
-        <a href="/home" class="text-gray-500 hover:text-blue-500 flex flex-col items-center"><i class="fa-solid fa-house text-xl mb-1"></i><span class="text-[10px]">Home</span></a>
-        <a href="#" class="text-gray-500 hover:text-blue-500 flex flex-col items-center"><i class="fa-solid fa-fire text-xl mb-1"></i><span class="text-[10px]">Live</span></a>
-        <a href="/wallet" class="text-blue-500 flex flex-col items-center"><i class="fa-solid fa-wallet text-xl mb-1"></i><span class="text-[10px]">Wallet</span></a>
-        <a href="/profile" class="text-gray-500 hover:text-blue-500 flex flex-col items-center"><i class="fa-solid fa-user text-xl mb-1"></i><span class="text-[10px]">Profile</span></a>
+        <a href="/home" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Home</span></a>
+        <a href="#" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-fire text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Live</span></a>
+        <a href="/wallet" class="text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Wallet</span></a>
+        <a href="/profile" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-user text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Profile</span></a>
     </nav>
 
     <script>
@@ -117,39 +122,56 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    document.getElementById('balance').innerText = parseFloat(data.balance).toFixed(2);
+                    // Update Balance & LocalStorage
+                    const balance = parseFloat(data.balance);
+                    document.getElementById('balance').innerText = balance.toFixed(2);
+                    user.wallet_balance = balance;
+                    localStorage.setItem('user', JSON.stringify(user));
+
                     const list = document.getElementById('transactions');
                     
                     if (data.transactions && data.transactions.length > 0) {
                         list.innerHTML = data.transactions.map(t => {
-                            // ✅ COLOR LOGIC FIXED HERE
-                            const incomeTypes = ['Deposit', 'Admin Gift', 'Refund', 'Match Winnings', 'Bonus'];
+                            
+                            // ✅ SMART COLOR LOGIC
+                            // যে টাইপগুলো টাকা যোগ করে (Income)
+                            const incomeTypes = ['Deposit', 'Admin Gift', 'Refund', 'Match Winnings', 'Bonus', 'Refund (Kicked by Admin)', 'Refund (Withdraw Rejected)'];
+                            
                             const isIncome = incomeTypes.includes(t.type);
                             
                             const colorClass = isIncome ? 'text-green-400' : 'text-red-400';
                             const bgIconClass = isIncome ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500';
-                            const iconClass = isIncome ? 'fa-arrow-down' : 'fa-arrow-up';
+                            const iconClass = isIncome ? 'fa-arrow-down' : 'fa-arrow-up'; // টাকা আসলে Down, গেলে Up
                             const sign = isIncome ? '+' : '-';
 
+                            // তারিখ ফরম্যাট
+                            const date = new Date(t.created_at);
+                            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
                             return `
-                            <div class="flex justify-between items-center bg-gray-800 hover:bg-gray-750 p-3 rounded-xl border border-gray-700 transition">
+                            <div class="flex justify-between items-center bg-gray-800 hover:bg-gray-750 p-3 rounded-xl border border-gray-700 transition transaction-card">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 ${bgIconClass} rounded-full flex items-center justify-center">
                                         <i class="fa-solid ${iconClass} text-sm"></i>
                                     </div>
                                     <div>
                                         <p class="font-bold text-sm text-gray-200">${t.type}</p>
-                                        <p class="text-[10px] text-gray-500">${new Date(t.created_at).toLocaleString()}</p>
+                                        <p class="text-[10px] text-gray-500 font-mono">${dateStr} • ${timeStr}</p>
                                     </div>
                                 </div>
-                                <span class="font-bold ${colorClass} text-base">
+                                <span class="font-bold ${colorClass} text-base tracking-wide">
                                     ${sign}৳${parseFloat(t.amount).toFixed(2)}
                                 </span>
                             </div>
                             `;
                         }).join('');
                     } else {
-                        list.innerHTML = `<p class="text-center text-gray-500 mt-10">No transactions found.</p>`;
+                        list.innerHTML = `
+                            <div class="text-center py-10 opacity-50 border border-dashed border-gray-700 rounded-xl">
+                                <i class="fa-solid fa-receipt text-4xl mb-2 text-gray-600"></i>
+                                <p class="text-sm text-gray-400">No transactions found.</p>
+                            </div>`;
                     }
                 }
             } catch (e) { console.error(e); }
@@ -158,55 +180,67 @@
         async function submitDeposit(e) {
             e.preventDefault();
             const btn = document.getElementById('dep_btn');
-            btn.innerText = "...";
-            btn.disabled = true;
+            btn.innerText = "Processing..."; btn.disabled = true;
 
-            const res = await fetch('/api/user', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    type: 'deposit', 
-                    user_id: user.id, 
-                    amount: document.getElementById('dep_amount').value, 
-                    sender_number: document.getElementById('dep_sender').value, 
-                    trx_id: document.getElementById('dep_trx').value 
-                })
-            });
-            const data = await res.json();
-            alert(data.message || data.error);
-            if(data.success) { closeModal('depositModal'); loadWallet(); }
-            btn.innerText = "Submit";
-            btn.disabled = false;
+            try {
+                const res = await fetch('/api/user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        type: 'deposit', 
+                        user_id: user.id, 
+                        amount: document.getElementById('dep_amount').value, 
+                        sender_number: document.getElementById('dep_sender').value, 
+                        trx_id: document.getElementById('dep_trx').value 
+                    })
+                });
+                const data = await res.json();
+                if(data.success) { 
+                    alert("✅ Request Submitted!"); 
+                    closeModal('depositModal'); 
+                    document.getElementById('dep_amount').value = '';
+                    document.getElementById('dep_sender').value = '';
+                    document.getElementById('dep_trx').value = '';
+                    loadWallet(); 
+                } else { alert("❌ " + data.error); }
+            } catch(e) { alert("Network Error"); }
+            btn.innerText = "Submit Request"; btn.disabled = false;
         }
 
         async function submitWithdraw(e) {
             e.preventDefault();
             const btn = document.getElementById('wd_btn');
-            btn.innerText = "...";
-            btn.disabled = true;
+            btn.innerText = "Processing..."; btn.disabled = true;
 
-            const res = await fetch('/api/user', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
-                    type: 'withdraw', 
-                    user_id: user.id, 
-                    amount: document.getElementById('wd_amount').value, 
-                    method: document.getElementById('wd_method').value, 
-                    account_number: document.getElementById('wd_account').value 
-                })
-            });
-            const data = await res.json();
-            alert(data.message || data.error);
-            if(data.success) { closeModal('withdrawModal'); loadWallet(); }
-            btn.innerText = "Withdraw";
-            btn.disabled = false;
+            try {
+                const res = await fetch('/api/user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        type: 'withdraw', 
+                        user_id: user.id, 
+                        amount: document.getElementById('wd_amount').value, 
+                        method: document.getElementById('wd_method').value, 
+                        account_number: document.getElementById('wd_account').value 
+                    })
+                });
+                const data = await res.json();
+                if(data.success) { 
+                    alert("✅ Withdrawal Request Sent!"); 
+                    closeModal('withdrawModal'); 
+                    document.getElementById('wd_amount').value = '';
+                    document.getElementById('wd_account').value = '';
+                    loadWallet(); 
+                } else { alert("❌ " + data.error); }
+            } catch(e) { alert("Network Error"); }
+            btn.innerText = "Withdraw"; btn.disabled = false;
         }
 
         loadWallet();
         
+        // Copy Number Function
         document.querySelector('.select-all').addEventListener('click', function() {
-            navigator.clipboard.writeText(this.innerText).then(() => alert("Copied!"));
+            navigator.clipboard.writeText(this.innerText).then(() => alert("Number Copied!"));
         });
     </script>
 </body>
