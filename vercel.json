@@ -10,16 +10,19 @@
     { "source": "/api/auth", "destination": "/api/auth.js" },
     { "source": "/api/user", "destination": "/api/user.js" },
     { "source": "/api/admin", "destination": "/api/admin.js" },
-    
+    { "source": "/api/tournament", "destination": "/api/tournament.js" },
+
     { "source": "/admin", "destination": "/admin-dashboard.html" },
     { "source": "/admin-users", "destination": "/admin-users.html" },
     { "source": "/admin-deposits", "destination": "/admin-deposits.html" },
     { "source": "/admin-withdrawals", "destination": "/admin-withdrawals.html" },
     { "source": "/admin-categories", "destination": "/admin-categories.html" },
-    
+    { "source": "/admin-matches", "destination": "/admin-matches.html" },
+
     { "source": "/home", "destination": "/home.html" },
     { "source": "/signup", "destination": "/signup.html" },
     { "source": "/wallet", "destination": "/wallet.html" },
+    { "source": "/matches", "destination": "/matches.html" },
     
     { "source": "/", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/$1" }
