@@ -156,6 +156,18 @@ module.exports = async (req, res) => {
             `, [category_id, title, entry_fee, winning_prize, schedule_time, match_type, total_spots]);
             return res.status(200).json({ success: true });
         }
+        
+        if (type === 'edit_match') {
+            const { match_id, title, entry_fee, winning_prize, schedule_time, match_type, total_spots } = req.body;
+            
+            await db.execute(`
+                UPDATE tournaments 
+                SET title = ?, entry_fee = ?, winning_prize = ?, schedule_time = ?, match_type = ?, total_spots = ? 
+                WHERE id = ?
+            `, [title, entry_fee, winning_prize, schedule_time, match_type, total_spots, match_id]);
+
+            return res.status(200).json({ success: true, message: 'Match Updated' });
+        }
 
         if (type === 'delete_match') {
             await db.execute('DELETE FROM tournaments WHERE id = ?', [id]);
