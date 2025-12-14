@@ -1,9 +1,15 @@
 const db = require('../db');
 
 module.exports = async (req, res) => {
+    // 1. CORS এবং No Cache Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // ✅ ক্যাশ সমস্যা সমাধানের জন্য এই হেডারগুলো জরুরি
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -11,10 +17,10 @@ module.exports = async (req, res) => {
 
     try {
         // ============================
-        // 1. GET MATCHES (User View) - FIXED
+        // 1. GET MATCHES (User View)
         // ============================
         if (type === 'get_matches') {
-            // ইউজারের জয়েন স্ট্যাটাস চেক করার জন্য সাব-কুয়েরি ব্যবহার করা হচ্ছে
+            // রিয়েল-টাইম চেক: ইউজার জয়েন করেছে কিনা
             const [matches] = await db.execute(`
                 SELECT t.*, 
                 (SELECT COUNT(*) FROM participants p WHERE p.tournament_id = t.id) as joined_count,
@@ -28,31 +34,27 @@ module.exports = async (req, res) => {
         }
 
         // ============================
-        // 2. JOIN MATCH (Strict Duplicate Check)
+        // 2. JOIN MATCH (Strict Check)
         // ============================
         if (type === 'join_match') {
-            if (!game_name || !game_uid || !game_level) return res.status(400).json({ error: 'All fields required!' });
+            if (!game_name || !game_uid || !game_level) return res.status(400).json({ error: 'All fields are required!' });
             if (parseInt(game_level) < 40) return res.status(400).json({ error: 'Minimum Level 40 required!' });
 
-            // ১. চেক করুন ইউজার আগে জয়েন করেছে কিনা
-            const [checkJoin] = await db.execute('SELECT id FROM participants WHERE user_id = ? AND tournament_id = ?', [user_id, tournament_id]);
-            if (checkJoin.length > 0) {
-                return res.status(400).json({ error: 'You have already joined this match!' });
-            }
-
-            // ২. ম্যাচ এবং ইউজার ডাটা আনুন
             const [matchData] = await db.execute('SELECT entry_fee, total_spots FROM tournaments WHERE id = ?', [tournament_id]);
             if (matchData.length === 0) return res.status(404).json({ error: 'Match not found' });
-            
-            const match = matchData[0];
-            const [countJoin] = await db.execute('SELECT COUNT(*) as c FROM participants WHERE tournament_id = ?', [tournament_id]);
+
             const [userData] = await db.execute('SELECT wallet_balance FROM users WHERE id = ?', [user_id]);
+            const [checkJoin] = await db.execute('SELECT id FROM participants WHERE user_id = ? AND tournament_id = ?', [user_id, tournament_id]);
+            const [countJoin] = await db.execute('SELECT COUNT(*) as c FROM participants WHERE tournament_id = ?', [tournament_id]);
+
+            const match = matchData[0];
             const user = userData[0];
 
+            if (checkJoin.length > 0) return res.status(400).json({ error: 'Already Joined!' });
             if (countJoin[0].c >= match.total_spots) return res.status(400).json({ error: 'Match is Full!' });
             if (parseFloat(user.wallet_balance) < parseFloat(match.entry_fee)) return res.status(400).json({ error: 'Insufficient Balance!' });
 
-            // ৩. জয়েন প্রসেস
+            // জয়েন প্রসেস
             await db.execute('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?', [match.entry_fee, user_id]);
             
             await db.execute(
@@ -65,9 +67,12 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true, message: 'Joined Successfully' });
         }
 
-        // ... (get_room অংশ আগের মতোই থাকবে) ...
+        // ============================
+        // 3. GET ROOM
+        // ============================
         if (type === 'get_room') {
             const [check] = await db.execute('SELECT id FROM participants WHERE user_id = ? AND tournament_id = ?', [user_id, tournament_id]);
+            
             if (check.length > 0) {
                 const [room] = await db.execute('SELECT room_id, room_pass FROM tournaments WHERE id = ?', [tournament_id]);
                 return res.status(200).json(room[0]);
@@ -75,21 +80,36 @@ module.exports = async (req, res) => {
                 return res.status(403).json({ error: 'Not joined' });
             }
         }
+
         // ============================
-        // 4. GET MATCH RESULT (Fix Rank Keyword)
+        // 4. GET RESULTS (Leaderboard)
         // ============================
         if (type === 'get_result_board') {
-            const { tournament_id } = req.body;
-            
-            // ✅ FIX: `rank` শব্দটিতে ব্যাকটিক ব্যবহার করা হয়েছে
-            const [results] = await db.execute(`
-                SELECT in_game_name, kills, \`rank\`, prize_won 
-                FROM participants 
-                WHERE tournament_id = ? 
-                ORDER BY \`rank\` ASC, kills DESC
-            `, [tournament_id]);
-            
+            const [results] = await db.execute('SELECT in_game_name, kills, `rank`, prize_won FROM participants WHERE tournament_id = ? ORDER BY `rank` ASC, kills DESC', [tournament_id]);
             return res.status(200).json(results);
+        }
+
+        // ============================
+        // 5. OFFICIAL TOURNAMENT FEATURES
+        // ============================
+        if (type === 'register_team') {
+            const { user_id, tournament_id, team_name, whatsapp, p1, p2, p3, p4 } = req.body;
+            const [check] = await db.execute('SELECT id FROM official_teams WHERE user_id = ? AND tournament_id = ?', [user_id, tournament_id]);
+            if(check.length > 0) return res.status(400).json({ error: 'Already registered!' });
+
+            await db.execute('INSERT INTO official_teams (tournament_id, user_id, team_name, whatsapp_number, player1, player2, player3, player4) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [tournament_id, user_id, team_name, whatsapp, p1, p2, p3, p4]);
+            await db.execute('INSERT INTO points_table (tournament_id, team_name) VALUES (?, ?)', [tournament_id, team_name]);
+            return res.status(200).json({ success: true, message: 'Team Registered' });
+        }
+
+        if (type === 'get_points') {
+            const [points] = await db.execute('SELECT * FROM points_table WHERE tournament_id = ? ORDER BY total_points DESC', [req.body.tournament_id]);
+            return res.status(200).json(points);
+        }
+
+        if (type === 'get_teams') {
+            const [teams] = await db.execute('SELECT team_name, player1 FROM official_teams WHERE tournament_id = ? ORDER BY id DESC', [req.body.tournament_id]);
+            return res.status(200).json(teams);
         }
 
     } catch (error) {
