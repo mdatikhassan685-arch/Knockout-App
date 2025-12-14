@@ -2,9 +2,15 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 
 module.exports = async (req, res) => {
+    // 1. CORS & No Cache Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // ✅ ক্যাশ সমস্যা সমাধানের জন্য
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -37,7 +43,7 @@ module.exports = async (req, res) => {
             return res.status(200).json({ message: 'Signup Success! Please Login.' });
         }
 
-        // USER LOGIN (FIXED)
+        // USER LOGIN
         else if (type === 'login') {
             const [users] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
             
@@ -45,12 +51,11 @@ module.exports = async (req, res) => {
             
             const user = users[0];
 
-            // ✅ STATUS CHECK
+            // STATUS CHECK
             if (user.status === 'blocked') {
                 return res.status(403).json({ error: 'ACCOUNT BLOCKED! Contact Support.' });
             }
             if (user.status === 'suspended') {
-                 // Check if suspension time is over (Optional logic here)
                  return res.status(403).json({ error: 'Account Suspended temporarily.' });
             }
 
