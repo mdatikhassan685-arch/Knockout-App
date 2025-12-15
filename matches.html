@@ -240,30 +240,96 @@
 
         async function viewPlayers(id) {
             document.getElementById('playersListModal').style.display = 'flex';
+        async function viewPlayers(id) {
+            document.getElementById('playersListModal').style.display = 'flex';
             const container = document.getElementById('joined_players_list');
             container.innerHTML = '<div class="text-center mt-10"><i class="fa-solid fa-spinner fa-spin text-blue-500 text-2xl"></i><p class="text-gray-500 text-xs mt-2">Fetching players...</p></div>';
+
             try {
-                const res = await fetch('/api/tournament', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'get_result_board', tournament_id: id }) });
+                // আমরা 'get_result_board' এপিআই ব্যবহার করছি কারণ এটি team_members সহ সব ডাটা রিটার্ন করে
+                const res = await fetch('/api/tournament', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ type: 'get_result_board', tournament_id: id }) 
+                });
                 const data = await res.json();
+
                 if(data.length > 0) {
-                    container.innerHTML = data.map((p, i) => `
-                        <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mb-2 hover:bg-gray-800 transition shadow-sm">
-                            <div class="flex justify-between items-center mb-1">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-6 h-6 bg-gray-800 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-500">#${i+1}</div>
-                                    <span class="font-bold text-white text-sm tracking-wide break-words">${p.in_game_name}</span>
+                    container.innerHTML = data.map((p, i) => {
+                        // টিম মেম্বার পার্স করা
+                        let members = [];
+                        try {
+                            if (p.team_members) members = JSON.parse(p.team_members);
+                        } catch (e) {}
+
+                        // মেম্বার লিস্ট HTML
+                        let membersHTML = '';
+                        if (members.length > 0) {
+                            membersHTML = members.map((m, idx) => `
+                                <div class="flex justify-between items-center text-[10px] text-gray-400 bg-gray-800 p-2 rounded mt-1 ml-2 border-l-2 border-blue-500">
+                                    <div>
+                                        <p class="font-bold text-white">Player ${idx + 2}: ${m.name}</p>
+                                        <p>UID: ${m.uid} | Lvl: ${m.level}</p>
+                                    </div>
                                 </div>
-                                <span class="text-[10px] bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded border border-blue-500/30">Lvl: ${p.game_level}</span>
+                            `).join('');
+                        } else {
+                            membersHTML = '<p class="text-[10px] text-gray-500 ml-2 mt-1">No other members.</p>';
+                        }
+
+                        // কার্ড লজিক (সলো হলে একরকম, টিম হলে এক্সপান্ডেবল)
+                        const isTeam = members.length > 0;
+                        const expandIcon = isTeam ? `<i class="fa-solid fa-chevron-down text-gray-500 transition transform" id="icon_${i}"></i>` : '';
+                        const clickAction = isTeam ? `onclick="toggleTeamDetails(${i})"` : '';
+
+                        return `
+                        <div class="bg-gray-900 rounded-lg border border-gray-700 mb-2 overflow-hidden transition">
+                            
+                            <!-- Header (Clickable for Teams) -->
+                            <div ${clickAction} class="p-3 flex justify-between items-center ${isTeam ? 'cursor-pointer hover:bg-gray-800' : ''}">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-gray-500">#${i + 1}</span>
+                                        <span class="font-bold text-white text-sm">${p.team_name || p.in_game_name}</span>
+                                        ${isTeam ? '<span class="text-[8px] bg-blue-900 text-blue-300 px-1.5 rounded">TEAM</span>' : ''}
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-[10px] text-gray-400 font-mono select-all">UID: ${p.in_game_uid}</span>
+                                        <span class="text-[10px] bg-gray-700 text-gray-300 px-1.5 rounded">Lvl: ${p.game_level}</span>
+                                    </div>
+                                </div>
+                                <div>${expandIcon}</div>
                             </div>
-                            <div class="flex justify-between items-center border-t border-gray-700 pt-2 mt-2">
-                                <span class="text-[10px] text-gray-400 font-mono select-all tracking-wider">UID: ${p.in_game_uid}</span>
-                                <button onclick="copyText('${p.in_game_uid}')" class="text-gray-500 hover:text-white transition"><i class="fa-regular fa-copy"></i></button>
+
+                            <!-- Hidden Team Details -->
+                            <div id="details_${i}" class="hidden p-2 bg-gray-800/30 border-t border-gray-700">
+                                <p class="text-[9px] text-gray-500 uppercase font-bold mb-1">Squad Members</p>
+                                ${membersHTML}
                             </div>
-                        </div>`).join('');
-                } else { container.innerHTML = '<div class="text-center text-gray-500 mt-10"><i class="fa-solid fa-users-slash text-3xl mb-2"></i><p>No players joined yet.</p></div>'; }
-            } catch(e) { container.innerHTML = '<p class="text-center text-red-500 mt-5">Error fetching data</p>'; }
+                        </div>`;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div class="text-center text-gray-500 mt-10"><i class="fa-solid fa-users-slash text-3xl mb-2"></i><p>No players joined yet.</p></div>';
+                }
+            } catch(e) { 
+                console.error(e);
+                container.innerHTML = '<p class="text-center text-red-500 mt-5">Error fetching data</p>'; 
+            }
         }
 
+        // Expand/Collapse Function
+        function toggleTeamDetails(id) {
+            const details = document.getElementById(`details_${id}`);
+            const icon = document.getElementById(`icon_${id}`);
+            
+            if (details.classList.contains('hidden')) {
+                details.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                details.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+                                    }
         async function viewResult(id) { document.getElementById('resultViewModal').style.display = 'flex'; const container = document.getElementById('result_list'); container.innerHTML = '<div class="text-center mt-10"><i class="fa-solid fa-spinner fa-spin text-blue-500 text-2xl"></i><p class="text-gray-500 text-xs mt-2">Loading Results...</p></div>'; try { const res = await fetch('/api/tournament', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'get_result_board', tournament_id: id }) }); const data = await res.json(); if(data.length > 0) { container.innerHTML = data.map((r, i) => `<div class="bg-gray-900 p-3 rounded-lg border border-gray-700 grid grid-cols-4 items-center mb-2"><div class="font-bold ${r.rank === 1 ? 'text-yellow-400' : 'text-white'}">#${r.rank || '-'}</div><div class="text-xs text-gray-300 break-words leading-tight pr-1">${r.in_game_name}</div><div class="text-center text-xs font-bold text-blue-400">${r.kills}</div><div class="text-right text-xs font-bold text-green-400">${parseFloat(r.prize_won) > 0 ? '৳'+r.prize_won : '-'}</div></div>`).join(''); } else { container.innerHTML = '<div class="text-center text-gray-500 mt-10">Results pending.</div>'; } } catch(e) { container.innerHTML = 'Error'; } }
         
         function copyText(text) { navigator.clipboard.writeText(text).then(() => showAlert("Copied!", "Copied to clipboard", "success")); }
