@@ -119,6 +119,9 @@ module.exports = async (req, res) => {
                 ORDER BY \`rank\` ASC, kills DESC
             `, [req.body.tournament_id]);
             
-            return res.status(200).json(results);
-        }
+            
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: error.message });
+    }
 };
