@@ -6,43 +6,37 @@
     <title>Knockout Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+    </style>
 </head>
 <body class="bg-gray-900 text-white font-sans pb-20">
 
-    <!-- Header -->
     <header class="p-4 bg-gray-800 shadow-md flex justify-between items-center sticky top-0 z-50">
         <div class="text-xl font-bold text-red-500">ADMIN PANEL</div>
         <button onclick="logout()" class="bg-red-600 px-3 py-1 rounded text-sm font-bold">Logout</button>
     </header>
 
-    <!-- Stats Grid -->
     <div class="p-4 grid grid-cols-2 gap-4">
-        <!-- Users -->
         <div class="bg-gray-800 p-4 rounded-xl border-l-4 border-blue-500 shadow-lg">
             <p class="text-gray-400 text-xs uppercase font-bold">Total Users</p>
             <h2 class="text-2xl font-bold mt-1" id="total_users">...</h2>
         </div>
-
-        <!-- Pending Deposits -->
         <div onclick="window.location.href='/admin-deposits'" class="bg-gray-800 p-4 rounded-xl border-l-4 border-yellow-500 shadow-lg cursor-pointer active:scale-95 transition hover:bg-gray-700">
             <p class="text-gray-400 text-xs uppercase font-bold flex justify-between">Deposits <i class="fa-solid fa-chevron-right text-xs"></i></p>
             <h2 class="text-2xl font-bold mt-1 text-yellow-400" id="pending_deposits">...</h2>
         </div>
-
-        <!-- Tournaments -->
         <div class="bg-gray-800 p-4 rounded-xl border-l-4 border-purple-500 shadow-lg">
             <p class="text-gray-400 text-xs uppercase font-bold">Tournaments</p>
             <h2 class="text-2xl font-bold mt-1" id="total_tournaments">0</h2>
         </div>
-
-        <!-- Withdrawals -->
         <div onclick="window.location.href='/admin-withdrawals'" class="bg-gray-800 p-4 rounded-xl border-l-4 border-red-500 shadow-lg cursor-pointer active:scale-95 transition hover:bg-gray-700">
             <p class="text-gray-400 text-xs uppercase font-bold flex justify-between">Withdrawals <i class="fa-solid fa-chevron-right text-xs"></i></p>
             <h2 class="text-2xl font-bold mt-1 text-red-400" id="pending_withdraws">...</h2>
         </div>
     </div>
 
-    <!-- Quick Actions -->
     <div class="p-4">
         <h3 class="font-bold text-lg mb-3 border-l-4 border-gray-500 pl-2">Quick Actions</h3>
         <div class="grid grid-cols-2 gap-3">
@@ -54,9 +48,7 @@
                 <i class="fa-solid fa-users text-2xl mb-1"></i>
                 <span class="text-xs font-bold mt-1">Manage Users</span>
             </button>
-            
-            <!-- ✅ NEW: App Settings Button -->
-            <button onclick="openSettings()" class="bg-purple-600 p-3 rounded-lg flex flex-col items-center justify-center h-24 hover:bg-purple-700 transition">
+            <button onclick="openSettings()" class="bg-purple-600 p-3 rounded-lg flex flex-col items-center justify-center h-24 hover:bg-purple-700 transition col-span-2">
                 <i class="fa-solid fa-sliders text-2xl mb-1"></i>
                 <span class="text-xs font-bold mt-1">App Settings</span>
             </button>
@@ -65,24 +57,23 @@
 
     <!-- SETTINGS MODAL -->
     <div id="settingsModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
-        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl">
-            <h3 class="text-xl font-bold mb-4 text-white">App Settings</h3>
+        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-600 shadow-2xl h-[85vh] flex flex-col">
+            <h3 class="text-xl font-bold mb-4 text-white border-b border-gray-600 pb-2">App Settings</h3>
             
-            <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">YouTube Link</label>
-            <input type="text" id="set_youtube" class="w-full bg-gray-900 p-2.5 rounded-lg mb-3 border border-gray-600 text-white outline-none focus:border-purple-500">
+            <div class="overflow-y-auto flex-1 space-y-3 pr-2 custom-scroll">
+                <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">YouTube Link</label><input type="text" id="set_youtube" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
+                <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">Telegram Link</label><input type="text" id="set_telegram" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
+                <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">WhatsApp Number</label><input type="text" id="set_whatsapp" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
+                <div><label class="text-[10px] text-yellow-400 uppercase font-bold ml-1">Announcement</label><textarea id="set_announcement" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-yellow-500"></textarea></div>
+                <div><label class="text-[10px] text-red-400 uppercase font-bold ml-1">Notification</label><textarea id="set_notification" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-red-500"></textarea></div>
+                <div><label class="text-[10px] text-green-400 uppercase font-bold ml-1">About Us</label><textarea id="set_about" rows="3" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-green-500"></textarea></div>
+                <div><label class="text-[10px] text-green-400 uppercase font-bold ml-1">Privacy Policy</label><textarea id="set_policy" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-green-500"></textarea></div>
+                <div><label class="text-[10px] text-gray-400 uppercase font-bold ml-1">App Version</label><input type="text" id="set_version" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-gray-500"></div>
+            </div>
 
-            <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Telegram Link</label>
-            <input type="text" id="set_telegram" class="w-full bg-gray-900 p-2.5 rounded-lg mb-3 border border-gray-600 text-white outline-none focus:border-purple-500">
-
-            <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">WhatsApp Number</label>
-            <input type="text" id="set_whatsapp" class="w-full bg-gray-900 p-2.5 rounded-lg mb-3 border border-gray-600 text-white outline-none focus:border-purple-500">
-            
-            <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">App Version</label>
-            <input type="text" id="set_version" class="w-full bg-gray-900 p-2.5 rounded-lg mb-5 border border-gray-600 text-white outline-none focus:border-purple-500">
-
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('settingsModal').style.display='none'" class="flex-1 bg-gray-700 py-2.5 rounded-lg font-bold hover:bg-gray-600">Cancel</button>
-                <button onclick="saveSettings()" class="flex-1 bg-purple-600 py-2.5 rounded-lg font-bold hover:bg-purple-700">Save</button>
+            <div class="flex gap-3 mt-4">
+                <button onclick="document.getElementById('settingsModal').style.display='none'" class="flex-1 bg-gray-700 py-3 rounded-lg font-bold hover:bg-gray-600">Cancel</button>
+                <button onclick="saveSettings()" class="flex-1 bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-700">Save</button>
             </div>
         </div>
     </div>
@@ -93,33 +84,27 @@
 
         async function loadStats() {
             try {
-                const res = await fetch('/api/admin', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'dashboard_stats' })
-                });
+                const res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'dashboard_stats' }) });
                 const data = await res.json();
-                
                 document.getElementById('total_users').innerText = data.total_users;
                 document.getElementById('pending_deposits').innerText = data.pending_deposits;
                 document.getElementById('pending_withdraws').innerText = data.pending_withdraws;
                 document.getElementById('total_tournaments').innerText = data.total_tournaments;
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
-        // --- SETTINGS LOGIC ---
         async function openSettings() {
             document.getElementById('settingsModal').style.display = 'flex';
             try {
-                const res = await fetch('/api/admin', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'get_settings' })
-                });
+                const res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'get_settings' }) });
                 const data = await res.json();
-                
                 document.getElementById('set_youtube').value = data.youtube_link || '';
                 document.getElementById('set_telegram').value = data.telegram_link || '';
                 document.getElementById('set_whatsapp').value = data.whatsapp_number || '';
+                document.getElementById('set_announcement').value = data.announcement || '';
+                document.getElementById('set_notification').value = data.notification_msg || '';
+                document.getElementById('set_about').value = data.about_us || '';
+                document.getElementById('set_policy').value = data.privacy_policy || '';
                 document.getElementById('set_version').value = data.app_version || '1.0.0';
             } catch(e) {}
         }
@@ -128,24 +113,24 @@
             const youtube = document.getElementById('set_youtube').value;
             const telegram = document.getElementById('set_telegram').value;
             const whatsapp = document.getElementById('set_whatsapp').value;
+            const announcement = document.getElementById('set_announcement').value;
+            const notification = document.getElementById('set_notification').value;
+            const about = document.getElementById('set_about').value;
+            const policy = document.getElementById('set_policy').value;
             const version = document.getElementById('set_version').value;
 
             try {
                 const res = await fetch('/api/admin', {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'update_settings', youtube, telegram, whatsapp, version })
+                    body: JSON.stringify({ type: 'update_settings', youtube, telegram, whatsapp, version, announcement, notification, about, policy })
                 });
                 const data = await res.json();
                 if(data.success) { alert("Settings Updated!"); document.getElementById('settingsModal').style.display = 'none'; }
-                else { alert("Error updating settings"); }
+                else { alert("Error"); }
             } catch(e) { alert("Network Error"); }
         }
 
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = '/';
-        }
-
+        function logout() { localStorage.removeItem('user'); window.location.href = '/'; }
         loadStats();
     </script>
 </body>
