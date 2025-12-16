@@ -49,20 +49,40 @@ module.exports = async (req, res) => {
 
             return res.status(200).json({ success: true, message: 'Settings Updated!' });
         }
+                // =======================
+        // 🔔 ADVANCED NOTIFICATION
         // =======================
-        // 🔔 NOTIFICATION MANAGEMENT
-        // =======================
-        if (type === 'add_notification') {
-            const { title, message } = req.body;
-            await db.execute('INSERT INTO notifications (title, message) VALUES (?, ?)', [title, message]);
-            return res.status(200).json({ success: true, message: 'Notification Sent!' });
-        }
         
-        if (type === 'delete_notification') {
-            const { id } = req.body;
-            await db.execute('DELETE FROM notifications WHERE id = ?', [id]);
-            return res.status(200).json({ success: true });
+        // ১. ইউজার সার্চ করা (ID বা Name দিয়ে)
+        if (type === 'search_users_for_noti') {
+            const { query } = req.body;
+            // নাম অথবা আইডি দিয়ে খুঁজবে
+            const [users] = await db.execute(
+                `SELECT id, username, email FROM users WHERE username LIKE ? OR id LIKE ? LIMIT 5`, 
+                [`%${query}%`, `%${query}%`]
+            );
+            return res.status(200).json(users);
         }
+
+        // ২. নোটিফিকেশন পাঠানো
+        if (type === 'send_notification') {
+            const { title, message, target_users, send_to_all } = req.body;
+            
+            if (send_to_all) {
+                // সবার জন্য (Global)
+                await db.execute('INSERT INTO notifications (title, message, user_id) VALUES (?, ?, NULL)', [title, message]);
+            } else {
+                // নির্দিষ্ট ইউজারদের জন্য (Loop Insert)
+                if (target_users && target_users.length > 0) {
+                    for (let uid of target_users) {
+                        await db.execute('INSERT INTO notifications (title, message, user_id) VALUES (?, ?, ?)', [title, message, uid]);
+                    }
+                } else {
+                    return res.status(400).json({ error: 'Select at least one user or choose Send to All' });
+                }
+            }
+            return res.status(200).json({ success: true, message: 'Notification Sent!' });
+                                 }
 
         // ==========================================
         // 📊 DASHBOARD STATS
