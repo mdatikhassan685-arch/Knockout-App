@@ -24,6 +24,7 @@
     { "source": "/wallet", "destination": "/wallet.html" },
     { "source": "/matches", "destination": "/matches.html" },
     { "source": "/profile", "destination": "/profile.html" },
+    { "source": "/leaderboard", "destination": "/leaderboard.html" },
     
     { "source": "/", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/$1" }
