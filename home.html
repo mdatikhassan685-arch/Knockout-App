@@ -31,8 +31,9 @@
                 <i class="fa-solid fa-coins text-yellow-400"></i>
                 <span class="text-yellow-400 font-bold text-sm">৳ <span id="balance">...</span></span>
             </a>
-            <!-- NOTIFICATION BUTTON -->
-            <button id="notification_btn" class="relative w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 hover:text-white text-gray-400 transition">
+            
+            <!-- NOTIFICATION BUTTON (Direct Link Setup) -->
+            <button onclick="window.location.href='/notifications'" class="relative w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 hover:text-white text-gray-400 transition active:scale-90">
                 <i class="fa-regular fa-bell text-xl"></i>
                 <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-gray-800 animate-pulse"></span>
             </button>
@@ -107,29 +108,6 @@
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) window.location.href = '/';
 
-        // Notification Modal (Custom)
-        function showNoti(message) {
-            const existing = document.getElementById('notiModal');
-            if(existing) existing.remove();
-
-            const html = `
-                <div id="notiModal" class="fixed inset-0 bg-black/90 z-[100] p-4 backdrop-blur-sm flex items-center justify-center">
-                    <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs border border-gray-600 text-center shadow-2xl relative animate-bounce">
-                        <div class="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="fa-solid fa-bell text-3xl text-red-500"></i>
-                        </div>
-                        <h3 class="text-lg font-bold mb-2 text-white">Notification</h3>
-                        <p class="text-xs text-gray-300 mb-5 leading-relaxed">${message}</p>
-                        
-                        <div class="flex gap-2">
-                            <button onclick="window.location.href='/notifications'" class="flex-1 bg-gray-700 py-2.5 rounded-xl font-bold hover:bg-gray-600 text-sm">View All</button>
-                            <button onclick="document.getElementById('notiModal').remove()" class="flex-1 bg-blue-600 py-2.5 rounded-xl font-bold hover:bg-blue-700 text-sm">Okay</button>
-                        </div>
-                    </div>
-                </div>`;
-            document.body.insertAdjacentHTML('beforeend', html);
-        }
-
         async function loadHomeData() {
             try {
                 const res = await fetch('/api/user', {
@@ -141,19 +119,17 @@
                 if (!res.ok) return;
                 const data = await res.json();
 
+                // Balance Sync
                 if (data.wallet !== undefined) {
                     document.getElementById('balance').innerText = parseFloat(data.wallet).toFixed(2);
                     user.wallet_balance = parseFloat(data.wallet);
                     localStorage.setItem('user', JSON.stringify(user));
                 }
                 
+                // Announcement
                 if(data.announcement) document.getElementById('announcement').innerText = data.announcement;
-                
-                // NOTIFICATION CLICK EVENT
-                const notiBtn = document.getElementById('notification_btn');
-                notiBtn.onclick = () => showNoti(data.notification_msg || "No new important notifications.");
 
-                // BANNERS
+                // Banners
                 const bannerContainer = document.getElementById('banners');
                 if (data.banners && data.banners.length > 0) {
                     bannerContainer.innerHTML = data.banners.map(b => 
@@ -161,9 +137,11 @@
                             <img src="${b.image}" class="w-full h-full object-cover">
                         </div>`
                     ).join('');
-                } else { bannerContainer.innerHTML = `<div class="w-full h-24 flex items-center justify-center text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">No Offers Active</div>`; }
+                } else {
+                    bannerContainer.innerHTML = `<div class="w-full h-24 flex items-center justify-center text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">No Offers Active</div>`;
+                }
 
-                // CATEGORIES
+                // Categories
                 const officialList = document.getElementById('official_list');
                 const normalList = document.getElementById('normal_list');
 
@@ -171,6 +149,7 @@
                     const officialData = data.categories.filter(c => c.type === 'official');
                     const normalData = data.categories.filter(c => !c.type || c.type === 'normal');
 
+                    // Official (Big)
                     if(officialData.length > 0) {
                         officialList.innerHTML = officialData.map(c => `
                             <div onclick="window.location.href='/tournament-details?cat_id=${c.id}&name=${c.title}'" class="relative w-full h-48 bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-700 active:scale-95 transition cursor-pointer">
@@ -184,6 +163,7 @@
                         `).join('');
                     } else { officialList.innerHTML = '<p class="text-gray-500 text-sm">No official tournaments.</p>'; }
 
+                    // Daily (Grid)
                     if(normalData.length > 0) {
                         normalList.innerHTML = normalData.map(c => `
                             <div onclick="window.location.href='/matches?cat_id=${c.id}&name=${c.title}'" class="relative w-full h-36 bg-gray-800 rounded-xl overflow-hidden shadow-md border border-gray-700/50 active:scale-95 transition cursor-pointer group">
@@ -195,10 +175,12 @@
                             </div>
                         `).join('');
                     } else { normalList.innerHTML = '<p class="text-gray-500 text-xs col-span-3 text-center">No regular matches.</p>'; }
+
                 } else {
                     officialList.innerHTML = '<p class="text-gray-500 text-sm">No data found.</p>';
                     normalList.innerHTML = '';
                 }
+
             } catch (err) { console.error(err); }
         }
 
