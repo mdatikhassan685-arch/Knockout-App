@@ -26,6 +26,7 @@
     { "source": "/profile", "destination": "/profile.html" },
     { "source": "/leaderboard", "destination": "/leaderboard.html" },
     { "source": "/support", "destination": "/support.html" },
+    { "source": "/menu", "destination": "/menu.html" },
     
     { "source": "/", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/$1" }
