@@ -9,9 +9,8 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         .glass { background: rgba(31, 41, 55, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .rank-1 { background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); color: black; border: none; }
-        .rank-2 { background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%); color: black; border: none; }
-        .rank-3 { background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%); color: black; border: none; }
+        .active-tab { background: #3b82f6; color: white; border: none; }
+        .inactive-tab { background: rgba(55, 65, 81, 0.5); color: #9ca3af; border: 1px solid #4b5563; }
     </style>
 </head>
 <body class="bg-[#0f172a] text-white pb-24 select-none">
@@ -22,8 +21,15 @@
         <div class="text-xl font-black uppercase tracking-widest italic text-yellow-500">Top Players</div>
     </header>
 
-    <!-- Top 3 Podium (Visual) -->
-    <div class="pt-8 pb-4 flex justify-center items-end gap-3 px-4">
+    <!-- TABS -->
+    <div class="flex justify-center gap-2 p-4 sticky top-16 z-40 bg-[#0f172a]/95">
+        <button onclick="switchTab('earners')" id="tab_earners" class="active-tab px-4 py-2 rounded-full text-xs font-bold transition active:scale-95 shadow-lg">💰 Earnings</button>
+        <button onclick="switchTab('killers')" id="tab_killers" class="inactive-tab px-4 py-2 rounded-full text-xs font-bold transition active:scale-95 shadow-lg">🔥 Kills</button>
+        <button onclick="switchTab('depositors')" id="tab_depositors" class="inactive-tab px-4 py-2 rounded-full text-xs font-bold transition active:scale-95 shadow-lg">💎 Deposit</button>
+    </div>
+
+    <!-- Top 3 Podium (Dynamic) -->
+    <div class="pt-4 pb-4 flex justify-center items-end gap-3 px-4" id="podium_view">
         <!-- Rank 2 -->
         <div class="flex flex-col items-center">
             <div class="w-16 h-16 rounded-full border-2 border-gray-400 bg-gray-800 flex items-center justify-center relative overflow-hidden shadow-lg">
@@ -31,7 +37,7 @@
                 <div class="absolute bottom-0 w-full bg-gray-400 text-[10px] text-black text-center font-bold">#2</div>
             </div>
             <p class="text-xs font-bold mt-2 truncate w-20 text-center" id="name_2">...</p>
-            <p class="text-[10px] text-green-400 font-bold" id="won_2">...</p>
+            <p class="text-[10px] text-green-400 font-bold" id="val_2">...</p>
         </div>
 
         <!-- Rank 1 (Big) -->
@@ -42,7 +48,7 @@
                 <div class="absolute bottom-0 w-full bg-yellow-400 text-[10px] text-black text-center font-bold">#1</div>
             </div>
             <p class="text-sm font-bold mt-2 text-yellow-400 truncate w-24 text-center" id="name_1">Loading...</p>
-            <p class="text-xs text-green-400 font-bold" id="won_1">...</p>
+            <p class="text-xs text-green-400 font-bold" id="val_1">...</p>
         </div>
 
         <!-- Rank 3 -->
@@ -52,14 +58,13 @@
                 <div class="absolute bottom-0 w-full bg-[#CD7F32] text-[10px] text-black text-center font-bold">#3</div>
             </div>
             <p class="text-xs font-bold mt-2 truncate w-20 text-center" id="name_3">...</p>
-            <p class="text-[10px] text-green-400 font-bold" id="won_3">...</p>
+            <p class="text-[10px] text-green-400 font-bold" id="val_3">...</p>
         </div>
     </div>
 
     <!-- List (Rank 4-10) -->
     <div class="px-4 mt-4 space-y-3" id="leaderboard_list">
         <!-- Skeleton Loaders -->
-        <div class="h-14 bg-gray-800 rounded-xl animate-pulse"></div>
         <div class="h-14 bg-gray-800 rounded-xl animate-pulse"></div>
         <div class="h-14 bg-gray-800 rounded-xl animate-pulse"></div>
     </div>
@@ -73,6 +78,8 @@
     </nav>
 
     <script>
+        let allData = {};
+
         async function loadLeaderboard() {
             try {
                 const res = await fetch('/api/user', {
@@ -80,37 +87,66 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ type: 'leaderboard' })
                 });
-                const players = await res.json();
-                
-                // Top 3 Set (Podium)
-                if(players[0]) { document.getElementById('name_1').innerText = players[0].username; document.getElementById('won_1').innerText = '৳'+parseFloat(players[0].total_won).toFixed(0); }
-                if(players[1]) { document.getElementById('name_2').innerText = players[1].username; document.getElementById('won_2').innerText = '৳'+parseFloat(players[1].total_won).toFixed(0); }
-                if(players[2]) { document.getElementById('name_3').innerText = players[2].username; document.getElementById('won_3').innerText = '৳'+parseFloat(players[2].total_won).toFixed(0); }
-
-                // Rest List (4-10)
-                const list = document.getElementById('leaderboard_list');
-                const restPlayers = players.slice(3);
-
-                if(restPlayers.length > 0) {
-                    list.innerHTML = restPlayers.map((p, i) => `
-                        <div class="glass p-3 rounded-xl flex items-center justify-between transition active:scale-95">
-                            <div class="flex items-center gap-4">
-                                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-bold text-gray-400 text-sm">#${i + 4}</div>
-                                <div>
-                                    <p class="font-bold text-sm text-white">${p.username}</p>
-                                    <p class="text-[10px] text-gray-400">${p.total_kills} Kills</p>
-                                </div>
-                            </div>
-                            <p class="text-sm font-bold text-green-400">৳${parseFloat(p.total_won).toFixed(0)}</p>
-                        </div>
-                    `).join('');
-                } else {
-                    list.innerHTML = `<p class="text-center text-gray-500 text-xs mt-4">No more players.</p>`;
-                }
-
+                allData = await res.json();
+                switchTab('earners'); // Default Load
             } catch(e) { console.error(e); }
         }
+
+        function switchTab(type) {
+            // Tab Style Update
+            ['earners', 'killers', 'depositors'].forEach(t => {
+                const btn = document.getElementById('tab_' + t);
+                if(t === type) {
+                    btn.className = "active-tab px-4 py-2 rounded-full text-xs font-bold transition active:scale-95 shadow-lg";
+                } else {
+                    btn.className = "inactive-tab px-4 py-2 rounded-full text-xs font-bold transition active:scale-95 shadow-lg";
+                }
+            });
+
+            renderData(allData[type], type);
+        }
+
+        function renderData(players, type) {
+            // Format Helper
+            const format = (val) => {
+                if(type === 'killers') return val + " Kills";
+                return "৳" + parseFloat(val).toFixed(0);
+            };
+
+            // Reset UI
+            document.getElementById('name_1').innerText = "..."; document.getElementById('val_1').innerText = "";
+            document.getElementById('name_2').innerText = "..."; document.getElementById('val_2').innerText = "";
+            document.getElementById('name_3').innerText = "..."; document.getElementById('val_3').innerText = "";
+            document.getElementById('leaderboard_list').innerHTML = "";
+
+            if(!players || players.length === 0) {
+                document.getElementById('leaderboard_list').innerHTML = `<p class="text-center text-gray-500 text-xs mt-10">No data available.</p>`;
+                return;
+            }
+
+            // Top 3 Podium
+            if(players[0]) { document.getElementById('name_1').innerText = players[0].username; document.getElementById('val_1').innerText = format(players[0].value); }
+            if(players[1]) { document.getElementById('name_2').innerText = players[1].username; document.getElementById('val_2').innerText = format(players[1].value); }
+            if(players[2]) { document.getElementById('name_3').innerText = players[2].username; document.getElementById('val_3').innerText = format(players[2].value); }
+
+            // Rest List (4-10)
+            const restPlayers = players.slice(3);
+            const list = document.getElementById('leaderboard_list');
+
+            if(restPlayers.length > 0) {
+                list.innerHTML = restPlayers.map((p, i) => `
+                    <div class="glass p-3 rounded-xl flex items-center justify-between transition active:scale-95">
+                        <div class="flex items-center gap-4">
+                            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center font-bold text-gray-400 text-sm">#${i + 4}</div>
+                            <p class="font-bold text-sm text-white">${p.username}</p>
+                        </div>
+                        <p class="text-sm font-bold text-green-400">${format(p.value)}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
         loadLeaderboard();
     </script>
 </body>
-          </html>
+</html>
