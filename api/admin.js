@@ -24,6 +24,41 @@ module.exports = async (req, res) => {
     } = req.body;
 
     try {
+                // =======================
+        // ⚙️ SETTINGS MANAGEMENT (Key-Value Fixed)
+        // =======================
+        if (type === 'get_settings') {
+            const [rows] = await db.execute('SELECT * FROM settings');
+            
+            // ডাটাবেস থেকে পাওয়া অ্যারে কে অবজেক্ট এ রূপান্তর করা হচ্ছে
+            const settings = {};
+            rows.forEach(row => {
+                settings[row.setting_key] = row.setting_value;
+            });
+
+            return res.status(200).json(settings);
+        }
+
+        if (type === 'update_settings') {
+            const { youtube, telegram, whatsapp, version, policy } = req.body;
+
+            // আপসেন্ট (Upsert) লজিক: থাকলে আপডেট, না থাকলে ইনসার্ট
+            const queries = [
+                `INSERT INTO settings (setting_key, setting_value) VALUES ('youtube_link', ?) ON DUPLICATE KEY UPDATE setting_value = ?`,
+                `INSERT INTO settings (setting_key, setting_value) VALUES ('telegram_link', ?) ON DUPLICATE KEY UPDATE setting_value = ?`,
+                `INSERT INTO settings (setting_key, setting_value) VALUES ('whatsapp_number', ?) ON DUPLICATE KEY UPDATE setting_value = ?`,
+                `INSERT INTO settings (setting_key, setting_value) VALUES ('app_version', ?) ON DUPLICATE KEY UPDATE setting_value = ?`,
+                `INSERT INTO settings (setting_key, setting_value) VALUES ('privacy_policy', ?) ON DUPLICATE KEY UPDATE setting_value = ?`
+            ];
+
+            await db.execute(queries[0], [youtube, youtube]);
+            await db.execute(queries[1], [telegram, telegram]);
+            await db.execute(queries[2], [whatsapp, whatsapp]);
+            await db.execute(queries[3], [version, version]);
+            await db.execute(queries[4], [policy, policy]);
+
+            return res.status(200).json({ success: true, message: 'Settings Updated!' });
+        }
         // ==========================================
         // 📊 DASHBOARD STATS
         // ==========================================
