@@ -41,7 +41,7 @@
                     <i class="fa-solid fa-arrow-down text-xl"></i>
                 </div>
                 <span class="font-bold text-sm text-gray-300">Withdraw</span>
-            </button>
+            </div>
         </div>
     </div>
 
@@ -97,12 +97,29 @@
         </div>
     </div>
 
-    <!-- Bottom Nav -->
-    <nav class="fixed bottom-0 w-full bg-gray-900/95 backdrop-blur border-t border-gray-800 flex justify-around py-3 z-50 pb-5">
-        <a href="/home" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Home</span></a>
-        <a href="#" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-fire text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Live</span></a>
-        <a href="/wallet" class="text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Wallet</span></a>
-        <a href="/profile" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-user text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Profile</span></a>
+    <!-- ✅ BOTTOM NAVIGATION (UPDATED) -->
+    <nav class="fixed bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-gray-800 flex justify-around py-3 z-50 pb-6">
+        <a href="/home" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
+            <i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i>
+            <span class="text-[10px]">Home</span>
+        </a>
+        <a href="/support" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
+            <i class="fa-solid fa-headset text-xl mb-1 group-active:scale-90"></i>
+            <span class="text-[10px]">Support</span>
+        </a>
+        <!-- Active Wallet Tab -->
+        <a href="/wallet" class="text-blue-500 flex flex-col items-center group transition">
+            <i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90"></i>
+            <span class="text-[10px] font-bold">Wallet</span>
+        </a>
+        <a href="/profile" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
+            <i class="fa-solid fa-user text-xl mb-1 group-active:scale-90"></i>
+            <span class="text-[10px]">Profile</span>
+        </a>
+        <a href="/menu" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
+            <i class="fa-solid fa-bars text-xl mb-1 group-active:scale-90"></i>
+            <span class="text-[10px]">Menu</span>
+        </a>
     </nav>
 
     <script>
@@ -122,7 +139,6 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    // Update Balance & LocalStorage
                     const balance = parseFloat(data.balance);
                     document.getElementById('balance').innerText = balance.toFixed(2);
                     user.wallet_balance = balance;
@@ -132,19 +148,13 @@
                     
                     if (data.transactions && data.transactions.length > 0) {
                         list.innerHTML = data.transactions.map(t => {
-                            
-                            // ✅ SMART COLOR LOGIC
-                            // যে টাইপগুলো টাকা যোগ করে (Income)
                             const incomeTypes = ['Deposit', 'Admin Gift', 'Refund', 'Match Winnings', 'Bonus', 'Refund (Kicked by Admin)', 'Refund (Withdraw Rejected)'];
-                            
                             const isIncome = incomeTypes.includes(t.type);
-                            
                             const colorClass = isIncome ? 'text-green-400' : 'text-red-400';
                             const bgIconClass = isIncome ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500';
-                            const iconClass = isIncome ? 'fa-arrow-down' : 'fa-arrow-up'; // টাকা আসলে Down, গেলে Up
+                            const iconClass = isIncome ? 'fa-arrow-down' : 'fa-arrow-up';
                             const sign = isIncome ? '+' : '-';
 
-                            // তারিখ ফরম্যাট
                             const date = new Date(t.created_at);
                             const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                             const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -167,11 +177,7 @@
                             `;
                         }).join('');
                     } else {
-                        list.innerHTML = `
-                            <div class="text-center py-10 opacity-50 border border-dashed border-gray-700 rounded-xl">
-                                <i class="fa-solid fa-receipt text-4xl mb-2 text-gray-600"></i>
-                                <p class="text-sm text-gray-400">No transactions found.</p>
-                            </div>`;
+                        list.innerHTML = `<div class="text-center py-10 opacity-50 border border-dashed border-gray-700 rounded-xl"><i class="fa-solid fa-receipt text-4xl mb-2 text-gray-600"></i><p class="text-sm text-gray-400">No transactions found.</p></div>`;
                     }
                 }
             } catch (e) { console.error(e); }
@@ -184,25 +190,12 @@
 
             try {
                 const res = await fetch('/api/user', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        type: 'deposit', 
-                        user_id: user.id, 
-                        amount: document.getElementById('dep_amount').value, 
-                        sender_number: document.getElementById('dep_sender').value, 
-                        trx_id: document.getElementById('dep_trx').value 
-                    })
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'deposit', user_id: user.id, amount: document.getElementById('dep_amount').value, sender_number: document.getElementById('dep_sender').value, trx_id: document.getElementById('dep_trx').value })
                 });
                 const data = await res.json();
-                if(data.success) { 
-                    alert("✅ Request Submitted!"); 
-                    closeModal('depositModal'); 
-                    document.getElementById('dep_amount').value = '';
-                    document.getElementById('dep_sender').value = '';
-                    document.getElementById('dep_trx').value = '';
-                    loadWallet(); 
-                } else { alert("❌ " + data.error); }
+                if(data.success) { alert("✅ Request Submitted!"); closeModal('depositModal'); document.getElementById('dep_amount').value = ''; document.getElementById('dep_sender').value = ''; document.getElementById('dep_trx').value = ''; loadWallet(); } 
+                else { alert("❌ " + data.error); }
             } catch(e) { alert("Network Error"); }
             btn.innerText = "Submit Request"; btn.disabled = false;
         }
@@ -214,34 +207,18 @@
 
             try {
                 const res = await fetch('/api/user', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        type: 'withdraw', 
-                        user_id: user.id, 
-                        amount: document.getElementById('wd_amount').value, 
-                        method: document.getElementById('wd_method').value, 
-                        account_number: document.getElementById('wd_account').value 
-                    })
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'withdraw', user_id: user.id, amount: document.getElementById('wd_amount').value, method: document.getElementById('wd_method').value, account_number: document.getElementById('wd_account').value })
                 });
                 const data = await res.json();
-                if(data.success) { 
-                    alert("✅ Withdrawal Request Sent!"); 
-                    closeModal('withdrawModal'); 
-                    document.getElementById('wd_amount').value = '';
-                    document.getElementById('wd_account').value = '';
-                    loadWallet(); 
-                } else { alert("❌ " + data.error); }
+                if(data.success) { alert("✅ Withdrawal Request Sent!"); closeModal('withdrawModal'); document.getElementById('wd_amount').value = ''; document.getElementById('wd_account').value = ''; loadWallet(); } 
+                else { alert("❌ " + data.error); }
             } catch(e) { alert("Network Error"); }
             btn.innerText = "Withdraw"; btn.disabled = false;
         }
 
         loadWallet();
-        
-        // Copy Number Function
-        document.querySelector('.select-all').addEventListener('click', function() {
-            navigator.clipboard.writeText(this.innerText).then(() => alert("Number Copied!"));
-        });
+        document.querySelector('.select-all').addEventListener('click', function() { navigator.clipboard.writeText(this.innerText).then(() => alert("Number Copied!")); });
     </script>
 </body>
 </html>
