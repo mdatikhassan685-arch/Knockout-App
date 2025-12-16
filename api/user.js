@@ -73,11 +73,15 @@ module.exports = async (req, res) => {
             const [recent] = await db.execute('SELECT p.kills, p.rank, p.prize_won, t.title, t.schedule_time FROM participants p JOIN tournaments t ON p.tournament_id = t.id WHERE p.user_id = ? ORDER BY p.id DESC LIMIT 5', [user_id]);
             return res.status(200).json({ user: user[0], stats: stats[0], recent_matches: recent });
         }
-        // =======================
-        // 🔔 GET NOTIFICATIONS
+            // =======================
+        // 🔔 GET NOTIFICATIONS (SMART)
         // =======================
         if (type === 'get_notifications') {
-            const [notis] = await db.execute('SELECT * FROM notifications ORDER BY created_at DESC');
+            // এমন নোটিফিকেশন আনবে যা সবার জন্য (NULL) অথবা নির্দিষ্ট এই ইউজারের জন্য
+            const [notis] = await db.execute(
+                'SELECT * FROM notifications WHERE user_id IS NULL OR user_id = ? ORDER BY created_at DESC', 
+                [user_id]
+            );
             return res.status(200).json(notis);
         }
 
