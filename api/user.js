@@ -1,16 +1,11 @@
 const db = require('../db');
 
 module.exports = async (req, res) => {
-    // 1. STRONG CACHE CONTROL (যাতে ইউজার মিক্স না হয়)
+    // 1. CORS & Cache Control
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
-    // 🔥 এই ৪টি লাইন ইউজার পরিবর্তন হওয়ার সমস্যা ঠিক করবে
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('Surrogate-Control', 'no-store');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -21,14 +16,26 @@ module.exports = async (req, res) => {
         // 🔔 GET NOTIFICATIONS (FIXED)
         // =======================
         if (type === 'get_notifications') {
-            if (!user_id) return res.status(400).json({ error: "User ID required" });
+            let sql = 'SELECT * FROM notifications WHERE user_id IS NULL ORDER BY created_at DESC';
+            let params = [];
 
-            // গ্লোবাল নোটিফিকেশন (NULL) + পার্সোনাল নোটিফিকেশন (user_id)
-            const [notis] = await db.execute(
-                'SELECT * FROM notifications WHERE user_id IS NULL OR user_id = ? ORDER BY id DESC', 
-                [user_id]
-            );
-            return res.status(200).json(notis);
+            if (user_id) {
+                sql = 'SELECT * FROM notifications WHERE user_id IS NULL OR user_id = ? ORDER BY created_at DESC';
+                params = [user_id];
+            }
+
+            const [notis] = await db.execute(sql, params);
+            return res.status(200).json(notis || []);
+        }
+
+        // =======================
+        // ⚙️ GET SETTINGS
+        // =======================
+        if (type === 'get_app_settings') {
+            const [rows] = await db.execute('SELECT * FROM settings');
+            const settings = {};
+            rows.forEach(row => { settings[row.setting_key] = row.setting_value; });
+            return res.status(200).json(settings);
         }
 
         // =======================
@@ -36,18 +43,12 @@ module.exports = async (req, res) => {
         // =======================
         if (type === 'home') {
             const [userData] = await db.execute('SELECT wallet_balance, status FROM users WHERE id = ?', [user_id]);
-            
             if (userData.length === 0) return res.status(404).json({ error: 'User not found' });
 
-            // ডাটা ফেচিং
             let banners = [], categories = [];
-            try { 
-                const [b] = await db.execute('SELECT * FROM banners ORDER BY id DESC'); banners = b; 
-                const [c] = await db.execute('SELECT * FROM categories ORDER BY id ASC'); categories = c; 
-            } catch(e) {}
+            try { const [b] = await db.execute('SELECT * FROM banners ORDER BY id DESC'); banners = b; const [c] = await db.execute('SELECT * FROM categories ORDER BY id ASC'); categories = c; } catch(e) {}
             
-            // সেটিংস
-            let announcementText = "Welcome!";
+            let announcementText = "Welcome to Knockout Esports!";
             let notificationText = "No new notifications.";
             try {
                 const [s] = await db.execute('SELECT * FROM settings WHERE setting_key IN ("announcement", "notification_msg")');
@@ -57,26 +58,12 @@ module.exports = async (req, res) => {
                 });
             } catch (err) {}
 
-            return res.status(200).json({ 
-                wallet: parseFloat(userData[0].wallet_balance), 
-                status: userData[0].status, 
-                announcement: announcementText,
-                notification_msg: notificationText,
-                banners: banners, 
-                categories: categories 
-            });
+            return res.status(200).json({ wallet: parseFloat(userData[0].wallet_balance), status: userData[0].status, announcement: announcementText, notification_msg: notificationText, banners: banners, categories: categories });
         }
 
         // =======================
-        // ⚙️ SETTINGS & OTHER
+        // 💰 WALLET & DEPOSIT & WITHDRAW
         // =======================
-        if (type === 'get_app_settings') {
-            const [rows] = await db.execute('SELECT * FROM settings');
-            const settings = {};
-            rows.forEach(row => { settings[row.setting_key] = row.setting_value; });
-            return res.status(200).json(settings);
-        }
-
         if (type === 'wallet_info') { const [user] = await db.execute('SELECT wallet_balance FROM users WHERE id = ?', [user_id]); const [transactions] = await db.execute('SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 30', [user_id]); return res.status(200).json({ balance: parseFloat(user[0]?.wallet_balance || 0), transactions: transactions }); }
         if (type === 'deposit') { const depositAmount = parseFloat(amount); if (!depositAmount || depositAmount <= 0) return res.status(400).json({ error: 'Invalid amount' }); await db.execute('INSERT INTO deposits (user_id, amount, sender_number, trx_id, status, created_at) VALUES (?, ?, ?, ?, "pending", NOW())', [user_id, depositAmount, sender_number, trx_id]); return res.status(200).json({ success: true, message: 'Submitted!' }); }
         if (type === 'withdraw') { const withdrawAmount = parseFloat(amount); if (!withdrawAmount || withdrawAmount < 50) return res.status(400).json({ error: 'Min withdraw 50 Tk' }); const [user] = await db.execute('SELECT wallet_balance FROM users WHERE id = ?', [user_id]); if (parseFloat(user[0].wallet_balance) < withdrawAmount) return res.status(400).json({ error: 'Insufficient balance!' }); await db.execute('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?', [withdrawAmount, user_id]); await db.execute('INSERT INTO withdrawals (user_id, amount, method, account_number, status, created_at) VALUES (?, ?, ?, ?, "pending", NOW())', [user_id, withdrawAmount, method, account_number]); await db.execute('INSERT INTO transactions (user_id, amount, type, created_at) VALUES (?, ?, "Withdraw Request", NOW())', [user_id, withdrawAmount]); return res.status(200).json({ success: true, message: 'Request sent!' }); }
