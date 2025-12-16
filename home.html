@@ -3,189 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knockout - Home</title>
+    <title>Menu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         body { font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass { background: rgba(31, 41, 55, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .animate-pop { animation: popIn 0.3s ease-out; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body class="bg-[#0f172a] text-white pb-24 select-none">
 
-    <!-- Header -->
-    <header class="flex justify-between items-center p-4 bg-gray-900/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-800">
-        <div class="flex items-center gap-3">
-            <div class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/40">
-                <i class="fa-solid fa-gamepad text-white text-xl"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-black tracking-widest uppercase italic">Knockout</h1>
-                <p class="text-[10px] text-gray-400 font-bold -mt-1 tracking-wide">ESPORTS</p>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-3">
-            <a href="/wallet" class="bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-full flex items-center gap-2 active:scale-95 transition hover:bg-gray-700">
-                <i class="fa-solid fa-coins text-yellow-400"></i>
-                <span class="text-yellow-400 font-bold text-sm">৳ <span id="balance">...</span></span>
-            </a>
-            <button class="relative w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border border-gray-700 hover:text-white text-gray-400 transition">
-                <i class="fa-regular fa-bell text-xl"></i>
-                <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-gray-800"></span>
-            </button>
-        </div>
+    <header class="p-4 bg-gray-900/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-800 flex items-center">
+        <a href="/home" class="mr-4 text-gray-400 active:scale-90 transition"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <div class="text-xl font-black uppercase tracking-widest italic text-blue-500">More</div>
     </header>
 
-    <!-- Marquee Announcement -->
-    <div class="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border-y border-white/5 py-2">
-        <marquee id="announcement" behavior="scroll" direction="left" class="text-xs font-bold text-blue-200 tracking-wide">
-            Welcome to Knockout Esports! Join tournaments and win real money.
-        </marquee>
-    </div>
+    <div class="p-4 space-y-3">
+        
+        <div id="btn_share" class="glass p-4 rounded-xl flex items-center gap-4 active:scale-95 transition hover:bg-gray-800 cursor-pointer">
+            <div class="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-400"><i class="fa-solid fa-share-nodes"></i></div>
+            <div class="flex-1"><h3 class="font-bold text-sm">Share App</h3><p class="text-[10px] text-gray-400">Invite friends & earn</p></div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </div>
 
-    <!-- Banners Slider -->
-    <div class="p-4 overflow-x-auto whitespace-nowrap scrollbar-hide flex gap-4" id="banners">
-        <div class="w-80 h-40 bg-gray-800 rounded-2xl animate-pulse border border-gray-700 flex-shrink-0"></div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="px-4 flex gap-3 mb-6">
-        <a href="/wallet" class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 rounded-2xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-blue-600/20 active:scale-95 transition text-sm">
-            <i class="fa-solid fa-plus-circle"></i> Add Money
+        <a href="#" id="link_youtube" target="_blank" class="glass p-4 rounded-xl flex items-center gap-4 active:scale-95 transition hover:bg-gray-800">
+            <div class="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center text-red-400"><i class="fa-brands fa-youtube"></i></div>
+            <div class="flex-1"><h3 class="font-bold text-sm">How to Play?</h3><p class="text-[10px] text-gray-400">Watch tutorials</p></div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
         </a>
-        <a href="/leaderboard" class="flex-1 bg-gray-800 border border-gray-700 py-3.5 rounded-2xl flex items-center justify-center gap-2 font-bold active:scale-95 transition hover:bg-gray-750 text-sm">
-            <i class="fa-solid fa-trophy text-yellow-500"></i> Leaderboard
+
+        <a href="#" id="link_telegram" target="_blank" class="glass p-4 rounded-xl flex items-center gap-4 active:scale-95 transition hover:bg-gray-800">
+            <div class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400"><i class="fa-brands fa-telegram"></i></div>
+            <div class="flex-1"><h3 class="font-bold text-sm">Join Telegram</h3><p class="text-[10px] text-gray-400">Official Channel</p></div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
         </a>
+
+        <div onclick="showInfo('Privacy Policy', settings.privacy_policy)" class="glass p-4 rounded-xl flex items-center gap-4 active:scale-95 transition hover:bg-gray-800 cursor-pointer">
+            <div class="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="flex-1"><h3 class="font-bold text-sm">Privacy Policy</h3><p class="text-[10px] text-gray-400">Read our terms</p></div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </div>
+
+        <div onclick="showInfo('About Us', settings.about_us)" class="glass p-4 rounded-xl flex items-center gap-4 active:scale-95 transition hover:bg-gray-800 cursor-pointer">
+            <div class="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center text-green-400"><i class="fa-solid fa-circle-info"></i></div>
+            <div class="flex-1"><h3 class="font-bold text-sm">About Us</h3><p class="text-[10px] text-gray-400" id="app_version">Version 1.0.0</p></div>
+            <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+        </div>
+
     </div>
 
-    <!-- 🔥 SECTION 1: OFFICIAL TOURNAMENTS (Big Cards) -->
-    <div class="px-4 mb-6">
-        <h2 class="text-xl font-bold border-l-4 border-red-500 pl-3 leading-none mb-4">Official Tournaments</h2>
-        <div class="grid grid-cols-1 gap-5" id="official_list">
-            <div class="w-full h-48 bg-gray-800 rounded-2xl animate-pulse"></div>
+    <!-- INFO MODAL -->
+    <div id="infoModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-50 p-6 backdrop-blur-sm animate-pop">
+        <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-sm border border-gray-600 shadow-2xl relative h-[60vh] flex flex-col">
+            <button onclick="document.getElementById('infoModal').style.display='none'" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fa-solid fa-times text-lg"></i></button>
+            <h3 class="text-xl font-bold mb-4 text-white border-b border-gray-700 pb-2" id="modal_title">Title</h3>
+            <div class="overflow-y-auto flex-1 pr-2 custom-scroll text-sm text-gray-300 leading-relaxed" id="modal_body">Loading...</div>
         </div>
     </div>
 
-    <!-- 🎮 SECTION 2: DAILY MATCHES (3 Column Grid) -->
-    <div class="px-4">
-        <h2 class="text-xl font-bold border-l-4 border-blue-500 pl-3 leading-none mb-4">Daily Matches</h2>
-        <div class="grid grid-cols-3 gap-3" id="normal_list">
-            <div class="h-32 bg-gray-800 rounded-xl animate-pulse"></div>
-            <div class="h-32 bg-gray-800 rounded-xl animate-pulse"></div>
-            <div class="h-32 bg-gray-800 rounded-xl animate-pulse"></div>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation (UPDATED) -->
-    <nav class="fixed bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-gray-800 flex justify-around py-3 z-40 pb-6">
-        <a href="/home" class="text-blue-500 flex flex-col items-center transition group">
-            <i class="fa-solid fa-house text-xl mb-1 group-active:scale-90 transition"></i>
-            <span class="text-[10px] font-bold">Home</span>
-        </a>
-        
-        <!-- ✅ CHANGED: Live -> Support -->
-        <a href="/support" class="text-gray-500 hover:text-white flex flex-col items-center transition group">
-            <i class="fa-solid fa-headset text-xl mb-1 group-active:scale-90 transition"></i>
-            <span class="text-[10px] font-bold">Support</span>
-        </a>
-        
-        <a href="/wallet" class="text-gray-500 hover:text-white flex flex-col items-center transition group">
-            <i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90 transition"></i>
-            <span class="text-[10px] font-bold">Wallet</span>
-        </a>
-        <a href="/profile" class="text-gray-500 hover:text-white flex flex-col items-center transition group">
-            <i class="fa-solid fa-user text-xl mb-1 group-active:scale-90 transition"></i>
-            <span class="text-[10px] font-bold">Profile</span>
-        </a>
-        <a href="/menu" class="text-gray-500 hover:text-white flex flex-col items-center transition group">
-            <i class="fa-solid fa-bars text-xl mb-1 group-active:scale-90 transition"></i>
-            <span class="text-[10px] font-bold">Menu</span>
-        </a>
+    <nav class="fixed bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-gray-800 flex justify-around py-3 z-50 pb-6">
+        <a href="/home" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Home</span></a>
+        <a href="/support" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-headset text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Support</span></a>
+        <a href="/wallet" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Wallet</span></a>
+        <a href="/profile" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-user text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Profile</span></a>
+        <a href="/menu" class="text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-bars text-xl mb-1 group-active:scale-90"></i><span class="text-[10px] font-bold">Menu</span></a>
     </nav>
 
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) window.location.href = '/';
+        let settings = {};
 
-        async function loadHomeData() {
+        async function loadMenu() {
             try {
-                const res = await fetch('/api/user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'home', user_id: user.id })
-                });
-
-                if (!res.ok) return;
+                const res = await fetch('/api/user', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'get_app_settings' }) });
                 const data = await res.json();
-
-                // Balance Sync
-                if (data.wallet !== undefined) {
-                    const newBalance = parseFloat(data.wallet);
-                    document.getElementById('balance').innerText = newBalance.toFixed(2);
-                    user.wallet_balance = newBalance;
-                    localStorage.setItem('user', JSON.stringify(user));
-                }
+                settings = data;
                 
-                if(data.announcement) document.getElementById('announcement').innerText = data.announcement;
+                document.getElementById('link_youtube').href = data.youtube_link || '#';
+                document.getElementById('link_telegram').href = data.telegram_link || '#';
+                document.getElementById('app_version').innerText = "Version " + (data.app_version || '1.0.0');
 
-                // Banners
-                const bannerContainer = document.getElementById('banners');
-                if (data.banners && data.banners.length > 0) {
-                    bannerContainer.innerHTML = data.banners.map(b => 
-                        `<div class="w-80 h-40 rounded-2xl overflow-hidden shadow-lg flex-shrink-0 relative border border-gray-700 group">
-                            <img src="${b.image}" class="w-full h-full object-cover">
-                        </div>`
-                    ).join('');
-                } else {
-                    bannerContainer.innerHTML = `<div class="w-full h-24 flex items-center justify-center text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">No Offers Active</div>`;
-                }
-
-                // CATEGORIES
-                const officialList = document.getElementById('official_list');
-                const normalList = document.getElementById('normal_list');
-
-                if (data.categories && data.categories.length > 0) {
-                    const officialData = data.categories.filter(c => c.type === 'official');
-                    const normalData = data.categories.filter(c => !c.type || c.type === 'normal');
-
-                    // 1. OFFICIAL (Big Cards)
-                    if(officialData.length > 0) {
-                        officialList.innerHTML = officialData.map(c => `
-                            <div onclick="window.location.href='/tournament-details?cat_id=${c.id}&name=${c.title}'" class="relative w-full h-48 bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-700 active:scale-95 transition cursor-pointer">
-                                <img src="${c.image}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/222/fff?text=Image+Error'">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
-                                <div class="absolute bottom-0 left-0 p-4 w-full">
-                                    <h3 class="text-xl font-black text-white uppercase leading-none mb-1">${c.title}</h3>
-                                    <p class="text-[10px] text-green-400 font-bold uppercase tracking-wide flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Live</p>
-                                </div>
-                            </div>
-                        `).join('');
-                    } else { officialList.innerHTML = '<p class="text-gray-500 text-sm">No official tournaments.</p>'; }
-
-                    // 2. DAILY MATCHES (3 Col Grid)
-                    if(normalData.length > 0) {
-                        normalList.innerHTML = normalData.map(c => `
-                            <div onclick="window.location.href='/matches?cat_id=${c.id}&name=${c.title}'" class="relative w-full h-36 bg-gray-800 rounded-xl overflow-hidden shadow-md border border-gray-700/50 active:scale-95 transition cursor-pointer group">
-                                <img src="${c.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://placehold.co/200x300?text=Game'">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
-                                <div class="absolute bottom-0 left-0 w-full p-2 text-center">
-                                    <h3 class="text-[10px] font-bold text-white uppercase tracking-wider truncate leading-tight">${c.title}</h3>
-                                </div>
-                            </div>
-                        `).join('');
-                    } else { normalList.innerHTML = '<p class="text-gray-500 text-xs col-span-3 text-center">No regular matches.</p>'; }
-
-                } else {
-                    officialList.innerHTML = '<p class="text-gray-500 text-sm">No data found.</p>';
-                    normalList.innerHTML = '';
-                }
-
-            } catch (err) { console.error(err); }
+                document.getElementById('btn_share').onclick = () => {
+                    if (navigator.share) { navigator.share({ title: 'Knockout Esports', text: 'Join tournaments & win money!', url: window.location.origin }); } 
+                    else { alert("Link copied to clipboard!"); navigator.clipboard.writeText(window.location.origin); }
+                };
+            } catch(e) {}
         }
 
-        loadHomeData();
+        function showInfo(title, content) {
+            document.getElementById('modal_title').innerText = title;
+            document.getElementById('modal_body').innerHTML = content ? content.replace(/\n/g, '<br>') : 'No information available.';
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        loadMenu();
     </script>
 </body>
 </html>
