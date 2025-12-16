@@ -13,6 +13,7 @@
 </head>
 <body class="bg-gray-900 text-white font-sans pb-20 select-none">
 
+    <!-- Header -->
     <header class="p-4 bg-gray-800 shadow-md flex justify-between items-center sticky top-0 z-50">
         <div class="text-xl font-bold text-red-500">ADMIN PANEL</div>
         <button onclick="logout()" class="bg-red-600 px-3 py-1 rounded text-sm font-bold hover:bg-red-700 transition">Logout</button>
@@ -43,16 +44,20 @@
         <h3 class="font-bold text-lg mb-3 border-l-4 border-gray-500 pl-2">Quick Actions</h3>
         <div class="grid grid-cols-2 gap-3">
             <button onclick="window.location.href='/admin-categories'" class="bg-blue-600 p-3 rounded-lg flex flex-col items-center justify-center h-24 hover:bg-blue-700 transition">
-                <i class="fa-solid fa-gamepad text-2xl mb-1"></i><span class="text-xs font-bold mt-1">Manage Games</span>
+                <i class="fa-solid fa-gamepad text-2xl mb-1"></i>
+                <span class="text-xs font-bold mt-1">Manage Games</span>
             </button>
             <button onclick="window.location.href='/admin-users'" class="bg-gray-700 p-3 rounded-lg flex flex-col items-center justify-center h-24 hover:bg-gray-600 transition">
-                <i class="fa-solid fa-users text-2xl mb-1"></i><span class="text-xs font-bold mt-1">Manage Users</span>
+                <i class="fa-solid fa-users text-2xl mb-1"></i>
+                <span class="text-xs font-bold mt-1">Manage Users</span>
             </button>
             <button onclick="openSettings()" class="bg-purple-600 p-3 rounded-lg flex flex-col items-center justify-center h-24 hover:bg-purple-700 transition">
-                <i class="fa-solid fa-sliders text-2xl mb-1"></i><span class="text-xs font-bold mt-1">App Settings</span>
+                <i class="fa-solid fa-sliders text-2xl mb-1"></i>
+                <span class="text-xs font-bold mt-1">App Settings</span>
             </button>
             <button onclick="openNotiModal()" class="bg-red-600 p-3 rounded-lg flex flex-col items-center justify-center h-24 hover:bg-red-700 transition">
-                <i class="fa-solid fa-bell text-2xl mb-1"></i><span class="text-xs font-bold mt-1">Send Noti</span>
+                <i class="fa-solid fa-bell text-2xl mb-1"></i>
+                <span class="text-xs font-bold mt-1">Send Noti</span>
             </button>
         </div>
     </div>
@@ -61,6 +66,7 @@
     <div id="settingsModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
         <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-600 shadow-2xl h-[85vh] flex flex-col">
             <h3 class="text-xl font-bold mb-4 text-white border-b border-gray-600 pb-2">App Settings</h3>
+            
             <div class="overflow-y-auto flex-1 space-y-3 pr-2 custom-scroll">
                 <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">YouTube Link</label><input type="text" id="set_youtube" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
                 <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">Telegram Link</label><input type="text" id="set_telegram" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
@@ -71,6 +77,7 @@
                 <div><label class="text-[10px] text-green-400 uppercase font-bold ml-1">Privacy Policy</label><textarea id="set_policy" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-green-500"></textarea></div>
                 <div><label class="text-[10px] text-gray-400 uppercase font-bold ml-1">App Version</label><input type="text" id="set_version" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-gray-500"></div>
             </div>
+
             <div class="flex gap-3 mt-4">
                 <button onclick="document.getElementById('settingsModal').style.display='none'" class="flex-1 bg-gray-700 py-3 rounded-lg font-bold hover:bg-gray-600">Cancel</button>
                 <button onclick="saveSettings()" class="flex-1 bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-700">Save</button>
@@ -78,15 +85,45 @@
         </div>
     </div>
 
-    <!-- NOTIFICATION MODAL -->
+    <!-- NOTIFICATION MODAL (ADVANCED) -->
     <div id="notiModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
-        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl">
-            <h3 class="text-xl font-bold mb-4 text-white">Send Notification</h3>
-            <input type="text" id="noti_title" placeholder="Title" class="w-full bg-gray-900 p-3 rounded mb-3 text-white border border-gray-600 outline-none focus:border-red-500">
-            <textarea id="noti_msg" rows="4" placeholder="Message..." class="w-full bg-gray-900 p-3 rounded mb-4 text-white border border-gray-600 outline-none focus:border-red-500"></textarea>
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('notiModal').style.display='none'" class="flex-1 bg-gray-700 py-2 rounded font-bold hover:bg-gray-600">Cancel</button>
-                <button onclick="sendNoti()" class="flex-1 bg-red-600 py-2 rounded font-bold hover:bg-red-700">Send</button>
+        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-600 shadow-2xl h-[90vh] flex flex-col">
+            
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h3 class="text-xl font-bold text-white">Send Notification</h3>
+                <button onclick="closeNotiModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 pr-2 custom-scroll">
+                <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Title</label>
+                <input type="text" id="noti_title" placeholder="Notice Title" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 text-white outline-none focus:border-blue-500">
+                
+                <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Message</label>
+                <textarea id="noti_msg" rows="3" placeholder="Type here..." class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 text-white outline-none focus:border-blue-500"></textarea>
+
+                <!-- Search & Select Section -->
+                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="text-[10px] text-gray-400 uppercase font-bold">Select Users</label>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="send_all" onchange="toggleUserSearch()" class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500">
+                            <label for="send_all" class="text-xs text-white cursor-pointer select-none">Send to All</label>
+                        </div>
+                    </div>
+
+                    <!-- Search Box -->
+                    <div id="search_box_container" class="relative">
+                        <input type="text" id="user_search" oninput="searchUsers(this.value)" placeholder="Search ID or Name..." class="w-full bg-gray-800 p-2.5 rounded border border-gray-600 text-white text-sm outline-none focus:border-blue-500 transition">
+                        <div id="search_results" class="absolute w-full bg-gray-800 border border-gray-600 rounded mt-1 hidden z-10 max-h-40 overflow-y-auto shadow-xl"></div>
+                    </div>
+
+                    <!-- Selected Users Tags -->
+                    <div id="selected_users_container" class="flex flex-wrap gap-2 mt-3 min-h-[30px]"></div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button onclick="sendNoti()" id="send_btn" class="w-full bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg">Send Notification</button>
             </div>
         </div>
     </div>
@@ -95,6 +132,9 @@
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || user.role !== 'admin') window.location.href = '/';
 
+        let selectedUsers = [];
+
+        // --- DASHBOARD STATS ---
         async function loadStats() {
             try {
                 const res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'dashboard_stats' }) });
@@ -106,6 +146,7 @@
             } catch (e) {}
         }
 
+        // --- SETTINGS LOGIC ---
         async function openSettings() {
             document.getElementById('settingsModal').style.display = 'flex';
             try {
@@ -143,17 +184,75 @@
             } catch(e) { alert("Network Error"); }
         }
 
+        // --- NOTIFICATION LOGIC ---
         function openNotiModal() { document.getElementById('notiModal').style.display = 'flex'; }
-        
+        function closeNotiModal() { document.getElementById('notiModal').style.display = 'none'; }
+
+        async function searchUsers(query) {
+            const list = document.getElementById('search_results');
+            if(query.length < 1) { list.classList.add('hidden'); return; }
+
+            const res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'search_users_for_noti', query }) });
+            const users = await res.json();
+            
+            list.innerHTML = users.map(u => `
+                <div onclick="selectUser(${u.id}, '${u.username}')" class="p-2.5 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0 text-sm flex justify-between items-center transition">
+                    <span class="font-bold text-white">${u.username}</span> <span class="text-xs text-gray-400 font-mono">ID: ${u.id}</span>
+                </div>
+            `).join('');
+            list.classList.remove('hidden');
+        }
+
+        function selectUser(id, name) {
+            if (selectedUsers.includes(id)) return;
+            selectedUsers.push(id);
+            const tag = document.createElement('div');
+            tag.className = 'bg-blue-600 text-white text-xs px-2.5 py-1.5 rounded-full flex items-center gap-2 shadow-sm animate-pulse';
+            tag.innerHTML = `${name} <i class="fa-solid fa-times cursor-pointer hover:text-red-200 transition" onclick="removeUser(${id}, this)"></i>`;
+            document.getElementById('selected_users_container').appendChild(tag);
+            document.getElementById('search_results').classList.add('hidden');
+            document.getElementById('user_search').value = '';
+        }
+
+        function removeUser(id, element) {
+            selectedUsers = selectedUsers.filter(uid => uid !== id);
+            element.parentElement.remove();
+        }
+
+        function toggleUserSearch() {
+            const isAll = document.getElementById('send_all').checked;
+            const searchBox = document.getElementById('search_box_container');
+            const tags = document.getElementById('selected_users_container');
+            if(isAll) { searchBox.classList.add('opacity-50', 'pointer-events-none'); tags.classList.add('opacity-50', 'pointer-events-none'); }
+            else { searchBox.classList.remove('opacity-50', 'pointer-events-none'); tags.classList.remove('opacity-50', 'pointer-events-none'); }
+        }
+
         async function sendNoti() {
             const title = document.getElementById('noti_title').value;
             const message = document.getElementById('noti_msg').value;
-            if(!title || !message) return alert("Fill all fields");
+            const sendAll = document.getElementById('send_all').checked;
+
+            if(!title || !message) return alert("Enter Title and Message");
+            if(!sendAll && selectedUsers.length === 0) return alert("Select users or check 'Send to All'");
+
+            const btn = document.getElementById('send_btn');
+            btn.innerText = "Sending..."; btn.disabled = true;
 
             try {
-                await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'add_notification', title, message }) });
-                alert("Notification Sent!"); document.getElementById('notiModal').style.display = 'none';
-            } catch(e) { alert("Error"); }
+                await fetch('/api/admin', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'send_notification', title, message, target_users: selectedUsers, send_to_all: sendAll })
+                });
+                alert("Notification Sent!");
+                closeNotiModal();
+                // Reset
+                document.getElementById('noti_title').value = '';
+                document.getElementById('noti_msg').value = '';
+                document.getElementById('selected_users_container').innerHTML = '';
+                selectedUsers = [];
+            } catch(e) { alert("Error sending notification"); }
+            
+            btn.innerText = "Send Notification"; btn.disabled = false;
         }
 
         function logout() { localStorage.removeItem('user'); window.location.href = '/'; }
