@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass { background: rgba(31, 41, 55, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white pb-24 select-none">
+
+    <!-- Profile Header -->
+    <div class="relative h-48 bg-gradient-to-br from-blue-900 to-gray-900">
+        <div class="absolute top-4 left-4 z-10">
+            <a href="/home" class="bg-black/30 p-2 rounded-full backdrop-blur-sm"><i class="fa-solid fa-arrow-left"></i></a>
+        </div>
+        
+        <!-- Avatar & Name -->
+        <div class="absolute -bottom-12 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+            <div class="w-24 h-24 rounded-full border-4 border-gray-900 bg-gray-800 flex items-center justify-center shadow-xl overflow-hidden">
+                <i class="fa-solid fa-user text-4xl text-gray-500" id="avatar_icon"></i>
+                <img id="avatar_img" src="" class="w-full h-full object-cover hidden">
+            </div>
+            <h2 class="mt-2 text-xl font-bold" id="username">...</h2>
+            <p class="text-xs text-gray-400" id="email">...</p>
+        </div>
+    </div>
+
+    <div class="mt-14 px-4 text-center">
+        <span class="bg-yellow-500/10 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold border border-yellow-500/20">Balance: ৳<span id="balance">0.00</span></span>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-3 gap-3 p-4 mt-2">
+        <div class="glass p-3 rounded-xl text-center">
+            <p class="text-[10px] text-gray-400 uppercase font-bold">Matches</p>
+            <h3 class="text-xl font-bold text-blue-400" id="total_matches">0</h3>
+        </div>
+        <div class="glass p-3 rounded-xl text-center">
+            <p class="text-[10px] text-gray-400 uppercase font-bold">Kills</p>
+            <h3 class="text-xl font-bold text-red-400" id="total_kills">0</h3>
+        </div>
+        <div class="glass p-3 rounded-xl text-center">
+            <p class="text-[10px] text-gray-400 uppercase font-bold">Won</p>
+            <h3 class="text-xl font-bold text-green-400">৳<span id="total_won">0</span></h3>
+        </div>
+    </div>
+
+    <!-- Menu List -->
+    <div class="px-4 space-y-3 mt-2">
+        
+        <!-- Account Info -->
+        <div class="glass p-4 rounded-xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400"><i class="fa-solid fa-phone"></i></div>
+                <div>
+                    <p class="text-xs text-gray-400">Phone Number</p>
+                    <p class="font-bold text-sm" id="phone">...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass p-4 rounded-xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center text-purple-400"><i class="fa-solid fa-calendar"></i></div>
+                <div>
+                    <p class="text-xs text-gray-400">Joined Date</p>
+                    <p class="font-bold text-sm" id="joined_date">...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Matches -->
+        <div class="mt-4">
+            <h3 class="text-sm font-bold text-gray-400 mb-2 ml-1">Recent Matches</h3>
+            <div id="recent_list" class="space-y-2">
+                <p class="text-center text-xs text-gray-600">Loading history...</p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <button onclick="logout()" class="w-full bg-red-600/10 border border-red-600/30 text-red-500 py-3 rounded-xl font-bold mt-6 hover:bg-red-600 hover:text-white transition">
+            <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
+        </button>
+
+        <p class="text-center text-[10px] text-gray-600 mt-4">Version 1.0.0 | Knockout Esports</p>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="fixed bottom-0 w-full bg-gray-900/95 backdrop-blur border-t border-gray-800 flex justify-around py-3 z-50 pb-5">
+        <a href="/home" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Home</span></a>
+        <a href="#" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-fire text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Live</span></a>
+        <a href="/wallet" class="text-gray-500 hover:text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Wallet</span></a>
+        <a href="/profile" class="text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-user text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Profile</span></a>
+    </nav>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = '/';
+
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'profile_stats', user_id: user.id })
+                });
+                const data = await res.json();
+                
+                // User Info
+                document.getElementById('username').innerText = data.user.username;
+                document.getElementById('email').innerText = data.user.email;
+                document.getElementById('phone').innerText = data.user.phone || 'Not Set';
+                document.getElementById('balance').innerText = parseFloat(data.user.wallet_balance).toFixed(2);
+                document.getElementById('joined_date').innerText = new Date(data.user.created_at).toLocaleDateString();
+
+                // Stats
+                document.getElementById('total_matches').innerText = data.stats.total_matches || 0;
+                document.getElementById('total_kills').innerText = data.stats.total_kills || 0;
+                document.getElementById('total_won').innerText = parseFloat(data.stats.total_winnings || 0).toFixed(0);
+
+                // Recent Matches
+                const list = document.getElementById('recent_list');
+                if(data.recent_matches.length > 0) {
+                    list.innerHTML = data.recent_matches.map(m => `
+                        <div class="glass p-3 rounded-lg flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-xs text-white">${m.title}</p>
+                                <p class="text-[10px] text-gray-400">${new Date(m.schedule_time).toLocaleDateString()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-green-400">+৳${m.prize_won}</p>
+                                <p class="text-[10px] text-gray-500">${m.kills} Kills | #${m.rank}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<p class="text-center text-xs text-gray-500 py-2">No matches played yet.</p>';
+                }
+
+            } catch (e) { console.error(e); }
+        }
+
+        function logout() {
+            if(confirm("Are you sure you want to logout?")) {
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+  </html>
