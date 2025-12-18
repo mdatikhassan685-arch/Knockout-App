@@ -9,69 +9,61 @@
 </head>
 <body class="bg-gray-900 text-white font-sans pb-20 select-none">
 
-    <!-- Header -->
     <header class="p-4 bg-gray-800 shadow-md flex justify-between items-center sticky top-0 z-50">
         <div class="text-xl font-bold text-red-500">ADMIN PANEL</div>
         <button onclick="logout()" class="bg-red-600 px-3 py-1 rounded text-sm font-bold hover:bg-red-700 transition">Logout</button>
     </header>
 
-    <!-- Stats Grid -->
-    <div class="p-4 grid grid-cols-2 gap-3">
+    <div class="p-4 grid grid-cols-2 gap-4">
         <div class="bg-gray-800 p-4 rounded-xl border-l-4 border-blue-500 shadow-lg">
-            <p class="text-gray-400 text-[10px] uppercase font-bold">Users</p>
+            <p class="text-gray-400 text-xs uppercase font-bold">Total Users</p>
             <h2 class="text-2xl font-bold mt-1" id="total_users">...</h2>
         </div>
         <div onclick="window.location.href='/admin-deposits'" class="bg-gray-800 p-4 rounded-xl border-l-4 border-yellow-500 shadow-lg cursor-pointer">
-            <p class="text-gray-400 text-[10px] uppercase font-bold">Deposits</p>
+            <p class="text-gray-400 text-xs uppercase font-bold">Deposits</p>
             <h2 class="text-2xl font-bold mt-1 text-yellow-400" id="pending_deposits">...</h2>
         </div>
-        <div class="bg-gray-800 p-4 rounded-xl border-l-4 border-purple-500 shadow-lg">
-            <p class="text-gray-400 text-[10px] uppercase font-bold">Matches</p>
-            <h2 class="text-2xl font-bold mt-1" id="total_tournaments">0</h2>
-        </div>
-        <div onclick="window.location.href='/admin-withdrawals'" class="bg-gray-800 p-4 rounded-xl border-l-4 border-red-500 shadow-lg cursor-pointer">
-            <p class="text-gray-400 text-[10px] uppercase font-bold">Withdrawals</p>
-            <h2 class="text-2xl font-bold mt-1 text-red-400" id="pending_withdraws">...</h2>
-        </div>
     </div>
 
-    <!-- Quick Actions (Separate Buttons) -->
-    <div class="px-4">
+    <!-- MAIN BUTTONS SECTION (Updated Link Logic) -->
+    <div class="p-4">
         <h3 class="font-bold text-lg mb-3 border-l-4 border-gray-500 pl-2">Games</h3>
-        <div class="grid grid-cols-2 gap-3 mb-4">
+        
+        <div class="grid grid-cols-2 gap-4 mb-4">
             
             <!-- Button 1: Normal Matches -->
-            <button onclick="window.location.href='/admin-categories?type=normal'" class="bg-blue-600 p-4 rounded-xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition">
-                <i class="fa-solid fa-gamepad text-3xl mb-2"></i>
-                <span class="text-xs font-bold text-center">Normal<br>Matches</span>
-            </button>
-
+            <a href="/admin-categories?mode=normal" class="block bg-blue-600 p-5 rounded-2xl text-center shadow-lg active:scale-95 transition no-underline text-white">
+                <i class="fa-solid fa-gamepad text-4xl mb-3"></i>
+                <h3 class="font-bold text-md leading-none">Normal<br>Matches</h3>
+                <span class="text-[10px] text-blue-200 block mt-2">Create Regular Lobby</span>
+            </a>
+            
             <!-- Button 2: Official Tournaments -->
-            <button onclick="window.location.href='/admin-categories?type=official'" class="bg-yellow-600 p-4 rounded-xl flex flex-col items-center justify-center shadow-lg active:scale-95 transition text-white">
-                <i class="fa-solid fa-trophy text-3xl mb-2"></i>
-                <span class="text-xs font-bold text-center">Official<br>Tournaments</span>
-            </button>
+            <a href="/admin-categories?mode=official" class="block bg-yellow-600 p-5 rounded-2xl text-center shadow-lg active:scale-95 transition no-underline text-white">
+                <i class="fa-solid fa-trophy text-4xl mb-3 text-white"></i>
+                <h3 class="font-bold text-md leading-none">Official<br>Tournaments</h3>
+                <span class="text-[10px] text-yellow-100 block mt-2">Manage Big Events</span>
+            </a>
+
         </div>
 
+        <!-- Other System Buttons -->
         <h3 class="font-bold text-lg mb-3 border-l-4 border-gray-500 pl-2">System</h3>
-        <div class="grid grid-cols-2 gap-3">
-            <button onclick="window.location.href='/admin-users'" class="bg-gray-700 p-3 rounded-lg flex flex-col items-center justify-center h-20 active:scale-95">
-                <i class="fa-solid fa-users text-2xl mb-1 text-gray-400"></i>
-                <span class="text-[10px] font-bold">Users</span>
-            </button>
-            <button onclick="openSettings()" class="bg-purple-700 p-3 rounded-lg flex flex-col items-center justify-center h-20 active:scale-95">
-                <i class="fa-solid fa-sliders text-2xl mb-1 text-purple-300"></i>
-                <span class="text-[10px] font-bold">Settings</span>
-            </button>
-            <button onclick="openNotiModal()" class="col-span-2 bg-red-800 p-3 rounded-lg flex items-center justify-center gap-2 h-14 active:scale-95 border border-red-700">
-                <i class="fa-solid fa-bell text-xl"></i>
-                <span class="text-sm font-bold">Send Notification</span>
-            </button>
+        <div class="grid grid-cols-2 gap-4">
+            <a href="/admin-users" class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center border border-gray-700">
+                <i class="fa-solid fa-users text-2xl text-gray-400 mb-1"></i>
+                <span class="text-xs font-bold text-gray-300">Users</span>
+            </a>
+            <a href="/settings" class="bg-purple-600 p-4 rounded-xl flex flex-col items-center justify-center shadow-lg">
+                <i class="fa-solid fa-sliders text-2xl text-white mb-1"></i>
+                <span class="text-xs font-bold text-white">Settings</span>
+            </a>
         </div>
+        
+        <button onclick="window.location.href='/admin-dashboard.html'" class="w-full bg-red-800/80 text-red-100 mt-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 border border-red-700">
+            <i class="fa-solid fa-bell"></i> Send Notification
+        </button>
     </div>
-
-    <!-- Modals -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm"> <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-600 shadow-2xl h-[85vh] flex flex-col"> <h3 class="text-xl font-bold mb-4 text-white border-b border-gray-600 pb-2">App Settings</h3> <div class="overflow-y-auto flex-1 space-y-3 pr-2"> <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">YouTube Link</label><input type="text" id="set_youtube" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></div> <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">Telegram Link</label><input type="text" id="set_telegram" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></div> <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">WhatsApp Number</label><input type="text" id="set_whatsapp" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></div> <div><label class="text-[10px] text-yellow-400 uppercase font-bold ml-1">Announcement</label><textarea id="set_announcement" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></textarea></div> <div><label class="text-[10px] text-red-400 uppercase font-bold ml-1">Notification Msg</label><textarea id="set_notification" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></textarea></div> <div><label class="text-[10px] text-green-400 uppercase font-bold ml-1">About Us</label><textarea id="set_about" rows="3" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></textarea></div> <div><label class="text-[10px] text-green-400 uppercase font-bold ml-1">Privacy Policy</label><textarea id="set_policy" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></textarea></div> <div><label class="text-[10px] text-gray-400 uppercase font-bold ml-1">App Version</label><input type="text" id="set_version" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none"></div> </div> <div class="flex gap-3 mt-4"> <button onclick="document.getElementById('settingsModal').style.display='none'" class="flex-1 bg-gray-700 py-3 rounded-lg font-bold">Cancel</button> <button onclick="saveSettings()" class="flex-1 bg-blue-600 py-3 rounded-lg font-bold">Save</button> </div> </div> </div> <div id="notiModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm"> <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-600 shadow-2xl"> <div class="flex justify-between items-center mb-4"> <h3 class="text-xl font-bold text-white">Send Notification</h3> <button onclick="document.getElementById('notiModal').style.display='none'" class="text-gray-400"><i class="fa-solid fa-times"></i></button> </div> <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Title</label> <input type="text" id="noti_title" placeholder="Notice Title" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 text-white outline-none"> <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Message</label> <textarea id="noti_msg" rows="3" placeholder="Type here..." class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 text-white outline-none"></textarea> <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mb-4"> <div class="flex items-center gap-2"> <input type="checkbox" id="send_all" checked class="w-4 h-4 text-blue-600"> <label for="send_all" class="text-xs text-white">Send to ALL Users</label> </div> </div> <button onclick="sendNoti()" class="w-full bg-blue-600 py-3 rounded-lg font-bold">Send Notification</button> </div> </div>
 
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
@@ -83,17 +75,9 @@
                 const data = await res.json();
                 document.getElementById('total_users').innerText = data.total_users;
                 document.getElementById('pending_deposits').innerText = data.pending_deposits;
-                document.getElementById('pending_withdraws').innerText = data.pending_withdraws;
-                document.getElementById('total_tournaments').innerText = data.total_tournaments;
             } catch (e) {}
         }
-
         function logout() { localStorage.removeItem('user'); window.location.href = '/'; }
-        async function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; try { const res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'get_settings' }) }); const data = await res.json(); document.getElementById('set_youtube').value = data.youtube_link || ''; document.getElementById('set_telegram').value = data.telegram_link || ''; document.getElementById('set_whatsapp').value = data.whatsapp_number || ''; document.getElementById('set_announcement').value = data.announcement || ''; document.getElementById('set_notification').value = data.notification_msg || ''; document.getElementById('set_about').value = data.about_us || ''; document.getElementById('set_policy').value = data.privacy_policy || ''; document.getElementById('set_version').value = data.app_version || '1.0.0'; } catch(e) {} } 
-        async function saveSettings() { const youtube = document.getElementById('set_youtube').value; const telegram = document.getElementById('set_telegram').value; const whatsapp = document.getElementById('set_whatsapp').value; const announcement = document.getElementById('set_announcement').value; const notification = document.getElementById('set_notification').value; const about = document.getElementById('set_about').value; const policy = document.getElementById('set_policy').value; const version = document.getElementById('set_version').value; await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'update_settings', youtube, telegram, whatsapp, version, announcement, notification, about, policy }) }); alert("Updated!"); document.getElementById('settingsModal').style.display = 'none'; } 
-        function openNotiModal() { document.getElementById('notiModal').style.display = 'flex'; } 
-        async function sendNoti() { const title = document.getElementById('noti_title').value; const msg = document.getElementById('noti_msg').value; if(!title || !msg) return alert("Enter details"); await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'send_notification', title, message: msg, send_to_all: true }) }); alert("Sent!"); document.getElementById('notiModal').style.display = 'none'; }
-
         loadStats();
     </script>
 </body>
