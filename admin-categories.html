@@ -14,7 +14,7 @@
         <a href="/admin" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
         <div>
             <div class="text-xl font-bold" id="page_title">Games</div>
-            <p class="text-[10px] text-gray-400">Category Manager</p>
+            <p class="text-[10px] text-gray-400" id="page_mode">Loading...</p>
         </div>
     </header>
 
@@ -23,100 +23,138 @@
         <h3 class="font-bold text-md mb-3 border-b border-gray-600 pb-2 text-gray-300">Add New Category</h3>
         
         <input type="hidden" id="edit_id">
-        <!-- This handles the Type (Official / Normal) automatically -->
-        <input type="hidden" id="cat_mode"> 
+        <!-- Hidden Type -->
+        <input type="hidden" id="cat_mode">
 
         <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Title</label>
-        <input type="text" id="cat_title" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none focus:border-blue-500 transition text-white">
+        <input type="text" id="cat_title" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-blue-500">
         
         <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Image URL</label>
-        <input type="text" id="cat_img" class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 outline-none focus:border-blue-500 transition text-white">
+        <input type="text" id="cat_img" class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 outline-none text-white focus:border-blue-500">
         
-        <button onclick="handleCategory()" id="submit_btn" class="w-full bg-blue-600 py-3 rounded-lg font-bold shadow-lg hover:bg-blue-700 transition">Create Category</button>
-        <button onclick="resetForm()" id="cancel_btn" class="hidden w-full mt-2 bg-gray-700 py-2 rounded-lg text-sm text-gray-300">Cancel Edit</button>
+        <button onclick="handleCategory()" id="submit_btn" class="w-full bg-blue-600 py-3 rounded-lg font-bold shadow-lg transition">Create Category</button>
+        <button onclick="resetForm()" id="cancel_btn" class="hidden w-full mt-2 bg-gray-700 py-2 rounded-lg text-sm text-gray-300">Cancel</button>
     </div>
 
     <!-- List -->
     <div class="px-4">
-        <h3 class="font-bold text-lg mb-3 pl-2 border-l-4 border-blue-500" id="list_title">Active Categories</h3>
+        <h3 class="font-bold text-lg mb-3 pl-2 border-l-4 border-blue-500" id="list_title">Active List</h3>
         <div id="cat_list" class="space-y-3">
             <p class="text-center text-gray-500 mt-10">Loading...</p>
         </div>
     </div>
 
     <script>
-        // 1. মোড ডিটেক্ট করা (URL থেকে)
+        // 1. URL থেকে 'mode' সঠিকভাবে নেওয়া
         const urlParams = new URLSearchParams(window.location.search);
-        const mode = urlParams.get('mode') || 'normal'; // ডিফল্ট নরমাল
-        
-        // 2. UI সেটআপ
-        document.getElementById('cat_mode').value = mode; // ইনপুটে সেট
-        const pageTitle = document.getElementById('page_title');
-        const subBtn = document.getElementById('submit_btn');
+        let currentMode = urlParams.get('mode');
 
-        if(mode === 'official') {
-            pageTitle.innerText = "Official Tournaments";
-            subBtn.classList.replace('bg-blue-600', 'bg-purple-600');
-            subBtn.classList.replace('hover:bg-blue-700', 'hover:bg-purple-700');
-            document.getElementById('cat_title').placeholder = "e.g. Grand Series 2025";
-        } else {
-            pageTitle.innerText = "Daily Matches";
-            document.getElementById('cat_title').placeholder = "e.g. Ludo, FreeFire CS";
+        // যদি URL এ mode না থাকে, তাহলে ডিফল্ট 'normal' ধরে নেব
+        if (!currentMode || (currentMode !== 'official' && currentMode !== 'normal')) {
+            currentMode = 'normal';
         }
 
-        // 3. ডাটা লোড ও ফিল্টার
+        console.log("Current Mode Detected:", currentMode); // Debugging
+
+        // 2. UI আপডেট করা (কালার ও টেক্সট)
+        const titleEl = document.getElementById('page_title');
+        const modeEl = document.getElementById('page_mode');
+        const subBtn = document.getElementById('submit_btn');
+        const catInput = document.getElementById('cat_title');
+
+        if (currentMode === 'official') {
+            titleEl.innerText = "Official Tournaments";
+            modeEl.innerText = "Managing Official Events";
+            subBtn.classList.replace('bg-blue-600', 'bg-red-600');
+            catInput.placeholder = "e.g. World Cup Season 1";
+        } else {
+            titleEl.innerText = "Daily Matches";
+            modeEl.innerText = "Managing Normal Games";
+            subBtn.classList.replace('bg-red-600', 'bg-blue-600');
+            catInput.placeholder = "e.g. Ludo King, FreeFire Daily";
+        }
+
+        // 3. ডাটা লোড ও ফিল্টার লজিক (Main Fix)
         async function loadData() {
             try {
                 const res = await fetch('/api/admin', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ type: 'get_categories' })
                 });
-                const data = await res.json();
                 
-                // শুধু নির্দিষ্ট মোডের ডাটা দেখাবে
-                const filtered = data.filter(c => c.type === mode);
-                const list = document.getElementById('cat_list');
+                const allData = await res.json();
+                
+                // 🔥 Main Filter Logic Here 🔥
+                // যদি currentMode = 'official', শুধু official টাইপ দেখাবো
+                // যদি currentMode = 'normal', বাকি সব দেখাবো (normal বা null)
+                const filteredData = allData.filter(item => {
+                    if (currentMode === 'official') {
+                        return item.type === 'official';
+                    } else {
+                        // Normal mode shows items where type is 'normal' OR type is empty
+                        return !item.type || item.type === 'normal';
+                    }
+                });
 
-                if(filtered.length > 0) {
-                    list.innerHTML = filtered.map(c => `
-                        <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 flex justify-between items-center group">
-                            <div class="flex items-center gap-3">
-                                <img src="${c.image}" class="w-12 h-12 rounded-lg object-cover bg-gray-700 border border-gray-600">
+                const list = document.getElementById('cat_list');
+                
+                if (filteredData.length > 0) {
+                    list.innerHTML = filteredData.map(c => `
+                        <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 flex justify-between items-center group relative overflow-hidden">
+                            <div class="absolute left-0 top-0 h-full w-1 ${currentMode === 'official' ? 'bg-red-500' : 'bg-blue-500'}"></div>
+                            <div class="flex items-center gap-3 pl-2">
+                                <img src="${c.image}" class="w-12 h-12 rounded-lg object-cover bg-gray-700">
                                 <div>
                                     <h4 class="font-bold text-white text-sm">${c.title}</h4>
-                                    <button onclick="window.location.href='/admin-matches?cat_id=${c.id}&name=${c.title}'" class="text-[10px] bg-green-900 text-green-400 px-2 py-0.5 rounded border border-green-700 mt-1 hover:bg-green-800 transition">Manage Matches</button>
+                                    <button onclick="window.location.href='/admin-matches?cat_id=${c.id}&name=${c.title}'" class="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded border border-gray-600 mt-1 hover:bg-gray-600">
+                                        Matches Inside
+                                    </button>
                                 </div>
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="editMode(${c.id}, '${c.title}', '${c.image}')" class="bg-yellow-600/20 text-yellow-500 p-2 rounded hover:bg-yellow-600 hover:text-white transition"><i class="fa-solid fa-pen"></i></button>
-                                <button onclick="deleteCat(${c.id})" class="bg-red-600/20 text-red-500 p-2 rounded hover:bg-red-600 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
+                                <button onclick="editMode(${c.id}, '${c.title}', '${c.image}')" class="bg-yellow-500/20 text-yellow-500 p-2 rounded hover:bg-yellow-500 hover:text-black transition"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteCat(${c.id})" class="bg-red-500/20 text-red-500 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                     `).join('');
                 } else {
-                    list.innerHTML = '<p class="text-center text-gray-500 py-10 opacity-50">No categories found.</p>';
+                    list.innerHTML = `
+                        <div class="text-center py-10 opacity-50 border-2 border-dashed border-gray-700 rounded-xl">
+                            <i class="fa-solid fa-box-open text-4xl mb-2 text-gray-600"></i>
+                            <p class="text-gray-400">No ${currentMode} games found.</p>
+                        </div>
+                    `;
                 }
-            } catch(e) { console.error(e); }
+
+            } catch (e) { console.error(e); }
         }
 
-        // 4. অ্যাড / এডিট ফাংশন
+        // 4. Create Category
         async function handleCategory() {
             const title = document.getElementById('cat_title').value;
             const img = document.getElementById('cat_img').value;
             const id = document.getElementById('edit_id').value;
-            
-            if(!title || !img) return alert("Fill all fields");
 
-            // type পাঠানো হচ্ছে 'mode' ভেরিয়েবল থেকে
-            const apiType = id ? 'edit_category' : 'add_category';
-            
-            await fetch('/api/admin', {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ type: apiType, id, title, image: img, cat_type: mode })
-            });
+            if(!title || !img) return alert("Please fill all inputs");
+
+            const btn = document.getElementById('submit_btn');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            // ✅ এখানে টাইপ (cat_type) সঠিকভাবে পাঠানো হচ্ছে
+            const body = {
+                type: id ? 'edit_category' : 'add_category',
+                id: id,
+                title: title,
+                image: img,
+                cat_type: currentMode // এটি খুবই গুরুত্বপূর্ণ!
+            };
+
+            await fetch('/api/admin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
             
             resetForm();
-            loadData();
+            loadData(); // রিলোড
+            btn.innerText = "Create Category"; btn.disabled = false;
         }
 
         function editMode(id, t, i) {
@@ -136,8 +174,8 @@
         }
 
         async function deleteCat(id) {
-            if(!confirm("Delete? Matches inside will be lost!")) return;
-            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ type: 'delete_category', id }) });
+            if(!confirm("⚠️ Delete this category? All matches inside will be lost!")) return;
+            await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ type:'delete_category', id }) });
             loadData();
         }
 
