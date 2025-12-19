@@ -24,6 +24,7 @@
     { "source": "/matches", "destination": "/matches.html" },
    
     { "source": "/admin/add-tournament", "destination": "/admin-add-tournament.html" },
+    { "source": "/tournament-list", "destination": "/tournament-list.html" },
     
     { "source": "/profile", "destination": "/profile.html" },
     { "source": "/leaderboard", "destination": "/leaderboard.html" },
