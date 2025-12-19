@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Tournament</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white pb-20">
+
+    <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50">
+        <a href="/admin/dashboard" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left"></i></a>
+        <div class="text-xl font-bold text-blue-500">Add Tournament</div>
+    </header>
+
+    <div class="p-4 space-y-4">
+        
+        <!-- Game Selection -->
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">Select Game Category</label>
+            <select id="parent_id" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">Tournament Title</label>
+            <input type="text" id="title" placeholder="e.g. Weekly Solo Cup" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Entry Fee (৳)</label>
+                <input type="number" id="entry_fee" placeholder="0" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Prize Pool (৳)</label>
+                <input type="number" id="prize_pool" placeholder="0" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Match Type</label>
+                <select id="match_type" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white">
+                    <option value="Solo">Solo</option>
+                    <option value="Duo">Duo</option>
+                    <option value="Squad">Squad</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Total Slots</label>
+                <input type="number" id="max_teams" placeholder="48" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">Map</label>
+            <input type="text" id="map" placeholder="e.g. Bermuda" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Start Date</label>
+                <input type="datetime-local" id="start_time" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-gray-400 text-sm mb-1">Reg. Close</label>
+                <input type="datetime-local" id="registration_end" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-gray-400 text-sm mb-1">Banner Image URL</label>
+            <input type="text" id="image" placeholder="https://..." class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white focus:border-blue-500 outline-none">
+        </div>
+
+        <button onclick="createTournament()" class="w-full bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-700 transition">Create Tournament</button>
+
+    </div>
+
+    <script>
+        // Load Categories
+        async function loadCats() {
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'list_categories' })
+            });
+            const data = await res.json();
+            const select = document.getElementById('parent_id');
+            select.innerHTML = data.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+        }
+
+        async function createTournament() {
+            const data = {
+                type: 'create_tournament',
+                parent_id: document.getElementById('parent_id').value,
+                title: document.getElementById('title').value,
+                entry_fee: document.getElementById('entry_fee').value,
+                prize_pool: document.getElementById('prize_pool').value,
+                match_type: document.getElementById('match_type').value,
+                max_teams: document.getElementById('max_teams').value,
+                map: document.getElementById('map').value,
+                start_time: document.getElementById('start_time').value,
+                registration_end: document.getElementById('registration_end').value,
+                image: document.getElementById('image').value
+            };
+
+            if(!data.title || !data.entry_fee) return alert("Fill required fields");
+
+            const res = await fetch('/api/admin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if(result.success) {
+                alert("Tournament Created!");
+                window.location.href = '/admin/dashboard';
+            } else {
+                alert("Error: " + result.error);
+            }
+        }
+
+        loadCats();
+    </script>
+</body>
+  </html>
