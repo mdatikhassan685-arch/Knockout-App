@@ -29,6 +29,18 @@ module.exports = async (req, res) => {
             rows.forEach(row => { settings[row.setting_key] = row.setting_value; });
             return res.status(200).json(settings);
         }
+                // ========== CREATE TOURNAMENT ==========
+        if (type === 'create_tournament') {
+            const { parent_id, title, entry_fee, prize_pool, match_type, max_teams, map, start_time, registration_end, image } = req.body;
+            
+            await db.execute(
+                `INSERT INTO tournaments 
+                (parent_id, title, entry_fee, prize_pool, match_type, max_teams, map, start_time, registration_end, image, is_official, is_category, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, "open")`,
+                [parent_id, title, entry_fee, prize_pool, match_type, max_teams, map, start_time, registration_end, image]
+            );
+            return res.status(200).json({ success: true, message: 'Tournament created' });
+        }
 
         if (type === 'update_settings') {
             const upsert = async (key, val) => {
