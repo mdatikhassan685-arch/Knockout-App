@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Game Category</title>
+    <title>Manage Categories</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
@@ -11,162 +11,144 @@
 
     <!-- Header -->
     <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
-        <a href="/admin" class="mr-4 text-gray-400 active:scale-90"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <a href="/admin" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
         <div>
-            <div class="text-xl font-bold" id="page_heading">Game Categories</div>
-            <p class="text-[10px] text-gray-400">Add or Edit Game Titles</p>
+            <div class="text-xl font-bold" id="page_title">Games</div>
+            <p class="text-[10px] text-gray-400" id="page_sub">Management</p>
         </div>
     </header>
 
-    <!-- Create / Edit Form -->
-    <div class="p-4 bg-gray-800 m-4 rounded-xl border border-gray-700 shadow-lg" id="form_box">
-        <div class="flex justify-between items-center mb-3 border-b border-gray-600 pb-2">
-            <h3 class="font-bold text-lg text-white" id="form_title">Add New Game</h3>
-            <button onclick="resetForm()" id="cancel_btn" class="hidden text-xs bg-red-600/20 text-red-400 border border-red-500/50 px-3 py-1 rounded font-bold hover:bg-red-600 hover:text-white transition">Cancel</button>
-        </div>
+    <!-- Create/Edit Form -->
+    <div class="p-4 bg-gray-800 m-4 rounded-xl border border-gray-700 shadow-lg">
+        <h3 class="font-bold text-md mb-3 border-b border-gray-600 pb-2 text-gray-300">Add / Edit Category</h3>
         
         <input type="hidden" id="edit_id">
-        <!-- Default Type Selector -->
-        <div class="mb-3">
-            <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Category Type</label>
-            <select id="cat_type" class="w-full bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white focus:border-indigo-500">
-                <option value="normal">Daily Match (Normal)</option>
-                <option value="official">Official Tournament</option>
-            </select>
-        </div>
+        <input type="hidden" id="cat_mode"> 
 
-        <div class="mb-3">
-            <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Game Name</label>
-            <input type="text" id="cat_title" placeholder="e.g. FreeFire CS Rank" class="w-full bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white focus:border-indigo-500">
-        </div>
+        <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Title</label>
+        <input type="text" id="cat_title" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-blue-500">
         
-        <div class="mb-4">
-            <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Image URL</label>
-            <input type="text" id="cat_img" placeholder="https://..." class="w-full bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white focus:border-indigo-500">
-        </div>
+        <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Image URL</label>
+        <input type="text" id="cat_img" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-blue-500">
         
-        <button onclick="handleCategory()" id="submit_btn" class="w-full bg-indigo-600 py-3 rounded-lg font-bold text-white shadow-lg hover:bg-indigo-700 transition">Create Category</button>
+        <!-- Status Dropdown (New Feature) -->
+        <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Availability Status</label>
+        <select id="cat_status" class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 outline-none text-white focus:border-blue-500">
+            <option value="open">🟢 Open (User Can Click)</option>
+            <option value="coming_soon">🟡 Coming Soon (Locked)</option>
+        </select>
+
+        <button onclick="handleCategory()" id="submit_btn" class="w-full bg-blue-600 py-3 rounded-lg font-bold shadow-lg transition">Create Category</button>
+        <button onclick="resetForm()" id="cancel_btn" class="hidden w-full mt-2 bg-gray-700 py-2 rounded-lg text-sm text-gray-300">Cancel Edit</button>
     </div>
 
     <!-- Active List -->
     <div class="px-4">
-        <div class="flex justify-between items-center mb-3 border-l-4 border-indigo-500 pl-3">
-            <h3 class="font-bold text-lg text-white">All Games</h3>
-            <button onclick="loadData()" class="text-xs bg-gray-800 p-2 rounded hover:bg-gray-700 border border-gray-600"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-        </div>
-        
+        <h3 class="font-bold text-lg mb-3 pl-2 border-l-4 border-blue-500">Active List</h3>
         <div id="cat_list" class="space-y-3 pb-10">
-            <p class="text-center text-gray-500 mt-10 animate-pulse">Fetching data...</p>
+            <p class="text-center text-gray-500 mt-10">Loading...</p>
         </div>
     </div>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        let mode = urlParams.get('mode'); // Optional, to filter list if needed
+        let mode = urlParams.get('mode') || 'normal'; // Default normal
 
-        // --- 1. Load Categories ---
+        // UI Setup
+        if(mode === 'official') {
+            document.getElementById('page_title').innerText = "Official Tournaments";
+            document.getElementById('submit_btn').className = "w-full bg-yellow-600 py-3 rounded-lg font-bold shadow-lg";
+        } else {
+            document.getElementById('page_title').innerText = "Daily Matches";
+        }
+
         async function loadData() {
             try {
                 const res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'get_categories' }) });
                 const allData = await res.json();
                 
+                const filtered = allData.filter(c => {
+                    if(mode === 'official') return c.type === 'official';
+                    return c.type === 'normal' || !c.type;
+                });
+
                 const list = document.getElementById('cat_list');
                 
-                // If mode is passed via URL, filter accordingly (optional logic)
-                const filteredData = mode ? allData.filter(c => c.type === mode) : allData;
-
-                if(filteredData.length > 0) {
-                    list.innerHTML = filteredData.map(c => {
-                        // Badge color based on type
-                        const badgeColor = c.type === 'official' ? 'bg-yellow-600 text-black' : 'bg-blue-600 text-white';
-                        const badgeText = c.type === 'official' ? 'OFFICIAL' : 'NORMAL';
-
-                        return `
-                        <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 flex justify-between items-center group relative overflow-hidden transition hover:border-gray-500">
-                            
-                            <!-- Type Badge -->
-                            <span class="absolute top-0 right-0 ${badgeColor} text-[8px] font-bold px-2 py-0.5 rounded-bl-lg">${badgeText}</span>
-
-                            <div class="flex items-center gap-4">
-                                <img src="${c.image}" class="w-16 h-16 rounded-lg object-cover bg-gray-900 border border-gray-600 shadow-sm" onerror="this.src='https://placehold.co/100x100?text=No+Img'">
+                if (filtered.length > 0) {
+                    list.innerHTML = filtered.map(c => `
+                        <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 flex justify-between items-center group relative overflow-hidden">
+                            <div class="flex items-center gap-3 pl-2">
+                                <img src="${c.image}" class="w-12 h-12 rounded bg-black/20 object-cover border border-gray-600">
                                 <div>
-                                    <h4 class="font-bold text-white text-md mb-1">${c.title}</h4>
-                                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">ID: ${c.id}</p>
+                                    <h4 class="font-bold text-white text-sm">${c.title}</h4>
+                                    <!-- Status Badge -->
+                                    <span class="text-[9px] px-2 py-0.5 rounded font-bold uppercase ${c.status === 'coming_soon' ? 'bg-yellow-500 text-black' : 'bg-green-600 text-white'}">
+                                        ${c.status || 'open'}
+                                    </span>
                                 </div>
                             </div>
-
-                            <div class="flex flex-col gap-2 mt-2">
-                                <button onclick="enableEdit(${c.id}, '${c.title}', '${c.image}', '${c.type}')" class="bg-yellow-500/10 text-yellow-500 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-yellow-500 hover:text-black transition border border-yellow-500/30 shadow-md">
-                                    <i class="fa-solid fa-pen text-xs"></i>
+                            
+                            <div class="flex gap-2">
+                                <!-- Manage Matches Button -->
+                                <button onclick="window.location.href='/admin-matches?cat_id=${c.id}&name=${c.title}'" class="bg-gray-700 text-gray-300 p-2 rounded text-xs border border-gray-600 hover:bg-gray-600">
+                                    <i class="fa-solid fa-list"></i>
                                 </button>
-                                <button onclick="deleteCat(${c.id})" class="bg-red-500/10 text-red-500 w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition border border-red-500/30 shadow-md">
-                                    <i class="fa-solid fa-trash text-xs"></i>
+                                
+                                <!-- Edit Button -->
+                                <button onclick="editMode(${c.id}, '${c.title}', '${c.image}', '${c.status}')" class="bg-yellow-600/20 text-yellow-500 p-2 rounded hover:bg-yellow-600 hover:text-black">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                
+                                <!-- Delete Button -->
+                                <button onclick="deleteCat(${c.id})" class="bg-red-600/20 text-red-500 p-2 rounded hover:bg-red-600 hover:text-white">
+                                    <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
-                        </div>`;
-                    }).join('');
-                } else {
-                    list.innerHTML = `<div class="text-center py-12 opacity-40 border-2 border-dashed border-gray-700 rounded-xl m-4"><i class="fa-solid fa-ghost text-4xl mb-3"></i><p>No games found.</p></div>`;
-                }
-            } catch(e) { console.error(e); }
+                        </div>
+                    `).join('');
+                } else { list.innerHTML = `<p class="text-center text-gray-500 py-10 opacity-50">No games found.</p>`; }
+            } catch(e) {}
         }
 
-        // --- 2. Add / Update ---
         async function handleCategory() {
             const title = document.getElementById('cat_title').value;
             const img = document.getElementById('cat_img').value;
-            const typeVal = document.getElementById('cat_type').value;
+            const status = document.getElementById('cat_status').value; // New Status
             const id = document.getElementById('edit_id').value;
 
-            if(!title || !img) return alert("Fill all details!");
+            const body = { 
+                type: id ? 'edit_category' : 'add_category', 
+                id: id, title, image: img, 
+                cat_type: mode, 
+                status: status 
+            };
 
-            const apiType = id ? 'edit_category' : 'add_category';
-            const btn = document.getElementById('submit_btn');
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...`;
-            btn.disabled = true;
-
-            await fetch('/api/admin', { 
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ type: apiType, id, title, image: img, cat_type: typeVal }) 
-            });
-            
-            resetForm();
-            loadData();
-            btn.innerHTML = "Create Category"; 
-            btn.disabled = false;
+            await fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+            resetForm(); loadData();
         }
 
-        // --- 3. Edit Logic ---
-        function enableEdit(id, title, img, type) {
+        function editMode(id, t, i, s) {
             document.getElementById('edit_id').value = id;
-            document.getElementById('cat_title').value = title;
-            document.getElementById('cat_img').value = img;
-            document.getElementById('cat_type').value = type || 'normal';
-            
+            document.getElementById('cat_title').value = t;
+            document.getElementById('cat_img').value = i;
+            document.getElementById('cat_status').value = s || 'open'; // Set status dropdown
             document.getElementById('submit_btn').innerText = "Update Now";
-            document.getElementById('submit_btn').className = "w-full bg-green-600 py-3 rounded-lg font-bold text-white shadow-lg hover:bg-green-700 transition";
             document.getElementById('cancel_btn').classList.remove('hidden');
-            document.getElementById('form_title').innerText = "Edit Game Info";
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({top:0, behavior:'smooth'});
         }
 
         function resetForm() {
             document.getElementById('edit_id').value = '';
             document.getElementById('cat_title').value = '';
             document.getElementById('cat_img').value = '';
-            document.getElementById('cat_type').value = 'normal';
-            
+            document.getElementById('cat_status').value = 'open';
             document.getElementById('submit_btn').innerText = "Create Category";
-            document.getElementById('submit_btn').className = "w-full bg-indigo-600 py-3 rounded-lg font-bold text-white shadow-lg hover:bg-indigo-700 transition";
             document.getElementById('cancel_btn').classList.add('hidden');
-            document.getElementById('form_title').innerText = "Add New Game";
         }
 
-        // --- 4. Delete Logic ---
         async function deleteCat(id) {
-            if(confirm("⚠️ WARNING: Deleting this category will REMOVE ALL MATCHES associated with it. Continue?")) {
-                await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ type:'delete_category', id }) });
+            if(confirm("⚠️ Delete Category?")) {
+                await fetch('/api/admin', { method:'POST', body: JSON.stringify({ type:'delete_category', id }) });
                 loadData();
             }
         }
