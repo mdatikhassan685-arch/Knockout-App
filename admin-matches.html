@@ -3,181 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Matches Manager</title>
+    <title>Match Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>.custom-scroll::-webkit-scrollbar { width: 4px; } .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }</style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-900 text-white pb-24 select-none">
 
     <!-- Header -->
-    <nav class="bg-blue-600 text-white p-4 shadow flex justify-between items-center sticky top-0 z-50">
+    <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
+        <a href="javascript:history.back()" class="mr-4 text-gray-400 active:scale-90"><i class="fa-solid fa-arrow-left text-xl"></i></a>
         <div>
-            <h1 class="font-bold text-lg"><i class="fa-solid fa-fire mr-2"></i> Daily Matches</h1>
-            <p class="text-xs text-blue-200">Add & Manage Matches</p>
+            <h1 class="font-bold text-lg leading-tight truncate w-64" id="cat_title">Matches</h1>
+            <p class="text-[10px] text-gray-400">Match Operations</p>
         </div>
-        <a href="admin-dashboard.html" class="bg-blue-800 px-3 py-1 rounded text-xs hover:bg-blue-700 transition">Dashboard</a>
-    </nav>
+    </header>
 
-    <div class="container mx-auto p-4 pb-20">
+    <!-- Create Match Form -->
+    <div class="p-4 bg-gray-800 m-4 rounded-xl border border-gray-700 shadow-lg">
+        <h3 class="font-bold text-md mb-3 border-b border-gray-600 pb-2 flex justify-between items-center text-white">
+            <span id="form_title">Create New Match</span>
+            <button onclick="resetForm()" id="cancel_btn" class="hidden text-[10px] bg-red-900 text-red-300 px-2 py-1 rounded border border-red-700">Cancel</button>
+        </h3>
+        
+        <input type="hidden" id="match_id">
 
-        <!-- Form Box -->
-        <div class="bg-white p-5 rounded-xl shadow-lg border-t-4 border-blue-500">
-            <h2 class="text-lg font-bold mb-4 text-gray-800 border-b pb-2">Publish New Match</h2>
-            
-            <form id="createForm" onsubmit="createMatch(event)">
-                
-                <!-- Category Loader -->
-                <div class="mb-3">
-                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Select Game Category</label>
-                    <select id="cat_id" class="w-full border p-3 rounded-lg bg-gray-50 text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        <option value="">Loading Games...</option>
-                    </select>
-                </div>
-
-                <!-- Match Title -->
-                <div class="mb-3">
-                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Match Title</label>
-                    <input type="text" id="m_title" placeholder="Ex: Solo Rush Hour #55" class="w-full border p-3 rounded-lg focus:outline-none focus:border-blue-500" required>
-                </div>
-
-                <!-- Fees & Prize -->
-                <div class="flex gap-3 mb-3">
-                    <div class="w-1/2">
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Entry Fee</label>
-                        <input type="number" id="m_fee" placeholder="20" class="w-full border p-3 rounded-lg font-bold text-red-600 focus:outline-none" required>
-                    </div>
-                    <div class="w-1/2">
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Total Prize</label>
-                        <input type="number" id="m_prize" placeholder="300" class="w-full border p-3 rounded-lg font-bold text-green-600 focus:outline-none" required>
-                    </div>
-                </div>
-
-                <!-- Type & Map -->
-                <div class="flex gap-3 mb-3">
-                    <div class="w-1/2">
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Type</label>
-                        <select id="m_type" class="w-full border p-3 rounded-lg bg-white">
-                            <option value="Solo">Solo</option>
-                            <option value="Duo">Duo</option>
-                            <option value="Squad">Squad</option>
-                            <option value="Clash Squad">CS Mode</option>
-                        </select>
-                    </div>
-                    <div class="w-1/2">
-                        <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Map</label>
-                        <input type="text" id="m_map" placeholder="Bermuda" class="w-full border p-3 rounded-lg">
-                    </div>
-                </div>
-
-                <!-- Optional Kill Prize -->
-                <div class="mb-3">
-                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Per Kill Rate (Optional)</label>
-                    <input type="number" id="m_kill" placeholder="5" class="w-full border p-3 rounded-lg">
-                </div>
-
-                <!-- Time -->
-                <div class="mb-5">
-                    <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Schedule Time</label>
-                    <input type="datetime-local" id="m_time" class="w-full border p-3 rounded-lg text-gray-700 bg-gray-50 focus:bg-white" required>
-                </div>
-
-                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 rounded-lg hover:shadow-lg transition transform active:scale-95">
-                    🚀 PUBLISH MATCH NOW
-                </button>
-            </form>
+        <input type="text" id="m_title" placeholder="Match Title (e.g. Solo Rush #1)" class="w-full bg-gray-900 p-3 rounded-lg mb-2 text-sm border border-gray-600 outline-none text-white focus:border-blue-500 transition">
+        
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="number" id="m_fee" placeholder="Entry Fee" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm focus:border-blue-500">
+            <input type="number" id="m_prize" placeholder="Winning Prize" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm focus:border-blue-500">
         </div>
 
-        <!-- Latest Added Preview -->
-        <div class="mt-6">
-            <h3 class="font-bold text-gray-600 mb-2">Latest Created Matches</h3>
-            <div id="match-preview" class="space-y-3">
-                <p class="text-center text-gray-400 text-sm mt-4">Loading match history...</p>
-            </div>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <select id="m_type" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm focus:border-blue-500">
+                <option value="Solo">Solo</option>
+                <option value="Duo">Duo</option>
+                <option value="Squad">Squad</option>
+            </select>
+            <input type="number" id="m_spots" placeholder="Total Spots" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm focus:border-blue-500">
         </div>
 
+        <!-- NEW: Per Kill and Map Fields (For Daily Matches) -->
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="number" id="m_kill" placeholder="Per Kill Rate" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm focus:border-blue-500">
+            <input type="text" id="m_map" placeholder="Map Name" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm focus:border-blue-500">
+        </div>
+
+        <input type="datetime-local" id="m_time" class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 outline-none text-gray-400 text-sm focus:border-blue-500">
+
+        <button onclick="handleMatch()" id="submit_btn" class="w-full bg-blue-600 py-3 rounded-lg font-bold shadow-lg hover:bg-blue-700 transition transform active:scale-95 text-white">Publish Match</button>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        const adminToken = localStorage.getItem('adminToken');
-        if(!adminToken) window.location.href = 'index.html';
+    <!-- Match List -->
+    <div class="px-4">
+        <h3 class="font-bold text-lg mb-3 border-l-4 border-blue-500 pl-2">Active Matches</h3>
+        <div id="match_list" class="space-y-4 pb-10">
+            <p class="text-center text-gray-500 mt-10 animate-pulse">Loading matches...</p>
+        </div>
+    </div>
 
-        // 1. ক্যাটাগরি লোড করা (শুধুমাত্র Normal গেমস)
-        async function loadCategories() {
-            try {
-                // আমরা ধরে নিচ্ছি আপনার api/admin.js এ 'get_normal_categories' নামে অপশন বানানো হয়েছে বা হবে।
-                // অথবা 'get_categories' থেকে ফিল্টার করবেন।
-                const res = await fetch('/api/admin', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action: 'get_categories', token: adminToken })
-                });
-                
-                const d = await res.json();
-                if(d.success) {
-                    const sel = document.getElementById('cat_id');
-                    sel.innerHTML = '<option value="">-- Choose Category --</option>';
-                    d.data.forEach(c => {
-                        // যদি আপনার categories টেবিলে type কলাম থাকে তবে এই ফিল্টার কাজ করবে
-                        // না থাকলে সব দেখাবে, যা ঠিক আছে।
-                        if(c.type !== 'Official') { 
-                            sel.innerHTML += `<option value="${c.id}">${c.title}</option>`;
-                        }
-                    });
-                }
-            } catch(e) {
-                console.error("Cat Load Error:", e);
-                document.getElementById('cat_id').innerHTML = '<option>Error Loading Categories</option>';
+    <!-- Result Modal (Hidden) -->
+    <div id="resultModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 p-5 rounded-xl border border-gray-600 shadow-2xl w-full max-w-sm">
+            <h3 class="text-lg font-bold text-white mb-4 border-b border-gray-600 pb-2">Set Match Result</h3>
+            <p class="text-gray-400 text-xs mb-4">Set winners and prizes manually or automatically based on kills.</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="document.getElementById('resultModal').style.display='none'" class="bg-gray-700 px-4 py-2 rounded text-xs text-white">Close</button>
+                <button onclick="alert('Result Feature Coming Next')" class="bg-green-600 px-4 py-2 rounded text-xs font-bold text-white">Proceed</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ✅ 1. FIXED SECURITY CHECK
+        // (Checking 'user' object instead of 'adminToken' to prevent logout loop)
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            window.location.href = 'index.html'; 
+        } else {
+            const user = JSON.parse(userStr);
+            if (user.role !== 'admin') {
+                window.location.href = 'index.html';
             }
         }
 
-        // 2. ম্যাচ তৈরি করা
-        async function createMatch(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
-            btn.disabled = true;
+        // 2. URL Params Setup
+        const urlParams = new URLSearchParams(window.location.search);
+        const catId = urlParams.get('cat_id');
+        const catName = urlParams.get('name');
+        
+        if(catName) {
+            document.getElementById('cat_title').innerText = decodeURIComponent(catName);
+        } else {
+            document.getElementById('cat_title').innerText = "All Matches";
+        }
 
-            const bodyData = {
-                action: 'create_daily_match',
-                token: adminToken,
-                category_id: document.getElementById('cat_id').value,
+        // 3. Load Matches Function
+        async function loadMatches() {
+            try {
+                // Using new Daily Match API type 'get_admin_matches'
+                // This fetches from the new 'matches' table
+                const res = await fetch('/api/admin', { 
+                    method: 'POST', 
+                    headers: {'Content-Type':'application/json'}, 
+                    body: JSON.stringify({ type: 'get_admin_matches', category_id: catId }) 
+                });
+                
+                const matches = await res.json();
+                const list = document.getElementById('match_list');
+                
+                if(matches.length > 0) {
+                    list.innerHTML = matches.map((m, i) => `
+                        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 relative shadow-md group hover:border-blue-500 transition">
+                            <!-- Header -->
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-bold text-white text-md tracking-wide">#${m.id} ${m.title}</h4>
+                                    <p class="text-xs text-gray-400 mt-1 flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${new Date(m.match_time).toLocaleString()}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick='editMatch(${JSON.stringify(m)})' class="bg-yellow-600/20 text-yellow-500 p-2 rounded hover:bg-yellow-600 hover:text-black transition"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="deleteMatch(${m.id})" class="bg-red-600/20 text-red-500 p-2 rounded hover:bg-red-600 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- Details Badge -->
+                            <div class="flex flex-wrap gap-2 text-[10px] font-bold uppercase mb-4">
+                                <span class="bg-green-900 text-green-400 px-2 py-1 rounded border border-green-700">Prize: ${m.prize_pool}</span>
+                                <span class="bg-blue-900 text-blue-400 px-2 py-1 rounded border border-blue-700">Type: ${m.match_type}</span>
+                                <span class="bg-purple-900 text-purple-400 px-2 py-1 rounded border border-purple-700">Fee: ${m.entry_fee}</span>
+                            </div>
+
+                            <!-- Status & Actions -->
+                            <div class="grid grid-cols-2 gap-2 items-center">
+                                <select onchange="updateStatus(${m.id}, this.value)" class="w-full bg-black/20 text-xs p-2 rounded border border-gray-600 text-white outline-none focus:border-blue-500">
+                                    <option value="upcoming" ${m.status==='upcoming'?'selected':''}>🔵 Upcoming</option>
+                                    <option value="open" ${m.status==='open'?'selected':''}>🟢 Open</option>
+                                    <option value="live" ${m.status==='live'?'selected':''}>🔴 Live</option>
+                                    <option value="completed" ${m.status==='completed'?'selected':''}>🏁 Done</option>
+                                </select>
+
+                                <!-- Manage Buttons -->
+                                <button onclick="window.location.href='admin-match-players.html?id=${m.id}'" class="bg-gray-700 border border-gray-600 py-2 rounded text-xs font-bold hover:bg-gray-600 text-gray-300">
+                                    Players / Result
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `<div class="text-center py-10 opacity-50 border-2 border-dashed border-gray-700 rounded-xl"><i class="fa-solid fa-box-open text-3xl mb-2 text-gray-500"></i><p class="text-sm text-gray-400">No matches found.<br>Create a new one above.</p></div>`;
+                }
+
+            } catch(e) { console.error(e); }
+        }
+
+        // 4. Create or Update Match Logic
+        async function handleMatch() {
+            const id = document.getElementById('match_id').value;
+            
+            // নতুন API টাইপ 'create_daily_match' ব্যবহার করা হচ্ছে
+            const body = {
+                type: id ? 'edit_match' : 'create_daily_match', 
+                match_id: id,
+                category_id: catId,
                 title: document.getElementById('m_title').value,
                 entry_fee: document.getElementById('m_fee').value,
-                prize_pool: document.getElementById('m_prize').value,
-                per_kill: document.getElementById('m_kill').value,
+                prize_pool: document.getElementById('m_prize').value, // Renamed to match DB
+                per_kill: document.getElementById('m_kill').value,    // Added
+                map: document.getElementById('m_map').value,          // Added
+                match_time: document.getElementById('m_time').value,  // Renamed
                 match_type: document.getElementById('m_type').value,
-                map: document.getElementById('m_map').value,
-                match_time: document.getElementById('m_time').value
+                total_spots: document.getElementById('m_spots').value // Optional if needed
             };
 
+            if(!body.title || !body.match_time) return alert("Fill required fields");
+
+            const btn = document.getElementById('submit_btn');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+            btn.disabled = true;
+
             try {
-                const res = await fetch('/api/admin', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(bodyData)
+                await fetch('/api/admin', { 
+                    method:'POST', 
+                    headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify(body) 
                 });
                 
-                const result = await res.json();
-                
-                if(result.success) {
-                    alert('✅ Match Created Successfully!');
-                    document.getElementById('createForm').reset();
-                    // পেজ রিলোড বা প্রিভিউ আপডেট করতে পারেন
-                    location.reload(); 
-                } else {
-                    alert('❌ Error: ' + result.message);
-                }
-            } catch(error) {
-                alert('⚠️ Network or Server Error');
-                console.error(error);
-            } finally {
-                btn.innerHTML = '🚀 PUBLISH MATCH NOW';
-                btn.disabled = false;
-            }
+                resetForm();
+                loadMatches();
+            } catch(e) { alert("Failed!"); }
+            
+            btn.innerHTML = "Publish Match";
+            btn.disabled = false;
         }
 
-        loadCategories();
+        async function updateStatus(id, st) {
+            await fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'update_match_status', match_id:id, new_status:st }) });
+        }
+
+        async function deleteMatch(id) {
+            if(!confirm("⚠️ Delete this match? Player data will be lost.")) return;
+            await fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'delete_match', id:id }) });
+            loadMatches();
+        }
+
+        function editMatch(m) {
+            document.getElementById('match_id').value = m.id;
+            document.getElementById('m_title').value = m.title;
+            document.getElementById('m_fee').value = m.entry_fee;
+            document.getElementById('m_prize').value = m.prize_pool; // Match DB field
+            document.getElementById('m_kill').value = m.per_kill || '';
+            document.getElementById('m_map').value = m.map || '';
+            document.getElementById('m_type').value = m.match_type;
+            
+            // Date formatting for input
+            if(m.match_time) {
+                const dt = new Date(m.match_time);
+                dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+                document.getElementById('m_time').value = dt.toISOString().slice(0,16);
+            }
+
+            document.getElementById('submit_btn').innerText = "Update Match";
+            document.getElementById('submit_btn').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            document.getElementById('submit_btn').classList.add('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('cancel_btn').classList.remove('hidden');
+            document.getElementById('form_title').innerText = "Edit Mode";
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        function resetForm() {
+            document.getElementById('match_id').value = '';
+            document.getElementById('m_title').value = '';
+            document.getElementById('m_fee').value = '';
+            document.getElementById('m_prize').value = '';
+            document.getElementById('m_time').value = '';
+            document.getElementById('m_kill').value = '';
+            document.getElementById('m_map').value = '';
+            
+            const btn = document.getElementById('submit_btn');
+            btn.innerText = "Publish Match";
+            btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            
+            document.getElementById('cancel_btn').classList.add('hidden');
+            document.getElementById('form_title').innerText = "Create New Match";
+        }
+
+        loadMatches();
     </script>
 </body>
 </html>
