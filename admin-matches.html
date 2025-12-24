@@ -28,7 +28,6 @@
         
         <input type="hidden" id="match_id">
 
-        <!-- Category Dropdown -->
         <select id="cat_id" class="w-full bg-gray-900 p-3 mb-2 rounded-lg border border-gray-600 outline-none text-white focus:border-blue-500">
             <option value="">Select Game...</option>
         </select>
@@ -69,97 +68,62 @@
     </div>
 
     <script>
-        // Authentication Check
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || user.role !== 'admin') window.location.href = 'index.html';
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlCatId = urlParams.get('cat_id');
-        const urlCatName = urlParams.get('name');
+        if(urlParams.get('name')) document.getElementById('cat_title').innerText = decodeURIComponent(urlParams.get('name'));
 
-        if(urlCatName) document.getElementById('cat_title').innerText = decodeURIComponent(urlCatName);
-
-        // 1. SAFE LOAD FUNCTION (Async/Await Fixed)
         async function loadCatsAndMatches() {
             try {
-                // CATEGORIES LOAD FIRST
-                const res = await fetch('/api/admin', { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'get_categories' }) 
-                });
-                
-                if(!res.ok) throw new Error("Server Error");
-
+                const res = await fetch('/api/admin', { method: 'POST', body: JSON.stringify({ type: 'get_categories' }) });
                 const data = await res.json();
+                
                 const sel = document.getElementById('cat_id');
                 sel.innerHTML = '<option value="">Select Game...</option>';
                 
                 let foundSelected = false;
-                
-                if(Array.isArray(data)) {
-                    data.forEach(c => {
-                        // Only show Normal Games (Daily Match)
-                        if (!c.type || c.type !== 'official') {
-                            const isSelected = (urlCatId && c.id == urlCatId);
-                            if(isSelected) foundSelected = true;
-                            sel.innerHTML += `<option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.title}</option>`;
-                        }
-                    });
-                }
+                data.forEach(c => {
+                    if (c.type !== 'official') {
+                        const isSelected = (c.id == urlCatId);
+                        if (isSelected) foundSelected = true;
+                        sel.innerHTML += `<option value="${c.id}" ${isSelected ? 'selected' : ''}>${c.title}</option>`;
+                    }
+                });
 
-                // If loaded from URL, disable dropdown to prevent error
                 if(urlCatId && foundSelected) {
                     sel.value = urlCatId;
-                    sel.disabled = true;
+                    sel.disabled = true; 
                     sel.classList.add("bg-gray-800", "text-gray-500");
                 }
-
-                // NOW LOAD MATCHES (After Cats Loaded)
                 loadMatches();
-
-            } catch(e) { 
-                console.error("Init Error:", e);
-                // Even if categories fail, try loading matches
-                loadMatches();
-            }
+            } catch(e) { console.error(e); }
         }
 
-        // 2. MATCH LOAD FUNCTION (Safe Mode)
         async function loadMatches() {
             try {
-                // Get active category ID
                 const activeCatId = urlCatId || document.getElementById('cat_id').value;
-                
-                // If not URL driven, check if dropdown has value, else load ALL matches
-                // Sending 'null' explicitly if no cat selected
-                const payload = { 
-                    type: 'get_admin_matches',
-                    category_id: activeCatId ? activeCatId : null 
-                };
-
                 const res = await fetch('/api/admin', { 
                     method: 'POST', 
                     headers: {'Content-Type':'application/json'}, 
-                    body: JSON.stringify(payload) 
+                    body: JSON.stringify({ type: 'get_admin_matches', category_id: activeCatId || null }) 
                 });
                 
-                if (!res.ok) throw new Error('API Response Error');
-                
+                if (!res.ok) throw new Error('API Error');
                 const matches = await res.json();
                 const list = document.getElementById('match_list');
                 
-                if (Array.isArray(matches) && matches.length > 0) {
+                if (matches && matches.length > 0) {
                     list.innerHTML = matches.map(m => `
                         <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 relative shadow-md mb-3 group hover:border-blue-500 transition">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
                                     <h4 class="font-bold text-white text-sm tracking-wide">#${m.id} ${m.title}</h4>
-                                    <!-- টাইম ফরম্যাটিং ফিক্স (স্থানীয় সময়) -->
+                                    <!-- টাইম ফরম্যাটিং ফিক্স: ব্রাউজারের লোকাল টাইমে দেখাবে -->
                                     <p class="text-xs text-blue-300 mt-1 font-mono"><i class="fa-regular fa-clock"></i> ${new Date(m.match_time).toLocaleString()}</p>
                                 </div>
                                 <div class="flex gap-2">
-                                    <!-- Replace used for safe string escaping -->
                                     <button onclick='editMatch(${JSON.stringify(m).replace(/'/g, "&#39;")})' class="bg-yellow-600/20 text-yellow-500 p-1.5 rounded hover:bg-yellow-600 hover:text-black transition"><i class="fa-solid fa-pen"></i></button>
                                     <button onclick="deleteMatch(${m.id})" class="bg-red-600/20 text-red-500 p-1.5 rounded hover:bg-red-600 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
                                 </div>
@@ -181,33 +145,28 @@
                         </div>
                     `).join('');
                 } else {
-                    list.innerHTML = `<div class="text-center py-10 opacity-50 border-2 border-dashed border-gray-700 rounded-xl mx-2"><p class="text-gray-400 text-sm">No matches found.<br>Create a new one above.</p></div>`;
+                    list.innerHTML = `<div class="text-center py-10 opacity-50 border-2 border-dashed border-gray-700 rounded-xl mx-2"><p class="text-gray-400 text-sm">No matches found.</p></div>`;
                 }
-
-            } catch(e) { 
-                console.error(e);
-                document.getElementById('match_list').innerHTML = `<p class="text-center text-red-400 text-sm py-10">Failed to load matches.</p>`;
-            }
+            } catch(e) {}
         }
 
-        // 3. CREATE / UPDATE Logic
         async function handleMatch() {
             const id = document.getElementById('match_id').value;
-            let timeVal = document.getElementById('m_time').value;
+            const timeVal = document.getElementById('m_time').value; // Example: "2025-12-30T10:00"
+            const catSelect = document.getElementById('cat_id');
+            const categoryId = catSelect.value || urlCatId;
 
-            // ক্যাটাগরি আইডি নেয়া (লকড হলেও ভ্যালু যেন নেয়)
-            const sel = document.getElementById('cat_id');
-            const categoryId = sel.value || urlCatId;
-
-            // Date Correction Logic
+            // 🔥 FIXED: Convert Local Time to UTC before Sending to DB
+            // আগের কোডে ম্যানুয়াল ফরম্যাটিং ছিল, যা সমস্যা করছিল। এখন .toISOString() ব্যবহার করছি।
+            let dbTime = "";
             if (timeVal) {
-                // T সরিয়ে স্পেস দেওয়া, এবং সেকেন্ড না থাকলে :00 যোগ করা
-                timeVal = timeVal.replace('T', ' '); 
-                if(timeVal.length === 16) timeVal += ':00';
+                // ব্রাউজারের লোকাল টাইম নিয়ে সেটাকে UTC স্ট্রিং বানাচ্ছে (যেমন 10:00 AM -> 04:00 AM UTC)
+                // এবং ডাটাবেস এর ফরম্যাটে (YYYY-MM-DD HH:MM:SS) পাঠাচ্ছে
+                dbTime = new Date(timeVal).toISOString().slice(0, 19).replace('T', ' ');
             }
 
-            if(!categoryId || !document.getElementById('m_title').value || !timeVal) {
-                return alert("⚠️ Please fill Game Category, Title & Date!");
+            if(!categoryId || !document.getElementById('m_title').value || !dbTime) {
+                return alert("⚠️ Please fill Category, Title and Date!");
             }
 
             const body = {
@@ -219,55 +178,33 @@
                 prize_pool: document.getElementById('m_prize').value || 0,
                 per_kill: document.getElementById('m_kill').value || 0,
                 map: document.getElementById('m_map').value,
-                match_time: timeVal,
+                match_time: dbTime, // সঠিক UTC টাইম পাঠানো হচ্ছে
                 match_type: document.getElementById('m_type').value,
                 total_spots: document.getElementById('m_spots').value || 48
             };
 
             const btn = document.getElementById('submit_btn');
-            const originalTxt = btn.innerText;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
             btn.disabled = true;
 
             try {
-                const res = await fetch('/api/admin', { 
+                await fetch('/api/admin', { 
                     method:'POST', 
                     headers:{'Content-Type':'application/json'}, 
                     body:JSON.stringify(body) 
                 });
-
-                const data = await res.json();
-                
-                if(data.success) {
-                    resetForm();
-                    // যদি URL থেকে না হয়, ড্রপডাউনের বর্তমান সিলেক্ট দিয়েই লোড করব
-                    loadMatches();
-                } else {
-                    alert("Error: " + (data.error || data.message || "Unknown"));
-                }
-            } catch(e) { alert("Request Failed!"); }
+                resetForm();
+                loadMatches();
+            } catch(e) { alert("Failed!"); }
             
-            btn.innerText = "Publish Match";
+            btn.innerHTML = "Publish Match";
             btn.disabled = false;
-        }
-
-        // Helpers
-        async function updateStatus(id, st) {
-            await fetch('/api/admin', { method:'POST', body: JSON.stringify({ type:'update_match_status', match_id:id, new_status:st }) });
-        }
-        
-        async function deleteMatch(id) {
-            if(!confirm("⚠️ Delete this match? Player data will be lost.")) return;
-            await fetch('/api/admin', { method:'POST', body: JSON.stringify({ type:'delete_match', id:id }) });
-            loadMatches();
         }
 
         function editMatch(m) {
             document.getElementById('match_id').value = m.id;
-            
-            // Dropdown selection fix
             const sel = document.getElementById('cat_id');
-            if(!sel.disabled) sel.value = m.category_id; 
+            if(!sel.disabled) sel.value = m.category_id;
 
             document.getElementById('m_title').value = m.title;
             document.getElementById('m_fee').value = m.entry_fee;
@@ -276,51 +213,46 @@
             document.getElementById('m_map').value = m.map || '';
             document.getElementById('m_type').value = m.match_type;
             
-            // 🔥 Timezone Fixed Logic
+            // 🔥 Timezone Display Fix: UTC -> Local
+            // ডাটাবেস থেকে আসা UTC টাইম (04:00) কে ইনপুট বক্সের জন্য লোকাল (10:00) বানাচ্ছে
             if(m.match_time) {
-                const dt = new Date(m.match_time);
-                // UTC to Local Input format YYYY-MM-DDTHH:MM
-                const year = dt.getFullYear();
-                const month = String(dt.getMonth() + 1).padStart(2, '0');
-                const day = String(dt.getDate()).padStart(2, '0');
-                const hours = String(dt.getHours()).padStart(2, '0');
-                const minutes = String(dt.getMinutes()).padStart(2, '0');
-                
-                const localISOTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+                const dt = new Date(m.match_time); // এটি UTC কে লোকালে অটো কনভার্ট করবে
+                // ইনপুট বক্সের ফরম্যাট 'YYYY-MM-DDTHH:MM' তৈরির জন্য লজিক:
+                // আমাদের টাইমজোন অফসেট বাদ দিতে হবে যাতে .toISOString() লোকাল টাইমটাই দেয়।
+                const offset = dt.getTimezoneOffset() * 60000; 
+                const localISOTime = (new Date(dt - offset)).toISOString().slice(0, 16);
                 document.getElementById('m_time').value = localISOTime;
             }
-            
+
             document.getElementById('submit_btn').innerText = "Update Match";
             document.getElementById('submit_btn').className = "w-full bg-green-600 py-3 rounded-lg font-bold shadow-lg hover:bg-green-700 text-white";
-            
             document.getElementById('cancel_btn').classList.remove('hidden');
             document.getElementById('form_title').innerText = "Edit Mode";
             window.scrollTo({top:0, behavior:'smooth'});
         }
 
+        async function updateStatus(id, st) { await fetch('/api/admin', { method:'POST', body: JSON.stringify({ type:'update_match_status', match_id:id, new_status:st }) }); }
+        
+        async function deleteMatch(id) {
+            if(!confirm("⚠️ Delete?")) return;
+            await fetch('/api/admin', { method:'POST', body: JSON.stringify({ type:'delete_match', id:id }) });
+            loadMatches();
+        }
+
         function resetForm() {
             document.getElementById('match_id').value = '';
             document.getElementById('m_title').value = '';
-            document.getElementById('m_fee').value = '';
-            document.getElementById('m_prize').value = '';
             document.getElementById('m_time').value = '';
-            document.getElementById('m_kill').value = '';
-            document.getElementById('m_map').value = '';
+            if(!urlCatId) document.getElementById('cat_id').value = ''; 
             
-            // If from specific category URL, don't reset dropdown
-            if(!urlCatId) document.getElementById('cat_id').value = '';
-
-            const btn = document.getElementById('submit_btn');
-            btn.innerText = "Publish Match";
-            btn.className = "w-full bg-blue-600 py-3 rounded-lg font-bold shadow-lg hover:bg-blue-700 text-white";
+            document.getElementById('submit_btn').innerText = "Publish Match";
+            document.getElementById('submit_btn').className = "w-full bg-blue-600 py-3 rounded-lg font-bold shadow-lg hover:bg-blue-700 text-white";
             
             document.getElementById('cancel_btn').classList.add('hidden');
             document.getElementById('form_title').innerText = "Create New Match";
         }
 
-        // Initialize (Load categories first, then matches)
         loadCatsAndMatches();
-
     </script>
 </body>
 </html>
