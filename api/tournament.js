@@ -11,14 +11,23 @@ module.exports = async (req, res) => {
     const { type, user_id, category_id, match_id, players, team_name } = req.body;
 
     try {
-        // --- Get Matches ---
+                // --- 1. Get Daily Matches Fix ---
         if (type === 'get_daily_matches') {
             const [matches] = await db.execute(`
                 SELECT m.*, 
-                (SELECT COUNT(*) FROM match_participants mp WHERE mp.match_id = m.id) as joined_count,
+                (SELECT COUNT(*) FROM match_participants mp WHERE mp.match_id = m.id) as joined_players,
+                
+                -- Team Count (Only Unique Team Names)
+                (SELECT COUNT(DISTINCT team_name) FROM match_participants mp WHERE mp.match_id = m.id AND mp.team_name != 'Solo') as joined_teams,
+                
+                -- User Join Status
                 (SELECT COUNT(*) FROM match_participants mp WHERE mp.match_id = m.id AND mp.user_id = ?) as is_joined
-                FROM matches m WHERE m.category_id = ? ORDER BY m.match_time DESC`, 
-                [user_id, category_id]);
+                
+                FROM matches m 
+                WHERE m.category_id = ? 
+                ORDER BY m.match_time DESC
+            `, [user_id, category_id]);
+            
             return res.status(200).json(matches);
         }
 
@@ -66,10 +75,18 @@ module.exports = async (req, res) => {
                 return res.status(400).json({ error: err.message });
             }
         }
-
-        // --- Get Participants ---
+                // --- Get Participants Fix ---
         if (type === 'get_daily_participants') {
-            const [rows] = await db.execute('SELECT game_name, team_name, kills, prize_won FROM match_participants WHERE match_id = ? ORDER BY team_name, joined_at', [match_id]);
+            // Check if match_id provided
+            if(!match_id) return res.json([]);
+            
+            const [rows] = await db.execute(`
+                SELECT game_name, team_name, game_uid, kills, prize_won 
+                FROM match_participants 
+                WHERE match_id = ? 
+                ORDER BY team_name, joined_at
+            `, [match_id]);
+            
             return res.status(200).json(rows);
         }
 
