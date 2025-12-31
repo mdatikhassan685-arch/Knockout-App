@@ -10,19 +10,16 @@
         body { font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         .custom-scroll::-webkit-scrollbar { width: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-        
-        /* New Gradient Button Animation */
-        .btn-gradient { background: linear-gradient(135deg, #2563eb, #1e40af); }
-        .btn-gradient:active { transform: scale(0.98); }
+        .glass-header { background: rgba(31, 41, 55, 0.95); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="bg-gray-900 text-white pb-24">
 
     <!-- Header -->
-    <header class="p-4 bg-gray-800 shadow-lg flex items-center sticky top-0 z-50 border-b border-gray-700">
+    <header class="p-4 glass-header shadow-lg flex items-center sticky top-0 z-50 border-b border-gray-700">
         <a href="/home" class="mr-4 text-gray-400 active:scale-90 transition"><i class="fa-solid fa-arrow-left text-xl"></i></a>
-        <div class="text-lg font-bold truncate flex-1 tracking-wide" id="cat_title">Matches</div>
-        <div class="bg-gray-700 px-3 py-1.5 rounded-full text-xs font-bold text-yellow-400 border border-gray-600 shadow-sm flex items-center gap-1.5">
+        <div class="text-lg font-bold truncate flex-1 tracking-wide uppercase text-blue-100" id="cat_title">Matches</div>
+        <div class="bg-gray-800 px-3 py-1.5 rounded-full text-xs font-bold text-yellow-400 border border-gray-600 shadow-sm flex items-center gap-1.5">
             <i class="fa-solid fa-coins text-[10px]"></i>
             <span id="header_bal">...</span>
         </div>
@@ -30,7 +27,7 @@
 
     <!-- Main Match List -->
     <div id="match_list" class="p-4 space-y-5 pb-10">
-        <div class="text-center mt-20 text-gray-500 animate-pulse text-sm">Loading active matches...</div>
+        <div class="text-center mt-20 text-gray-500 animate-pulse text-sm">Searching active lobbies...</div>
     </div>
 
     <!-- MODALS -->
@@ -149,58 +146,62 @@
                             }
                         }
 
+                        // 🔥 UPDATED DESIGN CARD
                         return `
-                        <div class="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 shadow-xl mb-6 group relative transition hover:border-blue-500/50">
+                        <div class="bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 shadow-xl mb-6 group relative transition hover:border-gray-600">
                             <!-- Premium Header -->
-                            <div class="bg-gradient-to-r from-gray-750 to-gray-800 p-3.5 flex justify-between items-center border-b border-gray-600">
-                                <div class="w-3/4">
-                                    <div class="flex items-center gap-2 mb-1.5">
-                                        <span class="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded shadow font-bold uppercase tracking-wide">Match #${matchNo}</span>
-                                        <span class="text-[9px] text-gray-500 font-mono tracking-widest uppercase border border-gray-600 px-1.5 py-0.5 rounded">ID: ${m.id}</span>
-                                    </div>
-                                    <h3 class="font-bold text-white text-md leading-tight truncate">${m.title}</h3>
+                            <div class="bg-gradient-to-r from-gray-750 to-gray-800 p-4 flex justify-between items-center border-b border-gray-600">
+                                
+                                <!-- LEFT: Match Number & ID -->
+                                <div>
+                                    <div class="text-[10px] text-blue-400 font-black tracking-widest uppercase mb-1">MATCH #${matchNo}</div>
+                                    <div class="text-[9px] text-gray-500 font-mono tracking-wide bg-black/20 px-1.5 py-0.5 rounded inline-block border border-gray-700">ID: ${m.id}</div>
                                 </div>
                                 
-                                <div class="text-right">
-                                     <div class="text-[9px] font-bold text-blue-200 bg-blue-900/30 px-2 py-1.5 rounded-lg border border-blue-500/20 inline-flex items-center gap-1.5">
-                                        <i class="fa-regular fa-clock"></i> ${dateFormatted}
-                                    </div>
+                                <!-- RIGHT: Game Title & Time -->
+                                <div class="text-right w-2/3">
+                                    <h3 class="font-bold text-white text-md truncate leading-tight mb-1">${m.title}</h3>
+                                    <!-- Beautiful Single Line Time -->
+                                    <p class="text-xs text-blue-200 font-bold bg-blue-900/30 px-2 py-1 rounded inline-block border border-blue-500/20 shadow-sm">
+                                        <i class="fa-regular fa-clock mr-1"></i> ${dateFormatted}
+                                    </p>
                                 </div>
                             </div>
 
                             <div class="p-4">
-                                <!-- Stats Section -->
-                                <div class="grid grid-cols-3 gap-3 text-center mb-5 text-[10px] font-bold text-gray-400 bg-gray-900/30 p-3 rounded-xl border border-gray-700/50">
-                                    <div>
-                                        <span class="block text-green-400 text-sm font-black mb-1">৳${m.prize_pool}</span>
-                                        <span class="opacity-70 uppercase tracking-wide">Prize</span>
+                                <!-- Stats Section (Prize / Fee / Type) -->
+                                <div class="flex justify-between items-center text-center mb-5 bg-black/20 p-3 rounded-xl border border-gray-700/50">
+                                    <div class="w-1/3 border-r border-gray-700">
+                                        <span class="block text-[9px] text-gray-500 uppercase font-bold mb-1">Prize</span>
+                                        <span class="text-green-400 text-lg font-black tracking-tight">৳${m.prize_pool}</span>
                                     </div>
-                                    <div class="border-x border-gray-700/50 px-1">
-                                        <span class="block text-yellow-400 text-sm font-black mb-1">${feeDisplay}</span>
-                                        <span class="opacity-70 uppercase tracking-wide">Entry</span>
+                                    <div class="w-1/3 border-r border-gray-700">
+                                        <span class="block text-[9px] text-gray-500 uppercase font-bold mb-1">Entry</span>
+                                        <span class="text-yellow-400 text-lg font-black tracking-tight">${feeDisplay}</span>
                                     </div>
-                                    <div>
-                                        <span class="block text-blue-400 text-sm font-black uppercase mb-1">${type}</span>
-                                        <span class="opacity-70 uppercase tracking-wide">Mode</span>
+                                    <div class="w-1/3">
+                                        <span class="block text-[9px] text-gray-500 uppercase font-bold mb-1">Mode</span>
+                                        <span class="text-blue-400 text-sm font-black uppercase tracking-wide">${type}</span>
                                     </div>
                                 </div>
                                 
+                                <!-- Extra Info: Map & Kill -->
                                 <div class="flex justify-between text-[11px] mb-4 px-2 text-gray-400 font-medium">
                                     <span class="flex items-center gap-1.5"><i class="fa-solid fa-map-location-dot text-purple-400"></i> ${m.map || 'Random'}</span>
                                     <span class="flex items-center gap-1.5"><i class="fa-solid fa-crosshairs text-red-500"></i> Per Kill: <b class="text-white">৳${m.per_kill}</b></span>
                                 </div>
 
-                                <!-- Progress -->
+                                <!-- Progress Bar & Status -->
                                 <div class="mb-5 px-1">
                                     <div class="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider text-gray-400">
-                                        <button onclick="viewPlayers(${m.id}, ${limitCount}, '${type}')" class="hover:text-blue-400 transition underline cursor-pointer decoration-blue-500/30">
-                                            List (${currentCount}/${limitCount} ${label})
+                                        <button onclick="viewPlayers(${m.id}, ${limitCount}, '${type}')" class="hover:text-blue-400 transition underline cursor-pointer decoration-blue-500/30 flex items-center gap-1">
+                                            <i class="fa-solid fa-users text-[9px]"></i> List (${currentCount}/${limitCount})
                                         </button>
-                                        <span class="${status==='open'?'text-green-500 flex items-center gap-1':'text-yellow-500 flex items-center gap-1'}">
+                                        <span class="${status==='open'?'text-green-400':'text-yellow-500'} flex items-center gap-1">
                                             <span class="w-1.5 h-1.5 rounded-full ${status==='open'?'bg-green-500 animate-pulse':'bg-yellow-500'}"></span> ${status}
                                         </span>
                                     </div>
-                                    <div class="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden shadow-inner">
+                                    <div class="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden shadow-inner relative">
                                         <div class="bg-blue-500 h-full transition-all duration-700 relative" style="width:${percent}%"></div>
                                     </div>
                                 </div>
@@ -263,7 +264,7 @@
                 const res = await fetch('/api/tournament', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'join_daily_match', user_id: user.id, match_id: id, team_name: tName, players: pArr }) });
                 const d = await res.json();
                 if(d.success) { showToast("Joined Successfully!", "success"); document.getElementById('joinModal').style.display='none'; loadMatches(); fetchBalance(); }
-                else { showToast(d.error, "error"); btn.disabled=false; btn.innerText="Retry"; }
+                else { showToast(d.error, "error"); btn.disabled=false; btn.innerText="Try Again"; }
             } catch(e) { showToast("Connection Failed", "error"); btn.disabled=false; }
         }
 
@@ -277,7 +278,6 @@
             try {
                 const res = await fetch('/api/tournament', {method:'POST', body:JSON.stringify({type:'get_daily_participants', match_id:id})});
                 const d = await res.json();
-                
                 let html = '';
                 let filledCount = 0;
 
@@ -298,7 +298,7 @@
                 
                 const remaining = totalLimit - filledCount;
                 if(remaining > 0) {
-                     const loopMax = remaining > 30 ? 30 : remaining; // Optimization limit
+                     const loopMax = remaining > 30 ? 30 : remaining;
                      for(let i=0; i < loopMax; i++) {
                         const slotNum = filledCount + i + 1;
                         html += `<div class="border border-gray-700 border-dashed rounded-lg p-3 mb-2 flex justify-between items-center opacity-30 bg-black/5 hover:opacity-50 transition"><span class="text-xs text-gray-500 font-bold">Slot ${slotNum}</span><span class="text-[9px] text-gray-600 uppercase tracking-widest font-bold">Empty</span></div>`;
