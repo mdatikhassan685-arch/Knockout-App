@@ -1,93 +1,106 @@
 const db = require('../db');
 
 module.exports = async (req, res) => {
-    // 1. CORS Setup
+    // 1. Basic Setup
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    
-    if (req.method === 'OPTIONS') return res.status(200).end();
 
-    const { type, id, team_name, match_id, user_id, entry_fee, refund_amount } = req.body;
-    // ... (অন্যান্য ভেরিয়েবল) ...
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Only POST allowed' });
+
+    const body = req.body || {};
+    const { type, category_id, id } = body;
+
+    // Safety Check
+    if (!type) return res.status(400).json({ error: 'Type is missing' });
 
     try {
-        // ... (Category & Settings কোড আগের মতোই থাকবে, এখানে হাত দেওয়ার দরকার নেই) ...
+        // --- 🎮 GET CATEGORIES ---
+        if (type === 'get_categories') {
+            const [rows] = await db.execute('SELECT * FROM categories ORDER BY id ASC');
+            return res.status(200).json(rows);
+        }
 
-        // ==========================
-        // 🔥 TEAM KICK & REFUND (SMART LOGIC)
-        // ==========================
-        
-        // ১. অ্যাডমিন যখন কোনো নির্দিষ্ট প্লেয়ার বা টিমকে কিক করবে
-        if (type === 'kick_participant') {
-            const connection = await db.getConnection(); // ট্রানজ্যাকশন ব্যবহার করছি নিরাপদ ডিলিটের জন্য
+        // --- ➕ ADD CATEGORY ---
+        if (type === 'add_category') {
+            await db.execute('INSERT INTO categories (title, image, type, status) VALUES (?, ?, ?, ?)', 
+                [body.title, body.image, body.cat_type || 'normal', 'open']);
+            return res.status(200).json({ success: true });
+        }
 
-            try {
-                await connection.beginTransaction();
+        // --- ✏️ EDIT CATEGORY ---
+        if (type === 'edit_category') {
+            await db.execute('UPDATE categories SET title=?, image=?, type=? WHERE id=?', 
+                [body.title, body.image, body.cat_type, body.id]);
+            return res.status(200).json({ success: true });
+        }
 
-                // স্টেপ ১: চেক করি ওই টিমের বা ইউজারের ইনফো
-                // আমরা match_participants টেবিল থেকে শুধু এই ম্যাচ আইডি দিয়ে ওই ইউজার বা টিমকে খুঁজবো
-                
-                // যদি 'team_name' পাঠানো হয়, তবে পুরো টিমকে কিক করব
-                // যদি শুধু 'user_id' বা 'participant_id' পাঠানো হয়, শুধু তাকে কিক করব (Solo)
-                
-                let selectQuery = "";
-                let params = [];
-                
-                if (team_name && team_name !== 'Solo') {
-                    // Squad/Duo Kick Logic: পুরো টিমকে ধরো
-                    selectQuery = "SELECT id, user_id FROM match_participants WHERE match_id = ? AND team_name = ?";
-                    params = [match_id, team_name];
-                } else {
-                    // Solo Kick Logic: আইডি ধরে
-                    selectQuery = "SELECT id, user_id FROM match_participants WHERE id = ?"; // এখানে `id` হলো পার্টিসিপেন্ট টেবিলের row ID
-                    params = [id];
-                }
-                
-                const [players] = await connection.execute(selectQuery, params);
+        // --- ❌ DELETE CATEGORY ---
+        if (type === 'delete_category') {
+            await db.execute('DELETE FROM match_participants WHERE match_id IN (SELECT id FROM matches WHERE category_id = ?)', [id]);
+            await db.execute('DELETE FROM matches WHERE category_id = ?', [id]);
+            await db.execute('DELETE FROM categories WHERE id = ?', [id]);
+            return res.status(200).json({ success: true });
+        }
 
-                if (players.length === 0) {
-                    throw new Error("Player or Team not found in this match.");
-                }
+        // --- 🔥 GET MATCHES (SAFE) ---
+        if (type === 'get_admin_matches') {
+            let sql = `SELECT * FROM matches ORDER BY match_time DESC LIMIT 50`;
+            let params = [];
 
-                // স্টেপ ২: টাকা ফেরত দেওয়া (Refund Logic)
-                // ম্যাচের ফি চেক করি
-                const [matchData] = await connection.execute("SELECT entry_fee FROM matches WHERE id = ?", [match_id]);
-                const fee = parseFloat(matchData[0].entry_fee);
-
-                if (fee > 0) {
-                    for (let p of players) {
-                        // প্রত্যেক প্লেয়ারকে রিফান্ড করা হচ্ছে
-                        await connection.execute('UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?', [fee, p.user_id]);
-                        // ট্রানজ্যাকশন লগ রাখা
-                        await connection.execute('INSERT INTO transactions (user_id, amount, type, description) VALUES (?, ?, "Refund", ?)', [p.user_id, fee, "Kicked by Admin"]);
-                    }
-                }
-
-                // স্টেপ ৩: ডিলিট করা
-                if (team_name && team_name !== 'Solo') {
-                    await connection.execute("DELETE FROM match_participants WHERE match_id = ? AND team_name = ?", [match_id, team_name]);
-                } else {
-                    await connection.execute("DELETE FROM match_participants WHERE id = ?", [id]);
-                }
-
-                await connection.commit();
-                connection.release();
-                
-                return res.status(200).json({ success: true, message: "Kicked Successfully" });
-
-            } catch (err) {
-                await connection.rollback();
-                connection.release();
-                return res.status(400).json({ error: err.message });
+            // যদি category_id পাঠানো হয়
+            if (category_id && category_id != 'null') {
+                sql = `SELECT * FROM matches WHERE category_id = ? ORDER BY match_time DESC`;
+                params = [category_id];
             }
+            const [matches] = await db.execute(sql, params);
+            return res.status(200).json(matches);
+        }
+
+        // --- ➕ CREATE MATCH ---
+        if (type === 'create_daily_match') {
+            await db.execute(
+                `INSERT INTO matches (category_id, title, entry_fee, prize_pool, per_kill, match_type, match_time, map, status, total_spots) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'upcoming', ?)`,
+                [category_id, body.title, body.entry_fee||0, body.prize_pool||0, body.per_kill||0, body.match_type, body.match_time, body.map, body.total_spots||48]
+            );
+            return res.status(200).json({ success: true });
+        }
+
+        // --- ✏️ UPDATE MATCH ---
+        if (type === 'edit_match') {
+            await db.execute(
+                `UPDATE matches SET title=?, entry_fee=?, prize_pool=?, per_kill=?, match_type=?, match_time=?, map=?, total_spots=? WHERE id=?`, 
+                [body.title, body.entry_fee, body.prize_pool, body.per_kill, body.match_type, body.match_time, body.map, body.total_spots, body.match_id]
+            );
+            return res.status(200).json({ success: true });
         }
         
-        // ... (অন্যান্য Create, Edit ফাংশন আগের মতোই থাকবে) ...
+        // --- ❌ DELETE MATCH ---
+        if (type === 'delete_match') {
+            await db.execute('DELETE FROM match_participants WHERE match_id = ?', [id]);
+            await db.execute('DELETE FROM matches WHERE id = ?', [id]);
+            return res.status(200).json({ success: true });
+        }
 
-        return res.status(400).json({ error: 'Unknown Type' });
+        // --- 📊 STATS (DASHBOARD) ---
+        if (type === 'dashboard_stats') {
+            // Safety: Try catch inside stats to prevent crashing whole page if table missing
+            try {
+                const [u] = await db.execute('SELECT COUNT(*) as c FROM users');
+                const [d] = await db.execute('SELECT COUNT(*) as c FROM deposits WHERE status="pending"');
+                const [w] = await db.execute('SELECT COUNT(*) as c FROM withdrawals WHERE status="pending"');
+                return res.status(200).json({ total_users: u[0].c, pending_deposits: d[0].c, pending_withdraws: w[0].c });
+            } catch(e) {
+                return res.status(200).json({ total_users: 0, pending_deposits: 0, pending_withdraws: 0 });
+            }
+        }
+
+        return res.status(400).json({ error: 'Unknown Type: ' + type });
 
     } catch (e) {
+        console.error("API ERROR:", e);
         return res.status(500).json({ error: e.message });
     }
 };
