@@ -109,11 +109,11 @@
         }
 
         // 🔥 ADMIN VIEW (TEAM & SOLO LOGIC FIXED) 🔥
-        async function viewPlayersAdmin(id, matchType) {
+              async function viewPlayersAdmin(id, matchType) {
             document.getElementById('playersModal').style.display = 'flex';
             document.getElementById('player_limit_info').innerText = `Viewing as Admin (${matchType})`;
             const con = document.getElementById('modal_player_list');
-            con.innerHTML = '<div class="text-center p-10 animate-pulse text-gray-500">Fetching list...</div>';
+            con.innerHTML = '<div class="text-center p-10 animate-pulse text-gray-500">Loading list...</div>';
 
             try {
                 // Fetch players
@@ -127,53 +127,53 @@
 
                 let html = '';
 
-                // --- TEAM LOGIC (For Squad / Duo) ---
+                // --- SQUAD / DUO VIEW (Admin) ---
                 if (matchType !== 'Solo') {
-                    // 1. Group Data
                     const groups = {};
                     d.forEach(p => { 
-                        let t = p.team_name || "Unknown Team"; 
+                        let t = p.team_name || "Unknown"; 
                         if(!groups[t]) groups[t] = [];
                         groups[t].push(p);
                     });
 
-                    // 2. Render Team Blocks with Kick Team Button
-                    Object.keys(groups).forEach((tName, i) => {
+                    Object.keys(groups).forEach((tName, idx) => {
                         let members = groups[tName].map(p => `
-                            <div class="flex justify-between text-[10px] text-gray-400 py-1 pl-2 border-l border-gray-600 ml-1 mt-1">
-                                <span>${p.game_name}</span><span class="text-yellow-600">UID: ${p.game_uid||'--'}</span>
+                            <div class="flex justify-between text-xs py-1 border-b border-gray-700 items-center">
+                                <div>
+                                    <span class="text-gray-200 block">${p.game_name}</span>
+                                    <span class="text-[9px] text-gray-500 font-mono">UID: ${p.game_uid || '--'}</span>
+                                </div>
+                                <!-- 🔥 HERE IS THE FIX: Actual Level -->
+                                <div class="text-yellow-500 text-[10px] font-bold bg-black/20 px-1 rounded">
+                                    Lvl: ${p.game_level || '?'}
+                                </div>
                             </div>
                         `).join('');
 
                         html += `
-                        <div class="bg-gray-750 border border-blue-500/30 rounded-lg mb-2 overflow-hidden shadow-sm hover:border-red-500/50 transition group">
-                            <div onclick="this.nextElementSibling.classList.toggle('hidden')" class="p-3 flex justify-between items-center bg-gray-800 cursor-pointer">
+                        <div class="bg-gray-800 border border-blue-500/30 rounded-lg mb-2 overflow-hidden shadow-lg transition">
+                            <div class="p-3 flex justify-between items-center bg-gray-750">
                                 <div>
-                                    <span class="text-xs font-bold text-white uppercase block">${tName}</span>
-                                    <span class="text-[9px] text-gray-500">Team #${i+1} • ${groups[tName].length} Players</span>
+                                    <span class="text-sm font-bold text-white uppercase">${tName}</span>
+                                    <p class="text-[10px] text-gray-400">Team #${idx+1}</p>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <!-- 🔥 KICK TEAM BUTTON -->
-                                    <button onclick="event.stopPropagation(); kickUser('${tName}', ${id}, 'Team')" class="bg-red-600/20 text-red-500 border border-red-500/50 px-2 py-1 rounded text-[10px] hover:bg-red-600 hover:text-white transition font-bold">Kick Team</button>
-                                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
-                                </div>
+                                <button onclick="kickUser('${tName}', ${id}, 'Team')" class="bg-red-600/20 text-red-500 border border-red-500/50 px-2 py-1 rounded text-xs font-bold hover:bg-red-600 hover:text-white transition">Kick Team</button>
                             </div>
-                            <div class="hidden bg-black/20 p-2 border-t border-gray-700 transition-all">${members}</div>
+                            <div class="bg-black/20 p-2 border-t border-gray-700 space-y-1">${members}</div>
                         </div>`;
                     });
 
                 } else {
-                    // --- SOLO LOGIC ---
+                    // --- SOLO VIEW (Admin) ---
                     d.forEach((p, idx) => {
-                         html += `
-                         <div class="flex justify-between items-center bg-gray-700/20 p-2 rounded-lg mb-2 border border-gray-600">
-                             <div>
-                                 <span class="text-xs text-blue-400 font-bold mr-2">#${idx+1}</span> 
-                                 <span class="text-sm font-bold text-white">${p.game_name}</span>
-                             </div>
-                             <!-- 🔥 KICK PLAYER BUTTON -->
-                             <button onclick="kickUser('${p.game_name}', ${id}, 'Player')" class="text-red-500 bg-red-900/10 border border-red-600/30 px-2 py-1 rounded text-[10px] font-bold hover:bg-red-600 hover:text-white transition">Kick</button>
-                         </div>`;
+                        html += `
+                        <div class="flex justify-between items-center bg-gray-700/20 p-2 rounded-lg mb-1 border border-gray-600">
+                            <div>
+                                <span class="text-xs font-bold text-white">${idx+1}. ${p.game_name}</span>
+                                <span class="text-[9px] text-gray-400 block">UID: ${p.game_uid} | <b class="text-yellow-500">Lvl: ${p.game_level || '?'}</b></span>
+                            </div>
+                            <button onclick="kickUser('${p.game_name}', ${id}, 'Player')" class="text-red-500 bg-red-900/10 border border-red-600/30 px-2 py-1 rounded text-[10px] hover:bg-red-600 hover:text-white transition">Kick</button>
+                        </div>`;
                     });
                 }
                 
@@ -181,7 +181,7 @@
 
             } catch(e) { con.innerHTML = '<div class="text-center p-5 text-red-400 text-sm">Failed to Load</div>'; }
         }
-
+        
         async function kickUser(name, mid, typeText) {
              if(!confirm(`⚠️ WARNING: Kick ${typeText} "${name}"?\n- User(s) will be removed.\n- Entry fee will be refunded automatically.`)) return;
              
