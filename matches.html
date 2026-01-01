@@ -242,14 +242,91 @@
                 con.innerHTML = html;
             } catch(e) { con.innerHTML = `<div class="text-center p-10 text-red-400 text-sm">Failed to Load</div>`; }
         }
-        function openJoin(id, type, fee) {
-            const c = (type === 'Duo') ? 2 : (type.includes('Squad') ? 4 : 1);
-            let tf = c > 1 ? `<div class="bg-black/30 p-2 rounded mb-2 border border-blue-500/30"><label class="text-[9px] text-blue-400 uppercase font-bold block mb-1">TEAM NAME</label><input id="team_name" class="w-full bg-transparent text-white font-bold text-xs outline-none placeholder-gray-600" placeholder="Ex: Titans"></div>` : '';
-            let pf = ''; for(let i=1; i<=c; i++) pf+=`<div class="bg-gray-700/30 p-2 mb-2 rounded border border-gray-600 relative"><span class="absolute -top-2 left-2 bg-gray-800 px-2 text-[9px] text-gray-400 font-bold rounded border border-gray-600">P${i}</span><div class="flex gap-2 mt-1"><input id="n_${i}" class="bg-gray-900 border-none text-white text-[10px] p-2 rounded w-3/5" placeholder="Name"><input id="u_${i}" type="number" class="bg-gray-900 border-none text-white text-[10px] p-2 rounded w-2/5" placeholder="UID"></div><input id="l_${i}" type="number" class="w-full mt-2 bg-gray-900 border-none text-white text-[10px] p-2 rounded text-center" placeholder="Level (Min 40)"></div>`;
-            document.getElementById('joinModal').innerHTML = `<div class="bg-gray-800 p-5 rounded-2xl w-full max-w-md h-[80vh] flex flex-col relative shadow-2xl border border-gray-700 animate-zoom"><div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-600"><div><h3 class="font-bold text-md text-white">Join ${type}</h3></div><button onclick="document.getElementById('joinModal').style.display='none'"><i class="fa-solid fa-times text-gray-400"></i></button></div><div class="flex-1 overflow-y-auto pr-1 custom-scroll">${tf}${pf}</div><div class="pt-2 border-t border-gray-700"><button onclick="confirmJoin('${id}', '${type}')" id="cf_btn" class="w-full bg-blue-600 py-3 rounded-lg font-bold text-white text-xs">JOIN NOW</button></div></div>`;
-            document.getElementById('joinModal').style.display='flex';
-        }
+                function openJoin(id, type, fee) {
+            const count = (type === 'Duo') ? 2 : (type.includes('Squad') ? 4 : 1);
+            
+            // Team Name Field
+            let teamF = count > 1 ? `
+            <div class="mb-5 bg-gradient-to-r from-gray-800 to-gray-700 p-4 rounded-xl border border-blue-500/50 shadow-md">
+                <label class="text-[11px] font-bold text-blue-300 uppercase block mb-2 tracking-wide"><i class="fa-solid fa-users mr-1"></i> Squad / Team Name</label>
+                <input type="text" id="team_name" class="w-full bg-black/20 text-white font-bold text-sm px-4 py-3 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none transition" placeholder="e.g. Delta Force">
+            </div>` : '';
 
+            // Players Loop (Beautiful Card Style)
+            let playersF = '';
+            for(let i=1; i<=count; i++) {
+                const label = i===1 ? '(Leader)' : '';
+                const borderColor = i===1 ? 'border-yellow-500/50' : 'border-gray-700';
+
+                playersF += `
+                <div class="bg-gray-800/80 p-4 mb-4 rounded-xl border ${borderColor} shadow-sm relative group hover:border-gray-500 transition">
+                    
+                    <!-- Player Tag -->
+                    <span class="absolute -top-2.5 left-4 bg-gray-900 text-[10px] font-bold text-gray-300 px-3 py-0.5 rounded-full border border-gray-700 uppercase tracking-widest shadow-lg">
+                        Player ${i} <span class="text-yellow-400">${label}</span>
+                    </span>
+
+                    <div class="mt-2 space-y-3">
+                        <!-- Row 1: Name & UID -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[9px] font-bold text-gray-500 mb-1 block uppercase">Game Name</label>
+                                <input id="name_${i}" class="w-full bg-black/30 border border-gray-600 text-white text-xs px-3 py-2.5 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition" placeholder="Exact Name">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-gray-500 mb-1 block uppercase">UID (Optional)</label>
+                                <input id="uid_${i}" type="number" class="w-full bg-black/30 border border-gray-600 text-white text-xs px-3 py-2.5 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-600 transition" placeholder="12345...">
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Level -->
+                        <div>
+                            <label class="text-[9px] font-bold text-gray-500 mb-1 block uppercase flex justify-between">
+                                Game Level 
+                                <span class="text-red-400">Min 40+</span>
+                            </label>
+                            <input id="lvl_${i}" type="number" class="w-full bg-black/30 border border-gray-600 text-white text-xs px-3 py-2.5 rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none text-center font-bold tracking-widest transition" placeholder="Enter Level (Ex: 55)">
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            const feeTxt = fee === 0 ? "FREE ENTRY" : `PAY ৳${fee}`;
+
+            // Main Modal HTML
+            document.getElementById('joinModal').innerHTML = `
+                <div class="bg-[#10141d] w-full max-w-md h-[90vh] flex flex-col relative shadow-2xl rounded-t-3xl md:rounded-3xl border-t border-gray-700 animate-slide-up md:animate-zoom">
+                    
+                    <!-- Fixed Header -->
+                    <div class="flex justify-between items-center px-6 py-5 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md rounded-t-3xl">
+                        <div>
+                            <h3 class="font-black text-xl text-white tracking-wide">CONFIRM ENTRY</h3>
+                            <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">${type} Match • <span class="text-yellow-400 font-bold">${feeTxt}</span></p>
+                        </div>
+                        <button onclick="document.getElementById('joinModal').style.display='none'" class="bg-gray-800 text-gray-400 w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition shadow-lg">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Scrollable Form Area -->
+                    <div class="flex-1 overflow-y-auto p-5 custom-scroll space-y-2">
+                        ${teamF}
+                        <div class="space-y-4">
+                            ${playersF}
+                        </div>
+                    </div>
+
+                    <!-- Footer Action -->
+                    <div class="p-5 border-t border-gray-800 bg-gray-900 shadow-inner">
+                        <button onclick="confirmJoin('${id}', '${type}')" id="join_confirm_btn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 rounded-xl font-bold text-white shadow-lg text-sm tracking-widest uppercase hover:scale-[1.02] active:scale-95 transition transform">
+                            COMPLETE REGISTRATION
+                        </button>
+                    </div>
+                </div>`;
+            
+            document.getElementById('joinModal').style.display = 'flex';
+        }
+        
         async function confirmJoin(id, type) {
             const c = (type === 'Duo') ? 2 : (type.includes('Squad') ? 4 : 1);
             let tm = ''; if(c>1) { tm=document.getElementById('team_name').value; if(!tm) return showToast("Enter Team Name","error"); }
@@ -258,12 +335,4 @@
             try {
                 const res=await fetch('/api/tournament', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({type:'join_daily_match', user_id:user.id, match_id:id, team_name:tm, players:ps})});
                 const d=await res.json();
-                if(d.success) { showToast("Joined!", "success"); document.getElementById('joinModal').style.display='none'; loadMatches(); fetchBalance(); }
-                else { showToast(d.error, "error"); btn.disabled=false; }
-            } catch(e) { showToast("Error", "error"); btn.disabled=false; }
-        }
-
-        loadMatches();
-    </script>
-</body>
-</html>
+                if(d.success) { showToast("Joined!", "success"); docume
