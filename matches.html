@@ -63,7 +63,7 @@
                     <span class="text-[10px] text-gray-500 uppercase font-bold tracking-widest absolute top-2 right-2">Password</span>
                     <i class="fa-solid fa-key text-gray-600 text-lg absolute left-3 top-3.5"></i>
                     <div class="pl-8 pt-1">
-                        <span class="text-xl font-mono font-bold text-green-400 select-all tracking-wider block truncate" id="room_pass_display">LOADING...</span>
+                        <span class="text-xl font-mono font-bold text-green-400 select-all tracking-wider block truncate" id="room_pass_display"w>LOADING...</span>
                     </div>
                 </div>
             </div>
@@ -168,30 +168,81 @@
             document.getElementById('playersListModal').style.display = 'flex';
             document.getElementById('slot_info').innerText = `${totalLimit} SLOTS (${type.toUpperCase()})`;
             const con = document.getElementById('joined_players_list');
-            con.innerHTML = '<div class="text-center p-10 animate-pulse text-gray-500 text-sm">Loading list...</div>';
+            con.innerHTML = '<div class="text-center p-10 animate-pulse text-gray-500 text-sm">Fetching list...</div>';
 
             try {
                 const res = await fetch('/api/tournament', {method:'POST', body:JSON.stringify({type:'get_daily_participants', match_id:id})});
                 const d = await res.json();
+                
                 let html = '';
                 let filledCount = 0;
-                
-                if (type !== 'Solo' && d.length > 0) {
-                    const groups = {}; d.forEach(p => { let t = p.team_name || "Unknown"; if(!groups[t]) groups[t] = []; groups[t].push(p); });
-                    const tNames = Object.keys(groups); filledCount = tNames.length;
-                    tNames.forEach((nm, idx) => {
-                        let ms = groups[nm].map(m => `<div class="flex justify-between text-[10px] py-1 pl-2 border-l border-gray-600 text-gray-400"><span>${m.game_name}</span><span>${m.game_uid||'--'}</span></div>`).join('');
-                        html += `<div class="bg-gray-750 rounded mb-2 border border-blue-500/30 overflow-hidden"><div onclick="this.nextElementSibling.classList.toggle('hidden')" class="p-2 flex justify-between bg-gray-800 cursor-pointer"><span class="text-xs text-white font-bold uppercase flex gap-2"><span class="bg-blue-600 px-1 rounded text-white text-[9px]">#${idx+1}</span> ${nm}</span><i class="fa-solid fa-chevron-down text-gray-500 text-[10px]"></i></div><div class="hidden bg-black/20 p-2 border-t border-gray-700">${ms}</div></div>`;
-                    });
-                } else {
-                    filledCount = d.length; d.forEach((p, idx) => { html += `<div class="flex justify-between items-center bg-gray-700/20 p-2 rounded mb-2 border border-gray-600"><div><span class="text-xs text-blue-400 font-bold mr-2">#${idx+1}</span> <span class="text-sm font-bold text-white">${p.game_name}</span></div><span class="text-[9px] bg-green-900/30 text-green-400 px-2 rounded">READY</span></div>`; });
-                }
-                const rem = totalLimit - filledCount;
-                if(rem > 0) { for(let i=0; i<(rem>30?30:rem); i++) html+=`<div class="border border-gray-700 border-dashed rounded p-2 mb-2 flex justify-between items-center opacity-40"><span class="text-xs text-gray-500 font-bold">Slot ${filledCount+i+1}</span><span class="text-[10px] text-gray-600 uppercase">EMPTY</span></div>`; if(rem>30) html+=`<div class="text-center text-[10px] text-gray-500 italic">...more</div>`; }
-                con.innerHTML = html;
-            } catch(e) { con.innerHTML="<p>Error</p>"; }
-        }
 
+                // --- TEAM VIEW (SQUAD / DUO) ---
+                if (type !== 'Solo' && d.length > 0) {
+                    const groups = {};
+                    d.forEach(p => { 
+                        let t = p.team_name || "Unknown Team"; 
+                        if(!groups[t]) groups[t] = [];
+                        groups[t].push(p);
+                    });
+
+                    const teams = Object.keys(groups);
+                    filledCount = teams.length;
+
+                    teams.forEach((tName, idx) => {
+                        let members = groups[tName].map(m => `
+                            <div class="flex justify-between items-center text-[10px] text-gray-400 py-1 pl-2 border-l-2 border-blue-500/30 mt-1 ml-1 bg-black/20 pr-1 rounded">
+                                <span><i class="fa-solid fa-user text-[8px] text-gray-500 mr-1"></i>${m.game_name}</span>
+                                <span class="font-mono text-[9px] text-gray-500">Lvl 40+</span>
+                            </div>`).join('');
+                        
+                        html += `
+                        <div class="bg-gray-750 border border-blue-500/20 rounded-lg mb-2 overflow-hidden shadow-sm hover:bg-gray-800 transition">
+                            <div onclick="this.nextElementSibling.classList.toggle('hidden')" class="p-3 flex justify-between items-center bg-gray-800 cursor-pointer">
+                                <span class="text-xs font-bold text-white uppercase flex items-center gap-2">
+                                    <span class="bg-blue-600 text-[9px] px-1.5 py-0.5 rounded text-white shadow">#${idx+1}</span> 
+                                    ${tName}
+                                </span>
+                                <span class="text-[9px] bg-blue-900/30 text-blue-300 px-1.5 rounded">${groups[tName].length} Ply</span>
+                            </div>
+                            <div class="hidden p-2 border-t border-gray-700 bg-gray-900/50">${members}</div>
+                        </div>`;
+                    });
+
+                } else {
+                    // --- SOLO VIEW ---
+                    filledCount = d.length;
+                    d.forEach((p, idx) => {
+                         html += `
+                         <div class="flex justify-between items-center bg-gray-800/40 p-2.5 rounded-lg mb-2 border border-gray-700 shadow-sm hover:border-gray-500 transition">
+                             <div>
+                                 <span class="text-xs text-blue-400 font-bold mr-2">#${idx+1}</span> 
+                                 <span class="text-sm font-bold text-white">${p.game_name}</span>
+                             </div>
+                             <span class="text-[9px] bg-green-600/10 text-green-400 px-2 py-0.5 rounded font-bold border border-green-500/20">READY</span>
+                         </div>`;
+                    });
+                }
+                
+                // --- EMPTY SLOTS (সবগুলো দেখাবে) ---
+                const remaining = totalLimit - filledCount;
+                if(remaining > 0) {
+                     // আগে ৩০ লিমিট ছিল, এখন লুপ পুরোটা চালাচ্ছি
+                     for(let i=0; i < remaining; i++) {
+                        const slotNum = filledCount + i + 1;
+                        const label = type === 'Solo' ? 'Empty' : 'Team Slot Open';
+                        
+                        html += `
+                        <div class="border border-gray-800 border-dashed rounded-lg p-2.5 mb-2 flex justify-between items-center bg-black/10">
+                            <span class="text-xs text-gray-600 font-bold">Slot ${slotNum}</span>
+                            <span class="text-[9px] text-gray-700 uppercase tracking-widest font-bold">${label}</span>
+                        </div>`;
+                     }
+                }
+
+                con.innerHTML = html;
+            } catch(e) { con.innerHTML = `<div class="text-center p-10 text-red-400 text-sm">Failed to Load</div>`; }
+        }
         function openJoin(id, type, fee) {
             const c = (type === 'Duo') ? 2 : (type.includes('Squad') ? 4 : 1);
             let tf = c > 1 ? `<div class="bg-black/30 p-2 rounded mb-2 border border-blue-500/30"><label class="text-[9px] text-blue-400 uppercase font-bold block mb-1">TEAM NAME</label><input id="team_name" class="w-full bg-transparent text-white font-bold text-xs outline-none placeholder-gray-600" placeholder="Ex: Titans"></div>` : '';
