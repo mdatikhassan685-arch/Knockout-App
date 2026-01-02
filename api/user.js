@@ -8,57 +8,47 @@ module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
     
     const body = req.body || {};
-    const { type, user_id, amount, details } = body;
+    const { type, user_id, amount, sender_number, trx_id } = body;
 
     try {
-        // --- ১. ইউজার প্রোফাইল ও ব্যালেন্স দেখা ---
-        if (type === 'get_profile') {
-            const [rows] = await db.execute('SELECT id, name, email, wallet_balance FROM users WHERE id = ?', [user_id]);
-            return res.status(200).json(rows[0]);
-        }
-
-        // --- ২. টাকা জমার রিকোয়েস্ট (Add Money/Deposit) ---
-        if (type === 'submit_deposit') {
-            if (!user_id || !amount || !details) {
-                return res.status(400).json({ error: 'সব তথ্য দিন (Amount and Transaction Details required)' });
+        // --- ১. ডিপোজিট রিকোয়েস্ট (আপনার দেওয়া টেবিল কলাম অনুযায়ী) ---
+        if (type === 'deposit') {
+            if (!user_id || !amount || !sender_number || !trx_id) {
+                return res.status(400).json({ error: 'সবগুলো ঘর পূরণ করুন!' });
             }
 
-            // এখানে আমরা নিশ্চিত করছি যে 'type' কলামে 'deposit' সেভ হচ্ছে
-            await db.execute(
-                'INSERT INTO transactions (user_id, amount, type, details, status) VALUES (?, ?, ?, ?, ?)',
-                [user_id, amount, 'deposit', details, 'pending']
-            );
+            // এখানে আপনার deposits টেবিলের কলাম নাম অনুযায়ী ডাটা ইনসার্ট হচ্ছে
+            const sql = `INSERT INTO deposits (user_id, amount, sender_number, trx_id, status) 
+                         VALUES (?, ?, ?, ?, 'pending')`;
+            
+            await db.execute(sql, [user_id, amount, sender_number, trx_id]);
 
-            return res.status(200).json({ success: true, message: 'Deposit request submitted!' });
+            return res.status(200).json({ success: true });
         }
 
-        // --- ৩. টাকা তোলার রিকোয়েস্ট (Withdrawal) ---
-        if (type === 'submit_withdrawal') {
+        // --- ২. উইথড্র রিকোয়েস্ট ---
+        if (type === 'withdraw') {
             const { method, account_number } = body;
 
-            // আগে চেক করি ইউজারের যথেষ্ট ব্যালেন্স আছে কি না
-            const [user] = await db.execute('SELECT wallet_balance FROM users WHERE id = ?', [user_id]);
-            
-            if (user[0].wallet_balance < amount) {
-                return res.status(400).json({ error: 'আপনার যথেষ্ট ব্যালেন্স নেই!' });
+            const [uRows] = await db.execute('SELECT wallet_balance FROM users WHERE id = ?', [user_id]);
+            if (uRows.length === 0 || uRows[0].wallet_balance < amount) {
+                return res.status(400).json({ error: 'পর্যাপ্ত ব্যালেন্স নেই!' });
             }
 
-            // ইউজারের ব্যালেন্স থেকে টাকা কেটে নেওয়া
             await db.execute('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?', [amount, user_id]);
 
-            // উইথড্র রিকোয়েস্ট সেভ করা
             await db.execute(
-                'INSERT INTO withdrawals (user_id, amount, method, account_number, status) VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO withdrawals (user_id, amount, method, account_number, status) VALUES (?, ?, ?, ?, "pending")',
                 [user_id, amount, method, account_number, 'pending']
             );
 
-            return res.status(200).json({ success: true, message: 'Withdrawal request submitted!' });
+            return res.status(200).json({ success: true });
         }
 
-        return res.status(400).json({ error: 'Unknown Type' });
+        return res.status(400).json({ error: 'Unknown Type: ' + type });
 
     } catch (e) {
-        console.error(e);
+        console.error("API Error:", e);
         return res.status(500).json({ error: e.message });
     }
 };
