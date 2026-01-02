@@ -148,13 +148,24 @@ module.exports = async (req, res) => {
         /* ============================ 
            ⚙️ SETTINGS (FIXED: Key-Value Update)
         ============================ */
-        if (type === 'dashboard_stats') {
-             try {
+                if (type === 'dashboard_stats') {
+            try {
+                // ১. মোট ইউজার
                 const [u] = await db.execute('SELECT COUNT(*) as c FROM users');
+                // ২. পেন্ডিং ডিপোজিট
                 const [d] = await db.execute('SELECT COUNT(*) as c FROM deposits WHERE status="pending"');
-                return res.status(200).json({ total_users: u[0].c, pending_deposits: d[0].c });
-             } catch(e) { return res.status(200).json({ total_users:0, pending_deposits:0 }); }
-        }
+                // ৩. পেন্ডিং উইথড্র (এটি আগে ছিল না, এখন যোগ করলাম)
+                const [w] = await db.execute('SELECT COUNT(*) as c FROM withdrawals WHERE status="pending"');
+                
+                return res.status(200).json({ 
+                    total_users: u[0].c, 
+                    pending_deposits: d[0].c, 
+                    pending_withdraws: w[0].c 
+                });
+            } catch(e) {
+                return res.status(200).json({ total_users: 0, pending_deposits: 0, pending_withdraws: 0 });
+            }
+                }
 
         if (type === 'get_settings') {
             const [rows] = await db.execute('SELECT setting_key, setting_value FROM settings');
