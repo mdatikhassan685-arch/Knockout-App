@@ -9,6 +9,11 @@
     <style>
         .transaction-card { transition: all 0.2s ease; }
         .transaction-card:active { transform: scale(0.98); }
+        /* Toast Animation */
+        @keyframes slideIn { from { transform: translateX(-50%) translateY(100%); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
+        .toast { animation: slideIn 0.3s ease-out forwards; }
+        .toast.hide { animation: fadeOut 0.3s ease-in forwards; }
     </style>
 </head>
 <body class="bg-gray-900 text-white pb-24 select-none font-sans">
@@ -56,19 +61,32 @@
         </div>
     </div>
 
-    <!-- DEPOSIT MODAL -->
+    <!-- DEPOSIT MODAL (Updated with Payment Method) -->
     <div id="depositModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 w-full max-w-sm rounded-2xl p-6 border border-gray-600 shadow-2xl">
             <h3 class="text-xl font-bold mb-4 text-white">Add Money</h3>
-            <div class="bg-blue-600/20 p-4 rounded-lg border border-blue-500/30 mb-5 text-sm text-blue-200">
+            
+            <div class="bg-blue-600/20 p-4 rounded-lg border border-blue-500/30 mb-5 text-sm text-blue-200 text-center">
                 <p class="mb-1"><i class="fa-solid fa-circle-info text-blue-400"></i> Send money via <strong>Bkash/Nagad</strong></p>
-                <p class="font-mono text-lg font-bold text-white my-1 select-all bg-black/30 px-2 py-1 rounded text-center cursor-pointer">01322415927</p>
-                <p class="text-xs text-center opacity-70">Tap number to copy</p>
+                <p class="font-mono text-lg font-bold text-white my-1 select-all bg-black/30 px-2 py-1 rounded cursor-pointer">01322415927</p>
+                <p class="text-[10px] opacity-70">Tap number to copy</p>
             </div>
+
             <form onsubmit="submitDeposit(event)">
+                <!-- Payment Method Select -->
+                <div class="mb-3 relative">
+                    <i class="fa-solid fa-credit-card absolute left-3 top-3.5 text-gray-500"></i>
+                    <select id="dep_method" class="w-full bg-gray-900 p-3 pl-10 rounded-lg border border-gray-600 outline-none text-white focus:border-blue-500 transition appearance-none">
+                        <option value="bkash">Bkash</option>
+                        <option value="nagad">Nagad</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-4 text-gray-500 text-xs"></i>
+                </div>
+
                 <input type="number" id="dep_amount" placeholder="Amount" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-blue-500 transition">
                 <input type="number" id="dep_sender" placeholder="Sender Number" required class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-blue-500 transition">
                 <input type="text" id="dep_trx" placeholder="Transaction ID (TrxID)" required class="w-full bg-gray-900 p-3 rounded-lg mb-5 border border-gray-600 outline-none text-white uppercase focus:border-blue-500 transition">
+                
                 <div class="flex gap-3">
                     <button type="button" onclick="closeModal('depositModal')" class="flex-1 bg-gray-700 py-3 rounded-xl font-bold hover:bg-gray-600 transition">Cancel</button>
                     <button type="submit" id="dep_btn" class="flex-1 bg-blue-600 py-3 rounded-xl font-bold hover:bg-blue-700 transition">Submit Request</button>
@@ -97,29 +115,19 @@
         </div>
     </div>
 
-    <!-- ✅ BOTTOM NAVIGATION (UPDATED) -->
+    <!-- ✅ CUSTOM TOAST (No more boring alerts) -->
+    <div id="toastBox" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 bg-gray-800 px-5 py-3 rounded-full border border-gray-600 shadow-2xl hidden min-w-[200px] justify-center toast">
+        <i id="toastIcon" class="fa-solid text-lg"></i>
+        <span id="toastMsg" class="text-sm font-bold tracking-wide">Message</span>
+    </div>
+
+    <!-- BOTTOM NAV -->
     <nav class="fixed bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-gray-800 flex justify-around py-3 z-50 pb-6">
-        <a href="/home" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
-            <i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i>
-            <span class="text-[10px]">Home</span>
-        </a>
-        <a href="/support" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
-            <i class="fa-solid fa-headset text-xl mb-1 group-active:scale-90"></i>
-            <span class="text-[10px]">Support</span>
-        </a>
-        <!-- Active Wallet Tab -->
-        <a href="/wallet" class="text-blue-500 flex flex-col items-center group transition">
-            <i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90"></i>
-            <span class="text-[10px] font-bold">Wallet</span>
-        </a>
-        <a href="/profile" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
-            <i class="fa-solid fa-user text-xl mb-1 group-active:scale-90"></i>
-            <span class="text-[10px]">Profile</span>
-        </a>
-        <a href="/menu" class="text-gray-500 hover:text-white flex flex-col items-center group transition">
-            <i class="fa-solid fa-bars text-xl mb-1 group-active:scale-90"></i>
-            <span class="text-[10px]">Menu</span>
-        </a>
+        <a href="/home" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Home</span></a>
+        <a href="/support" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-headset text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Support</span></a>
+        <a href="/wallet" class="text-blue-500 flex flex-col items-center group transition"><i class="fa-solid fa-wallet text-xl mb-1 group-active:scale-90"></i><span class="text-[10px] font-bold">Wallet</span></a>
+        <a href="/profile" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-user text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Profile</span></a>
+        <a href="/menu" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-bars text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Menu</span></a>
     </nav>
 
     <script>
@@ -128,6 +136,30 @@
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // 🔥 Custom Toast Function
+        function showToast(msg, type) {
+            const box = document.getElementById('toastBox');
+            const icon = document.getElementById('toastIcon');
+            const txt = document.getElementById('toastMsg');
+            
+            box.style.display = 'flex';
+            box.classList.remove('hide');
+            txt.innerText = msg;
+            
+            if (type === 'success') {
+                icon.className = 'fa-solid fa-circle-check text-green-500';
+                box.style.borderColor = '#22c55e';
+            } else {
+                icon.className = 'fa-solid fa-circle-exclamation text-red-500';
+                box.style.borderColor = '#ef4444';
+            }
+
+            setTimeout(() => {
+                box.classList.add('hide');
+                setTimeout(() => box.style.display = 'none', 300);
+            }, 3000);
+        }
 
         async function loadWallet() {
             try {
@@ -139,86 +171,84 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    const balance = parseFloat(data.balance);
-                    document.getElementById('balance').innerText = balance.toFixed(2);
-                    user.wallet_balance = balance;
+                    document.getElementById('balance').innerText = parseFloat(data.balance).toFixed(2);
+                    user.wallet_balance = data.balance;
                     localStorage.setItem('user', JSON.stringify(user));
 
                     const list = document.getElementById('transactions');
-                    
                     if (data.transactions && data.transactions.length > 0) {
                         list.innerHTML = data.transactions.map(t => {
-                            const incomeTypes = ['Deposit', 'Admin Gift', 'Refund', 'Match Winnings', 'Bonus', 'Refund (Kicked by Admin)', 'Refund (Withdraw Rejected)'];
-                            const isIncome = incomeTypes.includes(t.type);
+                            const isIncome = ['Deposit', 'Admin Gift', 'Refund', 'Match Winnings'].includes(t.type);
                             const colorClass = isIncome ? 'text-green-400' : 'text-red-400';
-                            const bgIconClass = isIncome ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500';
                             const iconClass = isIncome ? 'fa-arrow-down' : 'fa-arrow-up';
-                            const sign = isIncome ? '+' : '-';
-
-                            const date = new Date(t.created_at);
-                            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                            const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
+                            const bgClass = isIncome ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500';
+                            
                             return `
-                            <div class="flex justify-between items-center bg-gray-800 hover:bg-gray-750 p-3 rounded-xl border border-gray-700 transition transaction-card">
+                            <div class="flex justify-between items-center bg-gray-800 p-3 rounded-xl border border-gray-700 transaction-card">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 ${bgIconClass} rounded-full flex items-center justify-center">
-                                        <i class="fa-solid ${iconClass} text-sm"></i>
-                                    </div>
+                                    <div class="w-10 h-10 ${bgClass} rounded-full flex items-center justify-center"><i class="fa-solid ${iconClass}"></i></div>
                                     <div>
                                         <p class="font-bold text-sm text-gray-200">${t.type}</p>
-                                        <p class="text-[10px] text-gray-500 font-mono">${dateStr} • ${timeStr}</p>
+                                        <p class="text-[10px] text-gray-500">${new Date(t.created_at).toLocaleString()}</p>
                                     </div>
                                 </div>
-                                <span class="font-bold ${colorClass} text-base tracking-wide">
-                                    ${sign}৳${parseFloat(t.amount).toFixed(2)}
-                                </span>
-                            </div>
-                            `;
+                                <span class="font-bold ${colorClass} text-base">${isIncome?'+':'-'}৳${t.amount}</span>
+                            </div>`;
                         }).join('');
                     } else {
-                        list.innerHTML = `<div class="text-center py-10 opacity-50 border border-dashed border-gray-700 rounded-xl"><i class="fa-solid fa-receipt text-4xl mb-2 text-gray-600"></i><p class="text-sm text-gray-400">No transactions found.</p></div>`;
+                        list.innerHTML = `<p class="text-center text-gray-500 text-xs py-4">No transactions yet.</p>`;
                     }
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
         async function submitDeposit(e) {
             e.preventDefault();
             const btn = document.getElementById('dep_btn');
-            btn.innerText = "Processing..."; btn.disabled = true;
+            btn.innerText = "..."; btn.disabled = true;
+
+            const body = {
+                type: 'deposit',
+                user_id: user.id,
+                method: document.getElementById('dep_method').value, // ✅ New Field
+                amount: document.getElementById('dep_amount').value,
+                sender_number: document.getElementById('dep_sender').value,
+                trx_id: document.getElementById('dep_trx').value
+            };
 
             try {
-                const res = await fetch('/api/user', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'deposit', user_id: user.id, amount: document.getElementById('dep_amount').value, sender_number: document.getElementById('dep_sender').value, trx_id: document.getElementById('dep_trx').value })
-                });
+                const res = await fetch('/api/user', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body) });
                 const data = await res.json();
-                if(data.success) { alert("✅ Request Submitted!"); closeModal('depositModal'); document.getElementById('dep_amount').value = ''; document.getElementById('dep_sender').value = ''; document.getElementById('dep_trx').value = ''; loadWallet(); } 
-                else { alert("❌ " + data.error); }
-            } catch(e) { alert("Network Error"); }
+                if(data.success) { 
+                    showToast("Deposit Request Sent!", "success"); // ✅ Custom Toast
+                    closeModal('depositModal'); loadWallet(); 
+                } else { 
+                    showToast(data.error, "error"); 
+                }
+            } catch(e) { showToast("Network Error", "error"); }
             btn.innerText = "Submit Request"; btn.disabled = false;
         }
 
         async function submitWithdraw(e) {
             e.preventDefault();
             const btn = document.getElementById('wd_btn');
-            btn.innerText = "Processing..."; btn.disabled = true;
+            btn.innerText = "..."; btn.disabled = true;
 
             try {
-                const res = await fetch('/api/user', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'withdraw', user_id: user.id, amount: document.getElementById('wd_amount').value, method: document.getElementById('wd_method').value, account_number: document.getElementById('wd_account').value })
-                });
+                const res = await fetch('/api/user', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'withdraw', user_id: user.id, amount: document.getElementById('wd_amount').value, method: document.getElementById('wd_method').value, account_number: document.getElementById('wd_account').value }) });
                 const data = await res.json();
-                if(data.success) { alert("✅ Withdrawal Request Sent!"); closeModal('withdrawModal'); document.getElementById('wd_amount').value = ''; document.getElementById('wd_account').value = ''; loadWallet(); } 
-                else { alert("❌ " + data.error); }
-            } catch(e) { alert("Network Error"); }
+                if(data.success) { 
+                    showToast("Withdraw Request Sent!", "success"); // ✅ Custom Toast
+                    closeModal('withdrawModal'); loadWallet(); 
+                } else { 
+                    showToast(data.error, "error"); 
+                }
+            } catch(e) { showToast("Network Error", "error"); }
             btn.innerText = "Withdraw"; btn.disabled = false;
         }
 
         loadWallet();
-        document.querySelector('.select-all').addEventListener('click', function() { navigator.clipboard.writeText(this.innerText).then(() => alert("Number Copied!")); });
+        document.querySelector('.select-all').addEventListener('click', function() { navigator.clipboard.writeText(this.innerText).then(() => showToast("Number Copied!", "success")); });
     </script>
 </body>
 </html>
