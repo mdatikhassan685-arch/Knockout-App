@@ -3,186 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knockout Admin</title>
+    <title>Categories Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-    </style>
+    <style>body { user-select: none; }</style>
 </head>
-<body class="bg-gray-900 text-white font-sans pb-20 select-none">
+<body class="bg-gray-900 text-white pb-20">
 
     <!-- Header -->
-    <header class="p-4 bg-gray-800 shadow-md flex justify-between items-center sticky top-0 z-50">
-        <div class="text-xl font-bold text-red-500">ADMIN PANEL</div>
-        <button onclick="logout()" class="bg-red-600 px-3 py-1 rounded text-sm font-bold hover:bg-red-700 transition">Logout</button>
+    <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
+        <a href="/admin" class="mr-4 text-gray-400 active:scale-90"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <div>
+            <div class="text-xl font-bold" id="page_title">Manage Categories</div>
+            <p class="text-[10px] text-gray-400" id="page_sub">Setup Games</p>
+        </div>
     </header>
 
-    <!-- Stats Grid -->
-    <div class="p-4 grid grid-cols-2 gap-4">
-        <div class="bg-gray-800 p-4 rounded-xl border-l-4 border-blue-500 shadow-lg">
-            <p class="text-gray-400 text-xs uppercase font-bold">Total Users</p>
-            <h2 class="text-2xl font-bold mt-1" id="total_users">...</h2>
-        </div>
-        <div onclick="window.location.href='/admin-deposits'" class="bg-gray-800 p-4 rounded-xl border-l-4 border-yellow-500 shadow-lg cursor-pointer">
-            <p class="text-gray-400 text-xs uppercase font-bold">Deposits</p>
-            <h2 class="text-2xl font-bold mt-1 text-yellow-400" id="pending_deposits">...</h2>
-        </div>
-    </div>
-
-    <!-- ✅ UPDATE START: Main Navigation Logic ✅ -->
-    <div class="p-4">
+    <!-- CREATE FORM (Visible in Manage Mode Only) -->
+    <div class="p-4 bg-gray-800 m-4 rounded-xl border border-gray-700 shadow-lg hidden" id="create_section">
+        <h3 class="font-bold text-md mb-3 border-b border-gray-600 pb-2 text-white">Create New Category</h3>
         
-        <!-- 1. CATEGORY MANAGEMENT (Create Games) -->
-        <h3 class="font-bold text-lg mb-3 border-l-4 border-gray-500 pl-2">System Setup</h3>
-        <button onclick="window.location.href='/admin-categories'" class="w-full bg-indigo-600 p-4 rounded-xl mb-4 shadow-lg active:scale-95 transition flex items-center justify-between border border-indigo-500 hover:bg-indigo-700">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 p-2 rounded-full"><i class="fa-solid fa-layer-group text-xl text-white"></i></div>
-                <div class="text-left">
-                    <h3 class="font-bold text-md text-white">Manage Game Titles</h3>
-                    <p class="text-[10px] text-indigo-200">Create New Games / Tournaments</p>
-                </div>
-            </div>
-            <i class="fa-solid fa-chevron-right text-sm"></i>
-        </button>
+        <input type="hidden" id="edit_id">
 
-        <!-- 2. MATCH OPERATIONS (Create Matches Inside Games) -->
-        <h3 class="font-bold text-lg mb-3 border-l-4 border-gray-500 pl-2">Match Operations</h3>
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            
-            <!-- DAILY MATCHES -> Select Category Mode -->
-            <a href="/admin-categories?mode=select&type=normal" class="block bg-blue-600 p-5 rounded-2xl text-center shadow-lg active:scale-95 transition no-underline text-white relative overflow-hidden group hover:bg-blue-700">
-                <i class="fa-solid fa-gamepad text-4xl mb-3 relative z-10"></i>
-                <h3 class="font-bold text-md leading-none relative z-10">Daily<br>Matches</h3>
-            </a>
-            
-            <!-- OFFICIAL -> Select Tournament Mode -->
-            <a href="/admin-categories?mode=select&type=official" class="block bg-yellow-600 p-5 rounded-2xl text-center shadow-lg active:scale-95 transition no-underline text-white relative overflow-hidden group hover:bg-yellow-700">
-                <i class="fa-solid fa-trophy text-4xl mb-3 text-white relative z-10"></i>
-                <h3 class="font-bold text-md leading-none relative z-10">Official<br>Events</h3>
-            </a>
+        <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Type</label>
+        <select id="cat_type" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-indigo-500">
+            <option value="normal">Daily Match (Normal)</option>
+            <option value="official">Official Tournament</option>
+        </select>
 
-        </div>
-
-        <!-- 3. USERS & SETTINGS -->
-        <h3 class="font-bold text-lg mb-3 border-l-4 border-gray-500 pl-2">Users & Settings</h3>
-        <div class="grid grid-cols-2 gap-4">
-            <a href="/admin-users" class="bg-gray-800 p-4 rounded-xl flex flex-col items-center justify-center border border-gray-700 active:scale-95 hover:bg-gray-700">
-                <i class="fa-solid fa-users text-2xl text-gray-400 mb-1"></i>
-                <span class="text-xs font-bold text-gray-300">Users</span>
-            </a>
-            <button onclick="openNotiModal()" class="bg-red-800 p-4 rounded-xl flex flex-col items-center justify-center border border-red-700 active:scale-95 hover:bg-red-700">
-                <i class="fa-solid fa-bell text-2xl text-white mb-1"></i>
-                <span class="text-xs font-bold text-white">Notify</span>
-            </button>
-        </div>
+        <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Title</label>
+        <input type="text" id="cat_title" placeholder="Ex: FreeFire, Ludo" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 outline-none text-white focus:border-indigo-500">
         
-        <button onclick="openSettings()" class="w-full bg-purple-700 p-3 mt-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:bg-purple-600">
-            <i class="fa-solid fa-sliders"></i> App Settings
-        </button>
-    </div>
-    <!-- ✅ UPDATE END ✅ -->
-
-    <!-- Placeholders for Modals -->
-    <!-- SETTINGS MODAL -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
-        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-600 shadow-2xl h-[85vh] flex flex-col">
-            <h3 class="text-xl font-bold mb-4 text-white border-b border-gray-600 pb-2">App Settings</h3>
-            <div class="overflow-y-auto flex-1 space-y-3 pr-2 custom-scroll">
-                <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">YouTube Link</label><input type="text" id="set_youtube" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
-                <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">Telegram Link</label><input type="text" id="set_telegram" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
-                <div><label class="text-[10px] text-blue-400 uppercase font-bold ml-1">WhatsApp Number</label><input type="text" id="set_whatsapp" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-blue-500"></div>
-                <div><label class="text-[10px] text-yellow-400 uppercase font-bold ml-1">Announcement</label><textarea id="set_announcement" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-yellow-500"></textarea></div>
-                <div><label class="text-[10px] text-red-400 uppercase font-bold ml-1">Notification Msg</label><textarea id="set_notification" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-red-500"></textarea></div>
-                <div><label class="text-[10px] text-green-400 uppercase font-bold ml-1">About Us</label><textarea id="set_about" rows="3" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-green-500"></textarea></div>
-                <div><label class="text-[10px] text-green-400 uppercase font-bold ml-1">Privacy Policy</label><textarea id="set_policy" rows="2" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-green-500"></textarea></div>
-                <div><label class="text-[10px] text-gray-400 uppercase font-bold ml-1">App Version</label><input type="text" id="set_version" class="w-full bg-gray-900 p-2.5 rounded-lg border border-gray-600 text-white text-sm outline-none focus:border-gray-500"></div>
-            </div>
-            <div class="flex gap-3 mt-4">
-                <button onclick="document.getElementById('settingsModal').style.display='none'" class="flex-1 bg-gray-700 py-3 rounded-lg font-bold hover:bg-gray-600">Cancel</button>
-                <button onclick="saveSettings()" class="flex-1 bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-700">Save</button>
-            </div>
-        </div>
+        <label class="text-[10px] text-gray-400 font-bold uppercase ml-1">Image URL</label>
+        <input type="text" id="cat_img" placeholder="https://..." class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 outline-none text-white focus:border-indigo-500">
+        
+        <button onclick="handleCategory()" id="submit_btn" class="w-full bg-indigo-600 py-3 rounded-lg font-bold shadow-lg transition hover:bg-indigo-700 text-white">Create Category</button>
+        <button onclick="resetForm()" id="cancel_btn" class="hidden w-full mt-2 text-xs text-red-400 bg-gray-700 py-2 rounded border border-red-900">Cancel Edit</button>
     </div>
 
-    <!-- NOTIFICATION MODAL -->
-    <div id="notiModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4 backdrop-blur-sm">
-        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-md border border-gray-600 shadow-2xl h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                <h3 class="text-xl font-bold text-white">Send Notification</h3>
-                <button onclick="closeNotiModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="overflow-y-auto flex-1 pr-2 custom-scroll">
-                <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Title</label>
-                <input type="text" id="noti_title" placeholder="Notice Title" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 text-white outline-none focus:border-blue-500">
-                <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Message</label>
-                <textarea id="noti_msg" rows="3" placeholder="Type here..." class="w-full bg-gray-900 p-3 rounded-lg mb-4 border border-gray-600 text-white outline-none focus:border-blue-500"></textarea>
-                <div class="bg-gray-900 p-3 rounded-lg border border-gray-700">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-[10px] text-gray-400 uppercase font-bold">Target Audience</label>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="send_all" class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500" checked>
-                            <label for="send_all" class="text-xs text-white cursor-pointer select-none">All Users</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-4">
-                <button onclick="sendNoti()" id="send_btn" class="w-full bg-blue-600 py-3 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg">Send Notification</button>
-            </div>
+    <!-- LIST SECTION -->
+    <div class="px-4">
+        <h3 class="font-bold text-lg mb-3 pl-2 border-l-4 border-indigo-500" id="list_title">All Categories</h3>
+        <div id="cat_list" class="space-y-3 pb-10">
+            <p class="text-center text-gray-500 mt-10 animate-pulse">Loading data...</p>
         </div>
     </div>
 
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user || user.role !== 'admin') window.location.href = '/';
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode'); // 'select' or 'manage'
+        const filterType = urlParams.get('type'); 
 
-        async function loadStats() {
-            try {
-                const res = await fetch('/api/admin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'dashboard_stats' }) });
-                const data = await res.json();
-                document.getElementById('total_users').innerText = data.total_users;
-                document.getElementById('pending_deposits').innerText = data.pending_deposits;
-            } catch (e) {}
+        // ✅ LOGIC FIXED HERE
+        if (mode === 'select') {
+            document.getElementById('create_section').style.display = 'none';
+            const typeText = filterType === 'official' ? 'Official Tournaments' : 'Daily Matches';
+            document.getElementById('page_title').innerText = "Select Game";
+            document.getElementById('page_sub').innerText = `Tap to manage ${typeText}`;
+            document.getElementById('list_title').innerText = "Tap a Game to Continue";
+        } else {
+            // Default: Manage Mode
+            document.getElementById('create_section').style.display = 'block';
+            document.getElementById('page_title').innerText = "Manage Categories";
+            document.getElementById('page_sub').innerText = "Setup Games";
         }
 
-        // Functions
-        function logout() { localStorage.removeItem('user'); window.location.href = '/'; }
-        async function openSettings() { 
-            document.getElementById('settingsModal').style.display = 'flex'; 
-            const res = await fetch('/api/admin', { method:'POST', body: JSON.stringify({type:'get_settings'})});
-            const data = await res.json();
-            if(data) {
-                document.getElementById('set_youtube').value = data.youtube_link || '';
-                document.getElementById('set_telegram').value = data.telegram_link || '';
-                document.getElementById('set_whatsapp').value = data.whatsapp_number || '';
-                document.getElementById('set_announcement').value = data.announcement || '';
-                document.getElementById('set_notification').value = data.notification_msg || '';
-                document.getElementById('set_about').value = data.about_us || '';
-                document.getElementById('set_policy').value = data.privacy_policy || '';
-                document.getElementById('set_version').value = data.app_version || '';
+        async function loadData() {
+            try {
+                const res = await fetch('/api/admin', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ type: 'get_categories' }) 
+                });
+                
+                if (!res.ok) throw new Error("Server Error");
+                const data = await res.json();
+                
+                const list = document.getElementById('cat_list');
+                
+                const filtered = data.filter(c => {
+                    if (mode === 'select') {
+                        if (filterType === 'official') return c.type === 'official';
+                        if (filterType === 'normal') return c.type === 'normal' || !c.type;
+                    }
+                    return true;
+                });
+
+                if(filtered.length > 0) {
+                    list.innerHTML = filtered.map(c => {
+                        const badgeColor = c.type === 'official' ? 'bg-yellow-500 text-black' : 'bg-blue-600 text-white';
+                        const badgeText = c.type === 'official' ? 'OFFICIAL' : 'NORMAL';
+                        
+                        let cardOnClick = '';
+                        let manageButtons = '';
+
+                        if (mode === 'select') {
+                            cardOnClick = `onclick="window.location.href='/admin-matches?cat_id=${c.id}&name=${encodeURIComponent(c.title)}'"`;
+                        } else {
+                            const safeTitle = c.title.replace(/'/g, "\\'"); 
+                            manageButtons = `
+                            <div class="flex flex-col gap-2 border-l border-gray-700 pl-3 ml-2" onclick="event.stopPropagation()">
+                                <button onclick="editCat(${c.id}, '${safeTitle}', '${c.image}', '${c.type}')" class="text-yellow-400 bg-gray-900 p-1.5 rounded hover:bg-yellow-500 hover:text-black transition"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteCat(${c.id})" class="text-red-400 bg-gray-900 p-1.5 rounded hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
+                            </div>`;
+                        }
+
+                        return `
+                        <div ${cardOnClick} class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center group relative overflow-hidden active:scale-95 transition shadow-lg ${mode === 'select' ? 'cursor-pointer hover:border-indigo-500 hover:bg-gray-750' : ''}">
+                            <span class="absolute top-0 left-0 ${badgeColor} text-[9px] font-bold px-2 py-0.5 rounded-br-lg uppercase tracking-wide shadow-sm">${badgeText}</span>
+                            
+                            <div class="flex items-center gap-4 pl-2 flex-1">
+                                <img src="${c.image}" class="w-14 h-14 rounded-lg object-cover bg-black/40 border border-gray-600 shadow-md" onerror="this.src='https://placehold.co/100?text=GAME'">
+                                <div>
+                                    <h4 class="font-bold text-white text-md tracking-wide leading-tight mb-1">${c.title}</h4>
+                                    <p class="text-[10px] text-gray-400 font-mono bg-gray-900 inline px-1.5 py-0.5 rounded border border-gray-700">ID: ${c.id}</p>
+                                </div>
+                            </div>
+                            ${manageButtons}
+                        </div>`;
+                    }).join('');
+                } else {
+                    list.innerHTML = `<div class="text-center py-10 opacity-50 border-2 border-dashed border-gray-700 rounded-xl mx-4 text-sm text-gray-400"><i class="fa-solid fa-box-open text-3xl mb-2"></i><br>No games found.</div>`;
+                }
+            } catch(e) { 
+                console.error(e);
+                document.getElementById('cat_list').innerHTML = `<p class="text-center text-red-400 text-sm py-4">Failed to load data.</p>`;
             }
         }
-        
-        async function saveSettings() {
-            const body = { type:'update_settings', youtube: document.getElementById('set_youtube').value, telegram: document.getElementById('set_telegram').value, whatsapp: document.getElementById('set_whatsapp').value, announcement: document.getElementById('set_announcement').value, notification: document.getElementById('set_notification').value, about: document.getElementById('set_about').value, policy: document.getElementById('set_policy').value, version: document.getElementById('set_version').value };
-            await fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-            alert("Updated!"); document.getElementById('settingsModal').style.display='none';
+
+        async function handleCategory() {
+            const title = document.getElementById('cat_title').value;
+            const img = document.getElementById('cat_img').value;
+            const typeVal = document.getElementById('cat_type').value;
+            const id = document.getElementById('edit_id').value;
+
+            if(!title || !img) return alert("Please fill Title and Image URL");
+
+            const btn = document.getElementById('submit_btn');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+            btn.disabled = true;
+
+            const apiType = id ? 'edit_category' : 'add_category';
+            
+            try {
+                const res = await fetch('/api/admin', { 
+                    method: 'POST', 
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ type: apiType, id, title, image: img, cat_type: typeVal }) 
+                });
+                
+                const data = await res.json();
+                if(data.success) { resetForm(); loadData(); } else { alert("Error: " + data.error); }
+            } catch(e) { alert("Network Request Failed!"); }
+            btn.innerText = id ? "Update Category" : "Create Category"; btn.disabled = false;
         }
 
-        function openNotiModal() { document.getElementById('notiModal').style.display = 'flex'; }
-        function closeNotiModal() { document.getElementById('notiModal').style.display = 'none'; }
-        
-        async function sendNoti() {
-            const t = document.getElementById('noti_title').value;
-            const m = document.getElementById('noti_msg').value;
-            if(!t || !m) return alert("Fill details");
-            await fetch('/api/admin', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ type:'send_notification', title:t, message:m, send_to_all:true }) });
-            alert("Sent!"); closeNotiModal();
+        function editCat(id, t, i, type) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('cat_title').value = t;
+            document.getElementById('cat_img').value = i;
+            document.getElementById('cat_type').value = type || 'normal';
+            const btn = document.getElementById('submit_btn');
+            btn.innerText = "Update Category";
+            btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700'); btn.classList.add('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('cancel_btn').classList.remove('hidden');
+            window.scrollTo({top:0, behavior:'smooth'});
         }
 
-        loadStats();
+        function resetForm() {
+            document.getElementById('edit_id').value = '';
+            document.getElementById('cat_title').value = '';
+            document.getElementById('cat_img').value = '';
+            const btn = document.getElementById('submit_btn');
+            btn.innerText = "Create Category";
+            btn.classList.add('bg-indigo-600', 'hover:bg-indigo-700'); btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('cancel_btn').classList.add('hidden');
+        }
+
+        async function deleteCat(id) {
+            if(!confirm("⚠️ Deleting this category will delete ALL MATCHES inside it. Sure?")) return;
+            try {
+                const res = await fetch('/api/admin', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ type: 'delete_category', id: id }) 
+                });
+                if(await res.json().success) loadData(); else alert("Delete Failed");
+            } catch(e) { alert("Error"); }
+        }
+
+        loadData();
     </script>
 </body>
 </html>
