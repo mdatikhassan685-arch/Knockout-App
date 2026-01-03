@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Tournament</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .tab-active { border-bottom: 2px solid #eab308; color: #eab308; }
+        .custom-scroll::-webkit-scrollbar { width: 3px; background: #1f2937; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #eab308; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white pb-20 font-sans select-none">
+
+    <!-- Header -->
+    <header class="p-4 bg-gray-800 flex items-center sticky top-0 z-50 shadow-lg border-b border-gray-700">
+        <a href="/home" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <h1 class="text-lg font-bold uppercase tracking-wide text-yellow-500 truncate" id="tour_title">Loading...</h1>
+    </header>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-gray-700 bg-gray-800 sticky top-16 z-40 shadow-md">
+        <button onclick="switchTab('details')" id="tab_details" class="flex-1 py-3 text-xs font-bold text-gray-400 tab-active transition uppercase">Details</button>
+        <button onclick="switchTab('points')" id="tab_points" class="flex-1 py-3 text-xs font-bold text-gray-400 transition uppercase">Points Table</button>
+    </div>
+
+    <!-- 1. DETAILS TAB -->
+    <div id="view_details" class="p-4 space-y-4 animate-fade-in">
+        <div class="w-full h-44 bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 relative group">
+             <img id="tour_banner" src="" class="w-full h-full object-cover transition transform group-hover:scale-105" onerror="this.style.display='none'">
+             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
+             <div class="absolute bottom-3 left-3">
+                 <span class="bg-yellow-600 text-white text-[9px] px-2 py-0.5 rounded uppercase font-bold">Official</span>
+             </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 text-center">
+            <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 shadow-sm">
+                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Entry Fee</p>
+                <p class="text-xl font-black text-white mt-1" id="tour_fee">...</p>
+            </div>
+            <div class="bg-gray-800 p-3 rounded-xl border border-gray-700 shadow-sm">
+                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">Prize Pool</p>
+                <p class="text-xl font-black text-yellow-400 mt-1" id="tour_prize">...</p>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-sm">
+            <h3 class="font-bold text-xs mb-3 text-blue-400 uppercase border-b border-gray-700 pb-2">Tournament Info</h3>
+            <div class="space-y-2">
+                <p class="text-xs text-gray-300 flex items-center gap-2"><i class="fa-regular fa-calendar text-yellow-500"></i> <span id="tour_time" class="font-bold">...</span></p>
+                <p class="text-xs text-gray-300 flex items-center gap-2"><i class="fa-solid fa-users text-green-500"></i> <span id="tour_spots" class="font-bold">...</span></p>
+            </div>
+        </div>
+
+        <div id="action_area" class="mt-4 pb-4">
+            <button onclick="openRegisterModal()" class="w-full bg-gradient-to-r from-yellow-600 to-orange-600 py-4 rounded-xl font-black text-black uppercase tracking-widest shadow-lg active:scale-95 transition flex justify-center items-center gap-2">
+                <i class="fa-solid fa-file-signature"></i> Register Team
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. POINTS TABLE TAB -->
+    <div id="view_points" class="hidden p-2">
+        <div class="overflow-x-auto rounded-xl border border-gray-700 shadow-lg">
+            <table class="w-full text-left text-sm text-gray-400">
+                <thead class="bg-gray-800 text-xs uppercase text-gray-300">
+                    <tr>
+                        <th class="px-3 py-3 text-center w-10">#</th>
+                        <th class="px-3 py-3">Team</th>
+                        <th class="px-3 py-3 text-center w-16">Kills</th>
+                        <th class="px-3 py-3 text-center font-black text-yellow-400 w-16">PTS</th>
+                    </tr>
+                </thead>
+                <tbody id="points_body" class="bg-gray-900 divide-y divide-gray-800">
+                    <tr><td colspan="4" class="text-center py-8 text-xs text-gray-500">Loading Standings...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div id="regModal" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-gray-900 w-full max-w-sm rounded-2xl border border-gray-700 flex flex-col relative max-h-[85vh] shadow-2xl">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-800/50 rounded-t-2xl">
+                <h3 class="font-bold text-lg text-white tracking-wide">Team Registration</h3>
+                <button onclick="document.getElementById('regModal').style.display='none'" class="text-gray-400 text-2xl hover:text-white">&times;</button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto custom-scroll space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-blue-400 uppercase ml-1 block mb-1">Team Name (Required)</label>
+                    <input type="text" id="reg_team_name" class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-white outline-none focus:border-blue-500 text-sm font-bold placeholder-gray-600" placeholder="e.g. BD Kings">
+                </div>
+                
+                <div class="space-y-2">
+                    <p class="text-[10px] text-gray-500 font-bold uppercase border-b border-gray-700 pb-1">Team Members</p>
+                    <div id="player_inputs" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-800 bg-gray-900 rounded-b-2xl">
+                <button onclick="submitReg()" id="submit_btn" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-bold uppercase tracking-wide text-sm shadow-lg transition">Confirm & Pay</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="fixed bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-gray-800 flex justify-around py-3 z-50 pb-6">
+        <a href="/home" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Home</span></a>
+    </nav>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = '/';
+        
+        const params = new URLSearchParams(window.location.search);
+        // Note: Assuming we pass ?id=TOURNAMENT_ID. If user clicks from Category list, logic might need adjustment if id is cat_id.
+        // For now, let's assume we pass ?id=... from somewhere or default to 1.
+        const tournamentId = params.get('id') || 1; 
+
+        async function loadData() {
+            try {
+                // Use official.js
+                const res = await fetch('/api/official', { 
+                    method: 'POST', 
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ type: 'get_official_details', tournament_id: tournamentId, user_id: user.id }) 
+                });
+                
+                if(!res.ok) {
+                    document.getElementById('tour_title').innerText = "Tournament Not Found";
+                    return;
+                }
+
+                const data = await res.json();
+                const t = data.data;
+                
+                document.getElementById('tour_title').innerText = t.title;
+                document.getElementById('tour_fee').innerText = "৳" + t.entry_fee;
+                document.getElementById('tour_prize').innerText = "৳" + t.winning_prize;
+                document.getElementById('tour_spots').innerText = t.total_spots + " Slots";
+                document.getElementById('tour_time').innerText = new Date(t.schedule_time).toLocaleString();
+                
+                document.getElementById('tour_banner').src = "https://placehold.co/600x300/1f2937/FFF?text=" + encodeURIComponent(t.title);
+
+                if (data.is_registered) {
+                    document.getElementById('action_area').innerHTML = `<button class="w-full bg-green-600/20 text-green-500 border border-green-500/50 py-3 rounded-xl font-bold uppercase cursor-default tracking-widest shadow-sm"><i class="fa-solid fa-check-circle"></i> Registered</button>`;
+                }
+
+                generateInputs();
+                loadPoints();
+
+            } catch(e) { console.error(e); }
+        }
+
+        function switchTab(tab) {
+            ['details', 'points'].forEach(t => {
+                document.getElementById('view_'+t).classList.add('hidden');
+                document.getElementById('tab_'+t).classList.remove('tab-active', 'text-yellow-500');
+                document.getElementById('tab_'+t).classList.add('text-gray-400');
+            });
+            document.getElementById('view_'+tab).classList.remove('hidden');
+            document.getElementById('tab_'+tab).classList.add('tab-active', 'text-yellow-500');
+            document.getElementById('tab_'+tab).classList.remove('text-gray-400');
+        }
+
+        function generateInputs() {
+            let html = '';
+            for(let i=1; i<=4; i++) {
+                html += `
+                <div class="relative">
+                    <input type="text" id="p_name_${i}" placeholder="Player ${i} IGN / UID" class="w-full bg-gray-800 p-2.5 pl-3 rounded-lg border border-gray-600 text-xs outline-none text-white focus:border-blue-500">
+                </div>`;
+            }
+            document.getElementById('player_inputs').innerHTML = html;
+        }
+
+        function openRegisterModal() { document.getElementById('regModal').style.display='flex'; }
+
+        async function submitReg() {
+            const btn = document.getElementById('submit_btn');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            const teamName = document.getElementById('reg_team_name').value;
+            let players = [];
+            for(let i=1; i<=4; i++) {
+                const name = document.getElementById(`p_name_${i}`).value;
+                if(name) players.push(name);
+            }
+
+            if(!teamName || players.length < 4) { alert("Team Name & 4 Players required!"); btn.disabled=false; btn.innerText="Confirm & Pay"; return; }
+
+            try {
+                const res = await fetch('/api/official', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        type: 'register_official_team',
+                        user_id: user.id,
+                        tournament_id: tournamentId,
+                        team_name: teamName,
+                        players: players
+                    })
+                });
+                const d = await res.json();
+                if(d.success) { alert("Successfully Registered!"); location.reload(); }
+                else { alert(d.error); }
+            } catch(e) { alert("Error"); }
+            btn.disabled=false; btn.innerText="Confirm & Pay";
+        }
+
+        async function loadPoints() {
+            try {
+                const res = await fetch('/api/official', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ type: 'get_official_standings', tournament_id: tournamentId })
+                });
+                const data = await res.json();
+                const body = document.getElementById('points_body');
+                
+                if(data.length > 0) {
+                    body.innerHTML = data.map((t, i) => `
+                    <tr class="hover:bg-gray-800 transition border-b border-gray-800">
+                        <td class="px-3 py-3 text-center text-gray-500 font-bold text-xs">#${i+1}</td>
+                        <td class="px-3 py-3 font-bold text-white text-xs uppercase">${t.team_name}</td>
+                        <td class="px-3 py-3 text-center text-red-400 font-bold text-xs">${t.kills}</td>
+                        <td class="px-3 py-3 text-center font-black text-yellow-400 text-sm">${t.total_points}</td>
+                    </tr>`).join('');
+                } else {
+                    body.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-xs text-gray-600 opacity-50 flex flex-col items-center"><i class="fa-solid fa-list-ol text-2xl mb-2"></i>No Data Available</td></tr>';
+                }
+            } catch(e){}
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
