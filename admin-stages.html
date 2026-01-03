@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Stages</title>
+    <title>Manage Rounds</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>body { user-select: none; }</style>
@@ -11,11 +11,10 @@
 <body class="bg-gray-900 text-white pb-20">
 
     <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
-        <!-- Back button logic to go back to tournament list is tricky without knowing CAT ID, so we go back to admin-categories?mode=select&type=official -->
         <a href="javascript:history.back()" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
         <div>
             <h1 class="font-bold text-lg text-yellow-500">Manage Rounds</h1>
-            <p class="text-[10px] text-gray-400">Schedule Matches</p>
+            <p class="text-[10px] text-gray-400">Schedule Matches per Stage</p>
         </div>
     </header>
 
@@ -29,7 +28,7 @@
             <h3 class="font-bold text-lg mb-4 text-white">Schedule New Match</h3>
             <input type="hidden" id="target_stage_id">
             
-            <input type="text" id="m_title" placeholder="Match Title (e.g. Match 1)" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 text-white outline-none focus:border-blue-500">
+            <input type="text" id="m_title" placeholder="Match Title (e.g. Match 1 - Bermuda)" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 text-white outline-none focus:border-blue-500">
             
             <select id="m_map" class="w-full bg-gray-900 p-3 rounded-lg mb-3 border border-gray-600 text-white outline-none">
                 <option value="Bermuda">Bermuda</option>
@@ -70,7 +69,7 @@
                                     <p class="text-[10px] text-yellow-500 font-mono">Room: ${m.room_id || 'Not Set'}</p>
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <button onclick='setRoom(${JSON.stringify(m)})' class="bg-gray-700 px-3 py-1 rounded text-[10px] border border-gray-600 hover:text-white font-bold">Set Room</button>
+                                    <button onclick='setRoom(${JSON.stringify(m)})' class="bg-gray-700 px-3 py-1 rounded text-[10px] border border-gray-600 hover:text-white font-bold">Room</button>
                                     <button onclick="deleteMatch(${m.id})" class="text-red-500 text-[10px] hover:text-red-400 font-bold border border-red-500/30 px-2 py-0.5 rounded">Delete</button>
                                 </div>
                             </div>
@@ -80,7 +79,10 @@
                         <div class="bg-gray-800 p-4 rounded-xl border-l-4 border-purple-500 shadow-lg">
                             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
                                 <h3 class="font-bold text-lg text-white">${s.stage_name}</h3>
-                                <button onclick="openMatchModal(${s.id})" class="bg-purple-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-500">+ Add Match</button>
+                                <div>
+                                    <button onclick="window.location.href='/admin-groups?stage_id=${s.id}'" class="bg-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-500 mr-2">Manage Teams</button>
+                                    <button onclick="openMatchModal(${s.id})" class="bg-purple-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-500">+ Match</button>
+                                </div>
                             </div>
                             <div class="space-y-2">
                                 ${matchesHtml || '<p class="text-xs text-gray-500 text-center py-4 border border-dashed border-gray-700 rounded-lg">No matches scheduled yet.</p>'}
@@ -88,7 +90,7 @@
                         </div>`;
                     }).join('');
                 } else {
-                    container.innerHTML = '<p class="text-center text-gray-500 mt-10">No stages found. Create tournament with stages first.</p>';
+                    container.innerHTML = '<p class="text-center text-gray-500 mt-10">No stages found. Please re-create tournament with stages.</p>';
                 }
             } catch(e) { console.error(e); }
         }
@@ -140,4 +142,4 @@
         loadStages();
     </script>
 </body>
-  </html>
+</html>
