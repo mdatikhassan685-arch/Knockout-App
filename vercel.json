@@ -12,7 +12,6 @@
     { "source": "/api/admin", "destination": "/api/admin.js" },
     { "source": "/api/tournament", "destination": "/api/tournament.js" },
     { "source": "/api/official", "destination": "/api/official.js" }, 
-    { "source": "/admin-stages", "destination": "/admin-stages.html" },
 
     { "source": "/admin", "destination": "/admin-dashboard.html" },
     { "source": "/admin-users", "destination": "/admin-users.html" },
@@ -21,6 +20,8 @@
     { "source": "/admin-categories", "destination": "/admin-categories.html" },
     { "source": "/admin-matches", "destination": "/admin-matches.html" },
     { "source": "/admin-official", "destination": "/admin-official.html" },
+    { "source": "/admin-stages", "destination": "/admin-stages.html" },
+    { "source": "/admin-groups", "destination": "/admin-groups.html" },
 
     { "source": "/home", "destination": "/home.html" },
     { "source": "/signup", "destination": "/signup.html" },
