@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Teams & Groups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-white pb-20">
+
+    <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
+        <a href="javascript:history.back()" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <div>
+            <h1 class="font-bold text-lg text-blue-400">Team Management</h1>
+            <p class="text-[10px] text-gray-400">Assign Groups & Promote Teams</p>
+        </div>
+    </header>
+
+    <div class="p-4">
+        <!-- Assign Group Section -->
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6">
+            <h3 class="font-bold text-md mb-3 border-b border-gray-600 pb-2">Assign Selected Teams to Group</h3>
+            <div class="flex gap-2 mb-3">
+                <select id="target_group" class="bg-gray-900 p-2 rounded-lg border border-gray-600 text-white text-sm outline-none flex-1">
+                    <option value="A">Group A</option>
+                    <option value="B">Group B</option>
+                    <option value="C">Group C</option>
+                    <option value="D">Group D</option>
+                </select>
+                <button onclick="assignGroup()" class="bg-blue-600 px-4 py-2 rounded-lg text-sm font-bold">Assign</button>
+            </div>
+            
+            <h3 class="font-bold text-md mb-3 border-b border-gray-600 pb-2 mt-6 text-green-400">Promote to Next Round</h3>
+            <button onclick="promoteTeams()" class="w-full bg-green-600 py-3 rounded-lg font-bold shadow-lg uppercase tracking-widest text-xs">Promote Selected Teams</button>
+        </div>
+
+        <!-- Team List -->
+        <h3 class="font-bold text-lg mb-3 pl-2 border-l-4 border-blue-500">All Teams</h3>
+        <div id="team_list" class="space-y-2 pb-10">
+            <p class="text-center text-gray-500 mt-10">Loading Teams...</p>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const stageId = params.get('stage_id'); // We need tournament_id actually, but stage_id is passed
+        // Note: For simplicity, assume we fetch teams for this tournament/stage
+        
+        let selectedTeams = [];
+
+        async function loadTeams() {
+            // Need API to fetch teams by stage_id
+            // Currently api/official.js doesn't have it explicitly, let's assume 'get_official_standings' logic
+            // We need to add 'get_stage_teams' in api/official.js
+            
+            // Temporary mock until API updated
+            document.getElementById('team_list').innerHTML = '<p class="text-center text-red-400">Need API Update to fetch teams.</p>';
+        }
+
+        // We need to update api/official.js to support fetching teams per stage
+        
+        loadTeams();
+    </script>
+</body>
+</html>
