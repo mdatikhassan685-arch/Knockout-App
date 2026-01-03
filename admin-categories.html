@@ -54,7 +54,7 @@
         const mode = urlParams.get('mode'); // 'select' or 'manage'
         const filterType = urlParams.get('type'); 
 
-        // ✅ LOGIC FIXED HERE
+        // ✅ UI LOGIC FIXED
         if (mode === 'select') {
             document.getElementById('create_section').style.display = 'none';
             const typeText = filterType === 'official' ? 'Official Tournaments' : 'Daily Matches';
@@ -81,12 +81,14 @@
                 
                 const list = document.getElementById('cat_list');
                 
+                // Filter Categories based on URL type
                 const filtered = data.filter(c => {
                     if (mode === 'select') {
+                        // Only show Official if type=official, Normal if type=normal
                         if (filterType === 'official') return c.type === 'official';
                         if (filterType === 'normal') return c.type === 'normal' || !c.type;
                     }
-                    return true;
+                    return true; // Show all in Manage Mode
                 });
 
                 if(filtered.length > 0) {
@@ -97,9 +99,17 @@
                         let cardOnClick = '';
                         let manageButtons = '';
 
+                        // 🔥 IMPORTANT LOGIC FIX 🔥
                         if (mode === 'select') {
-                            cardOnClick = `onclick="window.location.href='/admin-matches?cat_id=${c.id}&name=${encodeURIComponent(c.title)}'"`;
+                            if (c.type === 'official') {
+                                // ✅ Official Tournament হলে নতুন পেজে যাবে (api/official ব্যবহার করবে)
+                                cardOnClick = `onclick="window.location.href='/admin-official?cat_id=${c.id}&name=${encodeURIComponent(c.title)}'"`;
+                            } else {
+                                // Normal Match হলে আগের পেজেই যাবে
+                                cardOnClick = `onclick="window.location.href='/admin-matches?cat_id=${c.id}&name=${encodeURIComponent(c.title)}'"`;
+                            }
                         } else {
+                            // Manage Mode: Show Edit/Delete buttons
                             const safeTitle = c.title.replace(/'/g, "\\'"); 
                             manageButtons = `
                             <div class="flex flex-col gap-2 border-l border-gray-700 pl-3 ml-2" onclick="event.stopPropagation()">
