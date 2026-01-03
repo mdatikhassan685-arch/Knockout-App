@@ -12,7 +12,7 @@
 
     <!-- Header -->
     <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
-        <a href="/admin-categories?mode=manage&type=official" class="mr-4 text-gray-400 active:scale-90"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <a href="/admin-categories?mode=select&type=official" class="mr-4 text-gray-400 active:scale-90"><i class="fa-solid fa-arrow-left text-xl"></i></a>
         <div>
             <h1 class="font-bold text-lg leading-tight truncate w-64 text-yellow-500" id="page_title">...</h1>
             <p class="text-[10px] text-gray-400">Official Tournament Operations</p>
@@ -65,7 +65,6 @@
         // --- 1. LOAD TOURNAMENTS ---
         async function loadTournaments() {
             try {
-                // Calling api/official.js
                 const res = await fetch('/api/official', { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'},
@@ -94,6 +93,11 @@
                                 <div><p class="text-[9px] text-gray-500">PRIZE</p><p class="text-yellow-400 font-bold">৳${t.winning_prize}</p></div>
                                 <div><p class="text-[9px] text-gray-500">SLOTS</p><p class="text-blue-400 font-bold">${t.total_spots}</p></div>
                             </div>
+
+                            <!-- ✅ NEW BUTTON: MANAGE STAGES -->
+                            <button onclick="window.location.href='/admin-stages?tour_id=${t.id}'" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 py-3 rounded-lg text-xs font-bold text-white shadow-lg active:scale-95 transition flex justify-center items-center gap-2 uppercase tracking-wide border border-green-500/50 hover:to-green-500">
+                                <i class="fa-solid fa-sitemap"></i> Manage Stages & Groups
+                            </button>
                         </div>
                     `).join('');
                 } else {
@@ -172,4 +176,4 @@
         loadTournaments();
     </script>
 </body>
-  </html>
+</html>
