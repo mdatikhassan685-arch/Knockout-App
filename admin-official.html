@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official Tournament Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>body { user-select: none; } .custom-scroll::-webkit-scrollbar { width: 4px; background: #374151; } .custom-scroll::-webkit-scrollbar-thumb { background: #eab308; border-radius: 4px; }</style>
+</head>
+<body class="bg-gray-900 text-white pb-24">
+
+    <!-- Header -->
+    <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
+        <a href="/admin-categories?mode=manage&type=official" class="mr-4 text-gray-400 active:scale-90"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <div>
+            <h1 class="font-bold text-lg leading-tight truncate w-64 text-yellow-500" id="page_title">...</h1>
+            <p class="text-[10px] text-gray-400">Official Tournament Operations</p>
+        </div>
+    </header>
+
+    <!-- CREATE TOURNAMENT FORM -->
+    <div class="p-4 bg-gray-800 m-4 rounded-xl border border-gray-700 shadow-lg relative">
+        <h3 class="font-bold text-md mb-3 border-b border-gray-600 pb-2 text-yellow-400">Create / Edit Tournament</h3>
+        <input type="hidden" id="tour_id">
+        
+        <input type="text" id="t_title" placeholder="Tournament Name (e.g. Winter Cup)" class="w-full bg-gray-900 p-3 rounded-lg mb-2 text-sm border border-gray-600 outline-none text-white focus:border-yellow-500">
+        
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="number" id="t_fee" placeholder="Entry Fee" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm">
+            <input type="number" id="t_prize" placeholder="Total Prize" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="number" id="t_spots" placeholder="Total Slots (e.g. 48)" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm">
+            <input type="datetime-local" id="t_time" class="bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-gray-400 text-sm w-full">
+        </div>
+
+        <div class="mb-4">
+            <label class="text-[10px] text-gray-400 uppercase font-bold ml-1">Tournament Stages (Comma Separated)</label>
+            <input type="text" id="t_stages" placeholder="Qualifier, Group Stage, Grand Final" class="w-full bg-gray-900 p-3 rounded-lg border border-gray-600 outline-none text-white text-sm focus:border-blue-500">
+            <p class="text-[9px] text-gray-500 mt-1">* Stages will be created automatically.</p>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="handleTournament()" id="submit_btn" class="flex-1 bg-yellow-600 py-3 rounded-lg font-bold shadow-lg text-black uppercase tracking-wide hover:bg-yellow-500 transition">Create Tournament</button>
+            <button onclick="resetForm()" id="cancel_btn" class="hidden w-20 bg-gray-700 text-gray-300 rounded-lg text-xs font-bold border border-gray-600">Cancel</button>
+        </div>
+    </div>
+
+    <!-- LIST OF TOURNAMENTS -->
+    <div class="px-4">
+        <h3 class="font-bold text-lg mb-3 border-l-4 border-yellow-500 pl-2">Active Tournaments</h3>
+        <div id="tour_list" class="space-y-4 pb-10">
+            <p class="text-center text-gray-500 mt-10 animate-pulse">Loading...</p>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const catId = params.get('cat_id');
+        const catName = params.get('name');
+        if(catName) document.getElementById('page_title').innerText = decodeURIComponent(catName);
+
+        // --- 1. LOAD TOURNAMENTS ---
+        async function loadTournaments() {
+            try {
+                // Calling api/official.js
+                const res = await fetch('/api/official', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'get_admin_tournaments', category_id: catId }) 
+                });
+                const data = await res.json();
+                const list = document.getElementById('tour_list');
+                
+                if(data.length > 0) {
+                    list.innerHTML = data.map(t => `
+                        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg relative group transition hover:border-yellow-500/50">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="bg-yellow-600 text-black text-[9px] px-2 py-0.5 rounded font-bold uppercase">ID: ${t.id}</span>
+                                    <h3 class="font-bold text-lg text-white mt-1">${t.title}</h3>
+                                    <p class="text-xs text-gray-400">${new Date(t.schedule_time).toLocaleString()}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick='editTour(${JSON.stringify(t)})' class="bg-blue-600/20 text-blue-400 p-2 rounded hover:bg-blue-600 hover:text-white transition"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="deleteTour(${t.id})" class="bg-red-600/20 text-red-500 p-2 rounded hover:bg-red-600 hover:text-white transition"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-2 text-center bg-gray-900/50 p-2 rounded-lg border border-gray-700/50 mb-3">
+                                <div><p class="text-[9px] text-gray-500">FEE</p><p class="text-white font-bold">৳${t.entry_fee}</p></div>
+                                <div><p class="text-[9px] text-gray-500">PRIZE</p><p class="text-yellow-400 font-bold">৳${t.winning_prize}</p></div>
+                                <div><p class="text-[9px] text-gray-500">SLOTS</p><p class="text-blue-400 font-bold">${t.total_spots}</p></div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<div class="text-center text-gray-500 py-10">No tournaments found.</div>';
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // --- 2. CREATE / EDIT ---
+        async function handleTournament() {
+            const id = document.getElementById('tour_id').value;
+            const title = document.getElementById('t_title').value;
+            const fee = document.getElementById('t_fee').value;
+            const prize = document.getElementById('t_prize').value;
+            const spots = document.getElementById('t_spots').value;
+            let time = document.getElementById('t_time').value;
+            const stages = document.getElementById('t_stages').value;
+
+            if(!title || !fee || !time) return alert("Fill required fields!");
+            
+            time = new Date(time).toISOString().slice(0, 19).replace('T', ' ');
+
+            const btn = document.getElementById('submit_btn');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/official', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        type: id ? 'edit_tournament' : 'create_tournament',
+                        tour_id: id,
+                        category_id: catId,
+                        title, entry_fee: fee, winning_prize: prize, total_spots: spots, schedule_time: time, stages
+                    })
+                });
+                const d = await res.json();
+                if(d.success) { resetForm(); loadTournaments(); }
+                else { alert(d.error); }
+            } catch(e) { alert("Error"); }
+            btn.innerText = id ? "Update Tournament" : "Create Tournament"; btn.disabled = false;
+        }
+
+        // --- 3. HELPER FUNCTIONS ---
+        function editTour(t) {
+            document.getElementById('tour_id').value = t.id;
+            document.getElementById('t_title').value = t.title;
+            document.getElementById('t_fee').value = t.entry_fee;
+            document.getElementById('t_prize').value = t.winning_prize;
+            document.getElementById('t_spots').value = t.total_spots;
+            
+            const d = new Date(t.schedule_time);
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            document.getElementById('t_time').value = d.toISOString().slice(0,16);
+
+            document.getElementById('submit_btn').innerText = "Update Tournament";
+            document.getElementById('cancel_btn').classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function resetForm() {
+            document.getElementById('tour_id').value = '';
+            document.getElementById('t_title').value = '';
+            document.getElementById('t_fee').value = '';
+            document.getElementById('t_time').value = '';
+            document.getElementById('submit_btn').innerText = "Create Tournament";
+            document.getElementById('cancel_btn').classList.add('hidden');
+        }
+
+        async function deleteTour(id) {
+            if(!confirm("Delete this tournament?")) return;
+            await fetch('/api/official', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ type:'delete_tournament', tour_id:id }) });
+            loadTournaments();
+        }
+
+        loadTournaments();
+    </script>
+</body>
+  </html>
