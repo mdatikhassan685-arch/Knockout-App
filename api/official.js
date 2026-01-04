@@ -234,20 +234,13 @@ module.exports = async (req, res) => {
         }
 
         if (type === 'get_official_standings') {
+            // ✅ FIX: 'team_members' যোগ করা হয়েছে যাতে ডিটেইলস দেখানো যায়
             const [rows] = await db.execute(`
-                SELECT id, team_name, kills, \`rank\` as total_points 
+                SELECT id, team_name, team_members, kills, \`rank\` as total_points 
                 FROM participants 
                 WHERE tournament_id = ? 
-                ORDER BY \`rank\` DESC, kills DESC`, 
+                ORDER BY id DESC`, // লেটেস্ট টিম আগে দেখাবে
                 [tournament_id]
             );
             return res.status(200).json(rows);
-        }
-
-        return res.status(400).json({ error: "Invalid Type" });
-
-    } catch (e) {
-        console.error("OFFICIAL API ERROR:", e);
-        return res.status(500).json({ error: e.message });
-    }
-};
+        };
