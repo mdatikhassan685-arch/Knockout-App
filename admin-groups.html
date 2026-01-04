@@ -6,64 +6,61 @@
     <title>Manage Groups</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; user-select: none; } 
-        .custom-scroll::-webkit-scrollbar { width: 4px; background: #374151; } 
-        .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
-    </style>
+    <style>body { user-select: none; } .custom-scroll::-webkit-scrollbar { width: 4px; background: #374151; } .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }</style>
 </head>
-<body class="bg-blue-900 text-white pb-32">
+<body class="bg-gray-900 text-white pb-32">
 
-    <header class="p-4 bg-blue-800 shadow-md flex items-center sticky top-0 z-50 border-b border-blue-700">
-        <a href="javascript:history.back()" class="mr-4 text-gray-200"><i class="fa-solid fa-arrow-left text-xl"></i></a>
-        <div>
-            <h1 class="font-bold text-lg text-white">Manage Groups</h1>
-            <p class="text-[10px] text-blue-200">Bulk Assign & Remove</p>
+    <header class="p-4 bg-gray-800 shadow-md flex items-center sticky top-0 z-50 border-b border-gray-700">
+        <a href="javascript:history.back()" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <div class="flex-1">
+            <h1 class="font-bold text-lg text-blue-400">Manage Groups</h1>
+            <!-- STAGE SELECTOR -->
+            <select id="stage_select" onchange="changeStage()" class="bg-gray-900 text-[10px] text-gray-400 border border-gray-700 rounded px-2 py-1 outline-none mt-1 w-full max-w-[200px]">
+                <option>Loading Stages...</option>
+            </select>
         </div>
     </header>
 
     <div class="p-4 max-w-lg mx-auto">
         
         <!-- SEARCH BOX -->
-        <div class="bg-white p-3 rounded-lg shadow-lg mb-6 text-gray-800">
+        <div class="bg-gray-800 p-3 rounded-lg shadow-lg mb-6 border border-gray-700">
             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Bulk Search Teams:</label>
             <div class="flex gap-2">
-                <textarea id="search_query" rows="2" placeholder="e.g. TeamA, TeamB" class="w-full border p-2 rounded text-sm outline-none focus:border-blue-500"></textarea>
+                <textarea id="search_query" rows="1" placeholder="e.g. TeamA, TeamB" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-sm outline-none focus:border-blue-500 text-white"></textarea>
                 <button onclick="filterTeams()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold text-sm hover:bg-blue-700">Search</button>
             </div>
             <div class="mt-2 text-right">
-                <button onclick="clearSearch()" class="text-red-500 text-xs font-bold underline hidden" id="clear_btn">Clear Search</button>
+                <button onclick="clearSearch()" class="text-red-400 text-xs font-bold underline hidden" id="clear_btn">Clear</button>
             </div>
         </div>
 
         <!-- UNASSIGNED TEAMS -->
-        <div class="bg-white text-gray-800 rounded-lg shadow-lg p-4 mb-6 border-l-4 border-yellow-500">
+        <div class="bg-gray-800 rounded-lg shadow-lg p-4 mb-6 border-l-4 border-yellow-500 border-t border-r border-b border-gray-700">
             <div class="flex justify-between items-center mb-3">
-                <h2 class="text-lg font-bold">Unassigned (<span id="unassigned_count">0</span>)</h2>
-                <label class="text-xs flex items-center cursor-pointer select-none font-bold text-blue-600">
+                <h2 class="text-lg font-bold text-white">Unassigned (<span id="unassigned_count">0</span>)</h2>
+                <label class="text-xs flex items-center cursor-pointer select-none font-bold text-blue-400">
                     <input type="checkbox" onclick="toggleAll('unassigned', this)" class="mr-1"> Select All
                 </label>
             </div>
             
             <div id="unassigned_list" class="space-y-2 mb-4 max-h-60 overflow-y-auto custom-scroll pr-1">
-                <p class="text-center text-gray-400 text-xs italic py-4">Loading...</p>
+                <p class="text-center text-gray-500 text-xs italic py-4">Loading...</p>
             </div>
         </div>
 
-        <!-- ASSIGNED GROUPS (Dynamic) -->
+        <!-- ASSIGNED GROUPS -->
         <div id="groups_container" class="space-y-4">
-            <!-- Groups will be loaded here -->
+            <!-- Dynamic Content -->
         </div>
 
     </div>
 
     <!-- FIXED BOTTOM ACTION BAR -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-blue-600 p-3 shadow-[0_-5px_20px_rgba(0,0,0,0.3)] z-50 max-w-lg mx-auto">
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 p-3 shadow-2xl z-50 max-w-lg mx-auto">
         <div class="flex flex-col gap-2">
-            
-            <!-- Assign To Group -->
             <div class="flex gap-2">
-                <select id="target_group_select" class="w-2/3 p-2 border-2 border-blue-300 rounded font-bold text-sm text-gray-800 outline-none">
+                <select id="target_group_select" class="w-2/3 p-2 bg-gray-900 border border-gray-600 rounded font-bold text-sm text-white outline-none">
                     <option value="">Select Group...</option>
                     <option value="A">Group A</option>
                     <option value="B">Group B</option>
@@ -72,9 +69,7 @@
                 </select>
                 <button onclick="assignGroup()" class="w-1/3 bg-blue-600 text-white font-bold py-2 rounded shadow text-sm hover:bg-blue-700 transition">Assign</button>
             </div>
-
-            <!-- Remove From Group -->
-            <button onclick="removeGroup()" class="w-full bg-red-100 text-red-600 font-bold py-2 rounded border border-red-200 text-sm hover:bg-red-200 transition">
+            <button onclick="removeGroup()" class="w-full bg-red-600/20 text-red-500 font-bold py-2 rounded border border-red-500/30 text-sm hover:bg-red-600 hover:text-white transition">
                 Remove Selected from Groups
             </button>
         </div>
@@ -82,15 +77,48 @@
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const stageId = params.get('stage_id');
+        const tourId = params.get('tour_id');
+        let currentStageId = params.get('stage_id');
         let allTeams = [];
 
+        async function init() {
+            // Load Stages first
+            try {
+                const res = await fetch('/api/official', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ type: 'get_stages_and_matches', tournament_id: tourId }) 
+                });
+                const stages = await res.json();
+                
+                const select = document.getElementById('stage_select');
+                select.innerHTML = stages.map(s => `<option value="${s.id}">${s.stage_name}</option>`).join('');
+                
+                if (stages.length > 0) {
+                    if (!currentStageId) currentStageId = stages[0].id;
+                    select.value = currentStageId;
+                    loadTeams();
+                } else {
+                    select.innerHTML = '<option>No Stages Found</option>';
+                    document.getElementById('unassigned_list').innerHTML = '<p class="text-center text-red-400">Create Stages First!</p>';
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function changeStage() {
+            currentStageId = document.getElementById('stage_select').value;
+            loadTeams();
+        }
+
         async function loadTeams() {
+            document.getElementById('unassigned_list').innerHTML = '<p class="text-center text-gray-500">Fetching Data...</p>';
+            document.getElementById('groups_container').innerHTML = '';
+            
             try {
                 const res = await fetch('/api/official', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'get_stage_teams', stage_id: stageId })
+                    body: JSON.stringify({ type: 'get_stage_teams', stage_id: currentStageId })
                 });
                 allTeams = await res.json();
                 renderTeams(allTeams);
@@ -101,10 +129,7 @@
             const unassignedList = document.getElementById('unassigned_list');
             const groupsContainer = document.getElementById('groups_container');
             
-            // Separate teams
             const unassigned = teams.filter(t => !t.group_name || t.group_name === 'None');
-            
-            // Group logic
             const groups = {};
             ['A', 'B', 'C', 'D'].forEach(g => groups[g] = []);
             
@@ -115,34 +140,33 @@
                 }
             });
 
-            // Render Unassigned
             document.getElementById('unassigned_count').innerText = unassigned.length;
+            
             if (unassigned.length > 0) {
                 unassignedList.innerHTML = unassigned.map(t => `
-                    <label class="flex items-center p-2 bg-gray-100 rounded border hover:bg-gray-200 cursor-pointer transition select-none">
-                        <input type="checkbox" value="${t.id}" class="team-checkbox unassigned mr-3 accent-blue-600 w-4 h-4">
-                        <span class="text-sm font-semibold">${t.team_name}</span>
+                    <label class="flex items-center p-2 bg-gray-900 rounded border border-gray-700 hover:border-blue-500 cursor-pointer transition select-none">
+                        <input type="checkbox" value="${t.id}" class="team-checkbox unassigned mr-3 w-4 h-4 accent-blue-600">
+                        <span class="text-sm font-bold text-gray-300">${t.team_name}</span>
                     </label>
                 `).join('');
             } else {
-                unassignedList.innerHTML = '<p class="text-center text-gray-400 text-xs italic py-2">No unassigned teams.</p>';
+                unassignedList.innerHTML = '<p class="text-center text-gray-600 text-xs italic py-2">No unassigned teams.</p>';
             }
 
-            // Render Groups
             groupsContainer.innerHTML = Object.keys(groups).map(gName => {
                 const gTeams = groups[gName];
                 const teamHtml = gTeams.length > 0 ? gTeams.map(t => `
-                    <label class="flex items-center p-2 bg-green-50 rounded border hover:bg-green-100 cursor-pointer transition select-none">
-                        <input type="checkbox" value="${t.id}" class="team-checkbox grp_${gName} mr-3 accent-green-600 w-4 h-4">
-                        <span class="text-sm font-medium">${t.team_name}</span>
+                    <label class="flex items-center p-2 bg-green-900/20 rounded border border-green-500/30 hover:bg-green-900/40 cursor-pointer transition select-none">
+                        <input type="checkbox" value="${t.id}" class="team-checkbox grp_${gName} mr-3 w-4 h-4 accent-green-500">
+                        <span class="text-sm font-medium text-green-100">${t.team_name}</span>
                     </label>
-                `).join('') : '<p class="text-center text-gray-400 text-xs italic">Empty Group</p>';
+                `).join('') : '<p class="text-center text-gray-600 text-xs italic">Empty Group</p>';
 
                 return `
-                <div class="bg-white text-gray-800 rounded-lg shadow p-4 border-l-4 border-green-500">
-                    <div class="flex justify-between items-center mb-3 border-b pb-2">
-                        <h3 class="font-bold">Group ${gName} <span class="text-xs text-gray-500 font-normal">(${gTeams.length})</span></h3>
-                        <label class="text-xs flex items-center cursor-pointer select-none font-bold text-green-600">
+                <div class="bg-gray-800 rounded-lg shadow p-4 border-l-4 border-green-500 border-t border-r border-b border-gray-700">
+                    <div class="flex justify-between items-center mb-3 border-b border-gray-700 pb-2">
+                        <h3 class="font-bold text-green-400">Group ${gName} <span class="text-xs text-gray-500 font-normal">(${gTeams.length})</span></h3>
+                        <label class="text-xs flex items-center cursor-pointer select-none font-bold text-green-500">
                             <input type="checkbox" onclick="toggleAll('grp_${gName}', this)" class="mr-1"> Select All
                         </label>
                     </div>
@@ -151,22 +175,16 @@
             }).join('');
         }
 
-        // --- FILTER ---
+        // ... (Filter, Clear, Toggle, GetIDs, Assign, Remove functions remain SAME as previous code, just styling applies automatically)
+        // I will include them for completeness
+        
         function filterTeams() {
             const query = document.getElementById('search_query').value.toLowerCase();
             if (!query) return;
-            
             document.getElementById('clear_btn').classList.remove('hidden');
-            
             const keywords = query.split(',').map(s => s.trim()).filter(s => s);
-            
-            const filtered = allTeams.filter(t => {
-                return keywords.some(k => t.team_name.toLowerCase().includes(k));
-            });
-            
+            const filtered = allTeams.filter(t => keywords.some(k => t.team_name.toLowerCase().includes(k)));
             renderTeams(filtered);
-            
-            // Auto check filtered teams
             document.querySelectorAll('.team-checkbox').forEach(cb => cb.checked = true);
         }
 
@@ -176,7 +194,6 @@
             renderTeams(allTeams);
         }
 
-        // --- ACTIONS ---
         function toggleAll(className, source) {
             document.querySelectorAll('.' + className).forEach(cb => cb.checked = source.checked);
         }
@@ -188,49 +205,31 @@
         async function assignGroup() {
             const ids = getSelectedIds();
             const group = document.getElementById('target_group_select').value;
-            
             if (ids.length === 0) return alert("Select teams first!");
             if (!group) return alert("Select a group!");
 
-            const btn = event.target;
-            btn.innerText = "..."; btn.disabled = true;
-
+            const btn = event.target; btn.innerText = "..."; btn.disabled = true;
             try {
-                await fetch('/api/official', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ type: 'assign_group', team_ids: ids, target_group: group })
-                });
-                // alert("Assigned!"); // Optional
-                loadTeams(); // Reload
+                await fetch('/api/official', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'assign_group', team_ids: ids, target_group: group }) });
+                loadTeams();
             } catch(e) { alert("Error"); }
-            
             btn.innerText = "Assign"; btn.disabled = false;
         }
 
         async function removeGroup() {
             const ids = getSelectedIds();
             if (ids.length === 0) return alert("Select teams first!");
+            if(!confirm("Remove from group?")) return;
             
-            if(!confirm("Remove selected teams from their groups?")) return;
-
-            const btn = event.target;
-            btn.innerText = "..."; btn.disabled = true;
-
+            const btn = event.target; btn.innerText = "..."; btn.disabled = true;
             try {
-                await fetch('/api/official', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    // Removing group means setting group to 'None' or NULL
-                    body: JSON.stringify({ type: 'assign_group', team_ids: ids, target_group: 'None' }) 
-                });
+                await fetch('/api/official', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'assign_group', team_ids: ids, target_group: 'None' }) });
                 loadTeams();
             } catch(e) { alert("Error"); }
-            
             btn.innerText = "Remove Selected from Groups"; btn.disabled = false;
         }
 
-        loadTeams();
+        init();
     </script>
 </body>
 </html>
