@@ -6,7 +6,6 @@
     <title>Manage Schedule</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>body { user-select: none; } .custom-scroll::-webkit-scrollbar { width: 4px; background: #374151; } .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }</style>
 </head>
 <body class="bg-gray-900 text-white pb-32">
 
@@ -24,30 +23,9 @@
         <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 mb-6 shadow-lg">
             <h3 class="font-bold text-md mb-3 text-white border-b border-gray-700 pb-2">Add New Match Day</h3>
             
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <div>
-                    <label class="text-[10px] text-gray-400 uppercase font-bold">Title</label>
-                    <input type="text" id="day_title" placeholder="e.g. Day 1" class="w-full bg-gray-900 p-2 rounded border border-gray-600 text-sm text-white outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="text-[10px] text-gray-400 uppercase font-bold">Participants</label>
-                    <input type="text" id="day_group" placeholder="e.g. Group A" class="w-full bg-gray-900 p-2 rounded border border-gray-600 text-sm text-white outline-none focus:border-blue-500">
-                </div>
-            </div>
+            <input type="text" id="day_title" placeholder="Stage Name (e.g. Day 1 / Qualifier)" class="w-full bg-gray-900 p-3 rounded-lg border border-gray-600 text-sm text-white outline-none focus:border-blue-500 mb-3">
 
-            <div class="mb-3">
-                <label class="text-[10px] text-gray-400 uppercase font-bold">Start Time</label>
-                <input type="datetime-local" id="day_time" class="w-full bg-gray-900 p-2 rounded border border-gray-600 text-gray-400 text-sm outline-none focus:border-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label class="text-[10px] text-gray-400 uppercase font-bold">Round Type</label>
-                <select id="day_stage" class="w-full bg-gray-900 p-2 rounded border border-gray-600 text-sm text-white outline-none focus:border-blue-500">
-                    <option>Loading Stages...</option>
-                </select>
-            </div>
-
-            <button onclick="createDay()" class="w-full bg-blue-600 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:bg-blue-500 transition">Add Match Day</button>
+            <button onclick="createDay()" class="w-full bg-blue-600 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:bg-blue-500 transition">Add Stage</button>
         </div>
 
         <!-- Schedule List -->
@@ -57,7 +35,7 @@
 
     </div>
 
-    <!-- Match Modal (Hidden) -->
+    <!-- Match Modal -->
     <div id="matchModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl">
             <h3 class="font-bold text-lg mb-4 text-white">Add New Match</h3>
@@ -83,7 +61,6 @@
         const tourId = params.get('tour_id');
 
         async function init() {
-            // Load Stages for Dropdown
             try {
                 const res = await fetch('/api/official', { 
                     method: 'POST', 
@@ -91,26 +68,19 @@
                     body: JSON.stringify({ type: 'get_stages_and_matches', tournament_id: tourId }) 
                 });
                 const stages = await res.json();
-                
-                const select = document.getElementById('day_stage');
-                if (stages.length > 0) {
-                    select.innerHTML = stages.map(s => `<option value="${s.id}">${s.stage_name}</option>`).join('');
-                    renderSchedule(stages);
-                } else {
-                    select.innerHTML = '<option>No Stages Found</option>';
-                    document.getElementById('schedule_list').innerHTML = '<p class="text-center text-gray-500">Create Stages first.</p>';
-                }
+                renderSchedule(stages);
             } catch(e) { console.error(e); }
         }
 
         function renderSchedule(stages) {
             const list = document.getElementById('schedule_list');
             list.innerHTML = '';
-
-            // Note: We are treating 'stages' as 'Days' here to match your logic.
-            // Or we can create 'Match Groups' inside stages. 
-            // For simplicity, let's assume Stage = Day/Round.
             
+            if(stages.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-500">No stages created.</p>';
+                return;
+            }
+
             stages.forEach(s => {
                 const matchesHtml = s.matches ? s.matches.map(m => `
                     <div class="flex justify-between items-center bg-gray-900/50 p-2 rounded border border-gray-700/50 mb-1 group hover:border-gray-600">
@@ -130,18 +100,15 @@
                         <div>
                             <h3 class="font-bold text-lg text-white">${s.stage_name}</h3>
                             <span class="bg-blue-900 text-blue-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase">Round ${s.stage_order}</span>
-                            <p class="text-xs text-gray-400 mt-1">${new Date().toLocaleDateString()}</p> <!-- Date logic needed -->
                         </div>
-                        <div class="flex gap-2">
-                            <button class="text-blue-400 hover:text-white"><i class="fa-solid fa-pen"></i></button>
-                            <button class="text-red-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
+                        <div class="flex gap-3">
+                            <button onclick="editStage(${s.id}, '${s.stage_name}')" class="text-blue-400 hover:text-white"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteStage(${s.id})" class="text-red-400 hover:text-white"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                     
                     <div class="p-3 bg-gray-800 space-y-2">
                         ${matchesHtml}
-                        
-                        <!-- Add Match Button inside card -->
                         <div class="pt-2 border-t border-gray-700">
                             <button onclick="openMatchModal(${s.id})" class="w-full py-2 border-2 border-dashed border-gray-600 rounded-lg text-gray-400 text-xs font-bold hover:text-white hover:border-gray-500 transition">+ Add Match</button>
                         </div>
@@ -150,25 +117,50 @@
             });
         }
 
-        // --- ACTIONS ---
+        async function createDay() {
+            const title = document.getElementById('day_title').value;
+            if(!title) return alert("Enter Stage Name");
+
+            await fetch('/api/official', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'create_stage', tournament_id: tourId, stage_name: title })
+            });
+            document.getElementById('day_title').value = '';
+            init();
+        }
+
+        async function editStage(sid, name) {
+            const newName = prompt("Edit Name:", name);
+            if(newName && newName !== name) {
+                await fetch('/api/official', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ type:'update_stage', stage_id:sid, stage_name:newName }) });
+                init();
+            }
+        }
+
+        async function deleteStage(sid) {
+            if(confirm("Delete Stage & Matches?")) {
+                await fetch('/api/official', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ type:'delete_stage', stage_id:sid }) });
+                init();
+            }
+        }
+
         function openMatchModal(sid) {
             document.getElementById('target_day_id').value = sid;
             document.getElementById('matchModal').style.display = 'flex';
-        }
-
-        async function createDay() {
-            // Logic to create a NEW STAGE (Day) via API
-            // Reusing 'create_tournament' stage logic or need a new 'create_stage' API
-            // For now, this requires API update if you want to add stages dynamically here.
-            alert("To add a new Day/Stage, please use the 'Edit Tournament' feature or we need to add 'create_stage' API.");
         }
 
         async function addMatch() {
             const sid = document.getElementById('target_day_id').value;
             const title = document.getElementById('m_title').value;
             const map = document.getElementById('m_map').value;
-            // Combine Date + Time logic needed, using NOW for demo
-            const time = new Date().toISOString().slice(0, 19).replace('T', ' '); 
+            const timeVal = document.getElementById('m_time').value;
+            
+            if(!title || !timeVal) return alert("Fill Details");
+            
+            // Current Date + Selected Time
+            const date = new Date().toISOString().slice(0, 10); 
+            const time = `${date} ${timeVal}:00`;
 
             await fetch('/api/official', {
                 method: 'POST',
@@ -176,11 +168,11 @@
                 body: JSON.stringify({ type: 'create_stage_match', stage_id: sid, title, map, time })
             });
             document.getElementById('matchModal').style.display = 'none';
-            init(); // Reload
+            init();
         }
 
         async function deleteMatch(mid) {
-            if(confirm("Delete?")) {
+            if(confirm("Delete Match?")) {
                 await fetch('/api/official', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ type:'delete_stage_match', match_id:mid }) });
                 init();
             }
