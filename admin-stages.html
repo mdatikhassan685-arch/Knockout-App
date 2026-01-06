@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Schedule</title>
+    <title>Manage Rounds</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>body { user-select: none; } .custom-scroll::-webkit-scrollbar { width: 4px; background: #374151; } .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }</style>
 </head>
 <body class="bg-gray-900 text-white pb-32">
 
@@ -44,9 +45,9 @@
 
     </div>
 
-    <!-- ✅ ADD MATCH MODAL -->
-    <div id="matchModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
-        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl">
+    <!-- ✅ ADD MATCH MODAL (Fixed Z-Index & Display Logic) -->
+    <div id="matchModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[100] p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl relative animate-bounce-in">
             <h3 class="font-bold text-lg mb-4 text-white">Add New Match</h3>
             <input type="hidden" id="target_stage_id">
             
@@ -74,12 +75,12 @@
             </div>
 
             <button onclick="addMatch()" class="w-full bg-green-600 py-2.5 rounded-lg font-bold hover:bg-green-500 shadow-lg">Create Match</button>
-            <button onclick="document.getElementById('matchModal').style.display='none'" class="w-full mt-3 text-gray-400 text-xs hover:text-white">Cancel</button>
+            <button onclick="closeModal('matchModal')" class="w-full mt-3 text-gray-400 text-xs hover:text-white">Cancel</button>
         </div>
     </div>
 
-    <!-- ✅ EDIT STAGE MODAL (New) -->
-    <div id="editStageModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
+    <!-- ✅ EDIT STAGE MODAL -->
+    <div id="editStageModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[100] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl">
             <h3 class="font-bold text-lg mb-4 text-blue-400">Edit Stage</h3>
             <input type="hidden" id="edit_stage_id">
@@ -91,12 +92,12 @@
             <input type="number" id="edit_stage_round" class="w-full bg-gray-900 p-2.5 rounded-lg mb-4 border border-gray-600 text-white outline-none">
 
             <button onclick="saveStageEdit()" class="w-full bg-blue-600 py-2.5 rounded-lg font-bold hover:bg-blue-500">Update</button>
-            <button onclick="document.getElementById('editStageModal').style.display='none'" class="w-full mt-3 text-gray-400 text-xs hover:text-white">Cancel</button>
+            <button onclick="closeModal('editStageModal')" class="w-full mt-3 text-gray-400 text-xs hover:text-white">Cancel</button>
         </div>
     </div>
 
     <!-- ROOM EDIT MODAL -->
-    <div id="roomModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[70] p-4 backdrop-blur-sm">
+    <div id="roomModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[100] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 p-6 rounded-xl w-full max-w-xs border border-yellow-500/30 shadow-2xl">
             <h3 class="font-bold text-lg mb-4 text-yellow-500">Update Room</h3>
             <input type="hidden" id="room_match_id">
@@ -107,13 +108,21 @@
                 <span class="text-sm text-gray-300">Set Match LIVE 🔴</span>
             </label>
             <button onclick="saveRoom()" class="w-full bg-yellow-600 py-2 rounded-lg font-bold text-black hover:bg-yellow-500">Save</button>
-            <button onclick="document.getElementById('roomModal').style.display='none'" class="w-full mt-2 text-gray-500 text-xs">Close</button>
+            <button onclick="closeModal('roomModal')" class="w-full mt-2 text-gray-500 text-xs">Close</button>
         </div>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const tourId = params.get('tour_id');
+
+        // Modal Helpers
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
 
         async function init() {
             try {
@@ -177,6 +186,7 @@
             });
         }
 
+        // --- STAGE ACTIONS ---
         async function createDay() {
             const title = document.getElementById('day_title').value;
             const round = document.getElementById('day_round').value || 1;
@@ -191,15 +201,13 @@
             init();
         }
 
-        // ✅ NEW: Open Edit Modal
         function openEditStageModal(sid, name, round) {
             document.getElementById('edit_stage_id').value = sid;
             document.getElementById('edit_stage_name').value = name;
             document.getElementById('edit_stage_round').value = round;
-            document.getElementById('editStageModal').style.display = 'flex';
+            openModal('editStageModal'); // ✅ FIX: Use openModal function
         }
 
-        // ✅ NEW: Save Edit
         async function saveStageEdit() {
             const sid = document.getElementById('edit_stage_id').value;
             const name = document.getElementById('edit_stage_name').value;
@@ -210,7 +218,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ type: 'update_stage', stage_id: sid, stage_name: name, stage_order: round })
             });
-            document.getElementById('editStageModal').style.display = 'none';
+            closeModal('editStageModal');
             init();
         }
 
@@ -221,13 +229,14 @@
             }
         }
 
+        // --- MATCH ACTIONS ---
         function openMatchModal(sid) {
-            document.getElementById('target_day_id').value = sid;
-            document.getElementById('matchModal').style.display = 'flex';
+            document.getElementById('target_stage_id').value = sid;
+            openModal('matchModal'); // ✅ FIX: Use openModal function
         }
 
         async function addMatch() {
-            const sid = document.getElementById('target_day_id').value;
+            const sid = document.getElementById('target_stage_id').value;
             const title = document.getElementById('m_title').value;
             const parts = document.getElementById('m_parts').value || 'All Groups';
             const map = document.getElementById('m_map').value;
@@ -241,7 +250,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ type: 'create_stage_match', stage_id: sid, title, participants: parts, map, time })
             });
-            document.getElementById('matchModal').style.display = 'none';
+            closeModal('matchModal');
             init();
         }
 
@@ -250,7 +259,7 @@
             document.getElementById('room_id').value = m.room_id || '';
             document.getElementById('room_pass').value = m.room_pass || '';
             document.getElementById('match_live').checked = (m.status === 'live');
-            document.getElementById('roomModal').style.display = 'flex';
+            openModal('roomModal');
         }
 
         async function saveRoom() {
@@ -264,7 +273,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ type: 'update_stage_room', match_id: mid, room_id: rid, room_pass: pass, status })
             });
-            document.getElementById('roomModal').style.display = 'none';
+            closeModal('roomModal');
             init();
         }
 
