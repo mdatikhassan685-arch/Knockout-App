@@ -1,7 +1,6 @@
 const db = require('../db');
 
 module.exports = async (req, res) => {
-    // 1. Basic Setup
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -12,7 +11,7 @@ module.exports = async (req, res) => {
     const { type, user_id, tournament_id, category_id, team_name, players, tour_id, stage_id, match_id, title, map, time, room_id, room_pass, status, team_ids, target_group, next_stage_id, points_to_add, kills_to_add, team_id } = body;
 
     try {
-        // --- TOURNAMENT ---
+        // --- 1. ADMIN: TOURNAMENT ---
         if (type === 'get_admin_tournaments') {
             const [rows] = await db.execute('SELECT * FROM tournaments WHERE category_id = ? ORDER BY schedule_time DESC', [category_id]);
             return res.status(200).json(rows);
@@ -37,7 +36,7 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true });
         }
 
-        // --- STAGE & MATCH ---
+        // --- 2. ADMIN: STAGE & MATCH (Fixed) ---
         if (type === 'get_stages_and_matches') {
             const [stages] = await db.execute('SELECT * FROM tournament_stages WHERE tournament_id = ? ORDER BY stage_order ASC', [tournament_id]);
             for (let stage of stages) {
@@ -46,36 +45,47 @@ module.exports = async (req, res) => {
             }
             return res.status(200).json(stages);
         }
-        
-        // ✅ NEW: Stage Management
+
+        // ✅ Create Stage with Round No
         if (type === 'create_stage') {
-            await db.execute(`INSERT INTO tournament_stages (tournament_id, stage_name, stage_order, status) VALUES (?, ?, 99, 'upcoming')`, [tournament_id, body.stage_name]);
+            const order = parseInt(body.stage_order) || 1;
+            await db.execute(`INSERT INTO tournament_stages (tournament_id, stage_name, stage_order, status) VALUES (?, ?, ?, 'upcoming')`, [tournament_id, body.stage_name, order]);
             return res.status(200).json({ success: true });
         }
+
+        // ✅ Update Stage (Name & Round No)
         if (type === 'update_stage') {
-            await db.execute(`UPDATE tournament_stages SET stage_name = ? WHERE id = ?`, [body.stage_name, stage_id]);
+            await db.execute(`UPDATE tournament_stages SET stage_name = ?, stage_order = ? WHERE id = ?`, [body.stage_name, body.stage_order, stage_id]);
             return res.status(200).json({ success: true });
         }
+
         if (type === 'delete_stage') {
             await db.execute('DELETE FROM stage_matches WHERE stage_id = ?', [stage_id]);
             await db.execute('DELETE FROM tournament_stages WHERE id = ?', [stage_id]);
             return res.status(200).json({ success: true });
         }
 
+        // ✅ Create Match (Ensure participants column exists in DB)
         if (type === 'create_stage_match') {
-            await db.execute(`INSERT INTO stage_matches (stage_id, match_title, map_name, schedule_time, status) VALUES (?, ?, ?, ?, 'upcoming')`, [stage_id, title, map, time]);
+            await db.execute(
+                `INSERT INTO stage_matches (stage_id, match_title, participants, map_name, schedule_time, status) 
+                 VALUES (?, ?, ?, ?, ?, 'upcoming')`,
+                [stage_id, title, body.participants || 'All', map, time]
+            );
             return res.status(200).json({ success: true });
         }
+
         if (type === 'update_stage_room') {
             await db.execute(`UPDATE stage_matches SET room_id=?, room_pass=?, status=? WHERE id=?`, [room_id, room_pass, status, match_id]);
             return res.status(200).json({ success: true });
         }
+
         if (type === 'delete_stage_match') {
             await db.execute('DELETE FROM stage_matches WHERE id=?', [match_id]);
             return res.status(200).json({ success: true });
         }
 
-        // --- TEAMS & GROUPS ---
+        // --- 3. TEAM & GROUP ---
         if (type === 'get_stage_teams') {
             let [teams] = await db.execute('SELECT * FROM stage_standings WHERE stage_id = ? ORDER BY total_points DESC', [stage_id]);
             if (teams.length === 0) {
@@ -110,53 +120,8 @@ module.exports = async (req, res) => {
             await db.execute(`UPDATE stage_standings SET kills = kills + ?, position_points = position_points + ?, total_points = total_points + ? + ? WHERE id = ?`, [kills_to_add, points_to_add, kills_to_add, points_to_add, team_id]);
             return res.status(200).json({ success: true });
         }
-                
-       // 1. Get Stages
-        if (type === 'get_stages_and_matches') {
-            const [stages] = await db.execute('SELECT * FROM tournament_stages WHERE tournament_id = ? ORDER BY stage_order ASC', [tournament_id]);
-            for (let stage of stages) {
-                const [matches] = await db.execute('SELECT * FROM stage_matches WHERE stage_id = ? ORDER BY schedule_time ASC', [stage.id]);
-                stage.matches = matches;
-            }
-            return res.status(200).json(stages);
-        }
 
-        // 2. Create Stage (With Custom Round Number)
-        if (type === 'create_stage') {
-            const order = parseInt(body.stage_order) || 1; // Admin input
-            await db.execute(
-                `INSERT INTO tournament_stages (tournament_id, stage_name, stage_order, status) 
-                 VALUES (?, ?, ?, 'upcoming')`,
-                [tournament_id, body.stage_name, order]
-            );
-            return res.status(200).json({ success: true });
-        }
-
-        // ... (Update/Delete Stage logic same as before) ...
-        if (type === 'update_stage') { /* ... same ... */ }
-        if (type === 'delete_stage') { /* ... same ... */ }
-
-        // 3. Create Match (With Participants Info)
-        if (type === 'create_stage_match') {
-            await db.execute(
-                `INSERT INTO stage_matches (stage_id, match_title, participants, map_name, schedule_time, status) 
-                 VALUES (?, ?, ?, ?, ?, 'upcoming')`,
-                [stage_id, title, body.participants, map, time]
-            );
-            return res.status(200).json({ success: true });
-        }
-
-        // 4. Update Room/Status/Details (Edit Match)
-        if (type === 'update_stage_match') {
-            // This handles Room ID, Pass, Status update
-            await db.execute(
-                `UPDATE stage_matches SET room_id=?, room_pass=?, status=? WHERE id=?`,
-                [room_id, room_pass, status, match_id]
-            );
-            return res.status(200).json({ success: true });
-        }
-
-        // --- BOTS ---
+        // --- 4. BOTS & USER ---
         if (type === 'add_test_teams') {
             const count = parseInt(body.count) || 10;
             const prefixes = ["Dark", "Red", "Blue", "Team", "Pro", "BD", "Royal", "King", "Elite", "Max"];
@@ -164,8 +129,7 @@ module.exports = async (req, res) => {
             for (let i = 0; i < count; i++) {
                 const username = "Bot_" + Math.floor(Math.random() * 100000);
                 const email = `bot${Date.now()}_${i}@test.local`;
-                const phone = "01" + Math.floor(Math.random() * 1000000000); 
-                const [uRes] = await db.execute(`INSERT INTO users (username, email, password, phone, role, status, wallet_balance, created_at) VALUES (?, ?, '$2a$10$FakeHashForBot123456', ?, 'user', 'active', 0, NOW())`, [username, email, phone]);
+                const [uRes] = await db.execute(`INSERT INTO users (username, email, password, phone, role, status, wallet_balance, created_at) VALUES (?, ?, '$2a$10$FakeHash', '0000000000', 'user', 'active', 0, NOW())`, [username, email]);
                 const botUserId = uRes.insertId;
                 const teamName = prefixes[Math.floor(Math.random() * prefixes.length)] + " " + suffixes[Math.floor(Math.random() * suffixes.length)] + " " + Math.floor(Math.random() * 999);
                 const members = `P1_${i}, P2_${i}, P3_${i}, P4_${i}`;
@@ -174,7 +138,6 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true, message: `${count} Bots Added!` });
         }
 
-        // --- USER ---
         if (type === 'get_official_details') {
             const [rows] = await db.execute('SELECT * FROM tournaments WHERE id = ?', [tournament_id]);
             if(rows.length === 0) return res.status(404).json({ error: 'Not Found' });
@@ -192,12 +155,12 @@ module.exports = async (req, res) => {
                 const [tour] = await connection.execute('SELECT entry_fee, total_spots FROM tournaments WHERE id = ?', [tournament_id]);
                 if (tour.length === 0) throw new Error("Invalid Tournament");
                 const [count] = await connection.execute('SELECT COUNT(*) as c FROM participants WHERE tournament_id=?', [tournament_id]);
-                if (count[0].c >= tour[0].total_spots) throw new Error("Tournament Full");
+                if (count[0].c >= tour[0].total_spots) throw new Error("Full");
                 const [dup] = await connection.execute('SELECT id FROM participants WHERE tournament_id=? AND user_id=?', [tournament_id, user_id]);
-                if (dup.length > 0) throw new Error("Already Registered");
+                if (dup.length > 0) throw new Error("Registered");
                 const fee = parseFloat(tour[0].entry_fee);
                 const [u] = await connection.execute('SELECT wallet_balance FROM users WHERE id=?', [user_id]);
-                if (parseFloat(u[0].wallet_balance) < fee) throw new Error("Insufficient Balance");
+                if (parseFloat(u[0].wallet_balance) < fee) throw new Error("Low Balance");
                 if (fee > 0) {
                     await connection.execute('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id=?', [fee, user_id]);
                     await connection.execute('INSERT INTO transactions (user_id, amount, type, details, status, created_at) VALUES (?, ?, "Tournament Fee", ?, "completed", NOW())', [user_id, fee, `Reg: ${team_name}`]);
