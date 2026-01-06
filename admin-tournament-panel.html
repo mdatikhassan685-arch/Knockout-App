@@ -163,10 +163,13 @@
                 list.innerHTML = '<p class="text-center text-xs text-gray-500 py-4">No teams found.</p>';
             }
         }
-
-        // ✅ KICK FUNCTION
         async function kickTeam(tid, tname) {
             if(!confirm(`⚠️ WARNING: Kick team "${tname}"?\n- User will be refunded.\n- Team will be removed permanently.`)) return;
+
+            const btn = event.target.closest('button'); // Get button reference
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            btn.disabled = true;
 
             try {
                 const res = await fetch('/api/official', { 
@@ -174,15 +177,26 @@
                     headers: {'Content-Type': 'application/json'}, 
                     body: JSON.stringify({ type: 'kick_official_team', team_id: tid }) 
                 });
+                
                 const d = await res.json();
                 
                 if(d.success) { 
-                    alert(d.message); 
+                    // alert(d.message); // Alert removed to prevent double popup
                     loadTeamCount(); // Reload list
+                    loadTeams(); // Reload full list if needed
                 } else { 
                     alert("Error: " + d.error); 
                 }
-            } catch(e) { alert("Network Error"); }
+            } catch(e) { 
+                console.error(e);
+                alert("Network Error: " + e.message); 
+            } finally {
+                // Restore button state (though list reloads, it's safer)
+                if(btn) {
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                }
+            }
         }
 
         function filterTeams() {
