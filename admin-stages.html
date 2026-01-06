@@ -6,7 +6,6 @@
     <title>Manage Schedule</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>body { user-select: none; } .custom-scroll::-webkit-scrollbar { width: 4px; background: #374151; } .custom-scroll::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }</style>
 </head>
 <body class="bg-gray-900 text-white pb-32">
 
@@ -45,7 +44,7 @@
 
     </div>
 
-    <!-- ADD MATCH MODAL -->
+    <!-- ✅ ADD MATCH MODAL -->
     <div id="matchModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl">
             <h3 class="font-bold text-lg mb-4 text-white">Add New Match</h3>
@@ -79,20 +78,34 @@
         </div>
     </div>
 
+    <!-- ✅ EDIT STAGE MODAL (New) -->
+    <div id="editStageModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 p-6 rounded-xl w-full max-w-sm border border-gray-600 shadow-2xl">
+            <h3 class="font-bold text-lg mb-4 text-blue-400">Edit Stage</h3>
+            <input type="hidden" id="edit_stage_id">
+            
+            <label class="text-[10px] text-gray-400 font-bold uppercase">Stage Name</label>
+            <input type="text" id="edit_stage_name" class="w-full bg-gray-900 p-2.5 rounded-lg mb-3 border border-gray-600 text-white outline-none">
+            
+            <label class="text-[10px] text-gray-400 font-bold uppercase">Round No</label>
+            <input type="number" id="edit_stage_round" class="w-full bg-gray-900 p-2.5 rounded-lg mb-4 border border-gray-600 text-white outline-none">
+
+            <button onclick="saveStageEdit()" class="w-full bg-blue-600 py-2.5 rounded-lg font-bold hover:bg-blue-500">Update</button>
+            <button onclick="document.getElementById('editStageModal').style.display='none'" class="w-full mt-3 text-gray-400 text-xs hover:text-white">Cancel</button>
+        </div>
+    </div>
+
     <!-- ROOM EDIT MODAL -->
     <div id="roomModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[70] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 p-6 rounded-xl w-full max-w-xs border border-yellow-500/30 shadow-2xl">
             <h3 class="font-bold text-lg mb-4 text-yellow-500">Update Room</h3>
             <input type="hidden" id="room_match_id">
-            
             <input type="text" id="room_id" placeholder="Room ID" class="w-full bg-gray-900 p-2.5 rounded-lg mb-2 border border-gray-600 text-white text-sm font-mono">
             <input type="text" id="room_pass" placeholder="Password" class="w-full bg-gray-900 p-2.5 rounded-lg mb-4 border border-gray-600 text-white text-sm font-mono">
-            
             <label class="flex items-center gap-2 mb-4 cursor-pointer">
                 <input type="checkbox" id="match_live" class="w-4 h-4 accent-red-500">
                 <span class="text-sm text-gray-300">Set Match LIVE 🔴</span>
             </label>
-
             <button onclick="saveRoom()" class="w-full bg-yellow-600 py-2 rounded-lg font-bold text-black hover:bg-yellow-500">Save</button>
             <button onclick="document.getElementById('roomModal').style.display='none'" class="w-full mt-2 text-gray-500 text-xs">Close</button>
         </div>
@@ -129,7 +142,7 @@
                         <div class="flex justify-between items-start">
                             <div>
                                 <p class="text-sm font-bold text-white">${m.match_title}</p>
-                                <p class="text-[10px] text-gray-400">${m.participants || 'All Teams'} • <span class="text-blue-400">${m.map_name}</span></p>
+                                <p class="text-[10px] text-gray-400">${m.participants || 'All Groups'} • <span class="text-blue-400">${m.map_name}</span></p>
                                 <p class="text-[10px] text-yellow-500 font-mono mt-1">
                                     ${m.status === 'live' ? '🔴 LIVE' : (m.room_id ? '🔑 Room Set' : '🕒 Upcoming')} 
                                     • ${new Date(m.schedule_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
@@ -151,7 +164,7 @@
                             <span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded font-bold uppercase">Round ${s.stage_order}</span>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="editStage(${s.id}, '${s.stage_name}')" class="text-blue-400 hover:text-white p-1"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="openEditStageModal(${s.id}, '${s.stage_name}', ${s.stage_order})" class="text-blue-400 hover:text-white p-1"><i class="fa-solid fa-pen"></i></button>
                             <button onclick="deleteStage(${s.id})" class="text-red-400 hover:text-white p-1"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
@@ -164,23 +177,41 @@
             });
         }
 
-        // --- STAGE ACTIONS ---
         async function createDay() {
             const title = document.getElementById('day_title').value;
             const round = document.getElementById('day_round').value || 1;
             if(!title) return alert("Enter Stage Name");
 
-            await fetch('/api/official', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ type: 'create_stage', tournament_id: tourId, stage_name: title, stage_order: round }) });
+            await fetch('/api/official', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'create_stage', tournament_id: tourId, stage_name: title, stage_order: round })
+            });
             document.getElementById('day_title').value = '';
             init();
         }
 
-        async function editStage(sid, name) {
-            const newName = prompt("Edit Stage Name:", name);
-            if(newName && newName !== name) {
-                await fetch('/api/official', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ type:'update_stage', stage_id:sid, stage_name:newName }) });
-                init();
-            }
+        // ✅ NEW: Open Edit Modal
+        function openEditStageModal(sid, name, round) {
+            document.getElementById('edit_stage_id').value = sid;
+            document.getElementById('edit_stage_name').value = name;
+            document.getElementById('edit_stage_round').value = round;
+            document.getElementById('editStageModal').style.display = 'flex';
+        }
+
+        // ✅ NEW: Save Edit
+        async function saveStageEdit() {
+            const sid = document.getElementById('edit_stage_id').value;
+            const name = document.getElementById('edit_stage_name').value;
+            const round = document.getElementById('edit_stage_round').value;
+
+            await fetch('/api/official', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ type: 'update_stage', stage_id: sid, stage_name: name, stage_order: round })
+            });
+            document.getElementById('editStageModal').style.display = 'none';
+            init();
         }
 
         async function deleteStage(sid) {
@@ -190,7 +221,6 @@
             }
         }
 
-        // --- MATCH ACTIONS ---
         function openMatchModal(sid) {
             document.getElementById('target_day_id').value = sid;
             document.getElementById('matchModal').style.display = 'flex';
@@ -204,7 +234,7 @@
             const timeVal = document.getElementById('m_time').value;
             
             if(!title || !timeVal) return alert("Fill Details");
-            const time = new Date().toISOString().slice(0, 10) + ' ' + timeVal + ':00'; // Today + Time
+            const time = new Date().toISOString().slice(0, 10) + ' ' + timeVal + ':00'; 
 
             await fetch('/api/official', {
                 method: 'POST',
