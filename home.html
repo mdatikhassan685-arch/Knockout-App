@@ -151,7 +151,7 @@
                     // --- Official Tournaments Display ---
                     if(officialData.length > 0) {
                         officialList.innerHTML = officialData.map(c => `
-                            <div onclick="window.location.href='/official-tournaments?cat_id=${c.id}&name=${c.title}'" class="relative w-full h-40 bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-700 active:scale-95 transition cursor-pointer group">
+                            <div onclick="window.location.href='/tournament-list?cat_id=${c.id}&name=${encodeURIComponent(c.title)}'" class="relative w-full h-40 bg-gray-800 rounded-2xl overflow-hidden shadow-xl border border-gray-700 active:scale-95 transition cursor-pointer group">
                                 <img src="${c.image}" class="w-full h-full object-cover transition transform group-hover:scale-105" onerror="this.src='https://placehold.co/600x400/222/fff?text=No+Image'">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
                                 <div class="absolute bottom-0 left-0 p-4 w-full">
