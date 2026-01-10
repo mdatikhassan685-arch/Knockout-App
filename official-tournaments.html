@@ -10,13 +10,15 @@
         .tab-active { border-bottom: 2px solid #eab308; color: #eab308; }
         .custom-scroll::-webkit-scrollbar { width: 3px; background: #1f2937; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #eab308; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast { animation: slideUp 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="bg-gray-900 text-white pb-24 font-sans select-none">
 
     <!-- Header -->
     <header class="p-4 bg-gray-800 flex items-center sticky top-0 z-50 shadow-lg border-b border-gray-700">
-        <a href="/tournament-list" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <a href="javascript:history.back()" class="mr-4 text-gray-400"><i class="fa-solid fa-arrow-left text-xl"></i></a>
         <h1 class="text-lg font-bold uppercase tracking-wide text-yellow-500 truncate" id="tour_title">Loading...</h1>
     </header>
 
@@ -27,13 +29,13 @@
         <button onclick="switchTab('teams')" id="tab_teams" class="flex-1 py-3 text-xs font-bold text-gray-400 transition uppercase">Teams</button>
     </div>
 
-    <!-- 1. MATCHES TAB (Schedule List) -->
+    <!-- 1. MATCHES TAB -->
     <div id="view_matches" class="p-4 space-y-4 animate-fade-in pb-10">
         <p class="text-center text-gray-500 mt-10 animate-pulse" id="loading_matches">Loading Schedule...</p>
         <div id="matches_container"></div>
     </div>
 
-    <!-- 2. POINTS TABLE TAB -->
+    <!-- 2. POINTS TAB -->
     <div id="view_points" class="hidden p-2">
         <div class="overflow-x-auto rounded-xl border border-gray-700 shadow-lg">
             <table class="w-full text-left text-sm text-gray-400">
@@ -46,7 +48,7 @@
                     </tr>
                 </thead>
                 <tbody id="points_body" class="bg-gray-900 divide-y divide-gray-800">
-                    <tr><td colspan="4" class="text-center py-8 text-xs text-gray-500">Loading Standings...</td></tr>
+                    <tr><td colspan="4" class="text-center py-8 text-xs text-gray-500">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -57,28 +59,31 @@
         <p class="text-center text-gray-500 text-xs mt-10">Loading Teams...</p>
     </div>
 
-    <!-- Room Info Modal -->
+    <!-- REGISTER MODAL -->
+    <!-- (Registration is now handled in list page, but keeping hidden in case needed or removed) -->
+    <!-- Since user wants no registration here, we hide the button logic -->
+    
+    <!-- Registration Status Button (Dynamic) -->
+    <div id="reg_status_bar" class="fixed bottom-0 w-full bg-gray-800 border-t border-gray-700 p-4 z-50 hidden">
+        <button class="w-full bg-green-600/20 text-green-500 border border-green-500/50 py-3 rounded-xl font-bold uppercase cursor-default tracking-widest shadow-sm">
+            <i class="fa-solid fa-check-circle"></i> Registered
+        </button>
+    </div>
+
     <div id="roomModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4 backdrop-blur-sm">
         <div class="bg-gray-800 p-6 rounded-xl w-full max-w-xs border border-yellow-500/30 shadow-2xl text-center relative">
             <button onclick="document.getElementById('roomModal').style.display='none'" class="absolute top-3 right-3 text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             <h3 class="text-lg font-bold text-white mb-4">ROOM DETAILS</h3>
-            
             <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 mb-3 text-left">
                 <p class="text-[10px] text-gray-500 uppercase font-bold">Room ID</p>
                 <p class="text-xl font-mono text-yellow-400 font-bold select-all" id="room_id_display">---</p>
             </div>
-            
             <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 text-left">
                 <p class="text-[10px] text-gray-500 uppercase font-bold">Password</p>
                 <p class="text-xl font-mono text-green-400 font-bold select-all" id="room_pass_display">---</p>
             </div>
         </div>
     </div>
-
-    <!-- Bottom Nav -->
-    <nav class="fixed bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-gray-800 flex justify-around py-3 z-50 pb-6">
-        <a href="/home" class="text-gray-500 hover:text-white flex flex-col items-center group transition"><i class="fa-solid fa-house text-xl mb-1 group-active:scale-90"></i><span class="text-[10px]">Home</span></a>
-    </nav>
 
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
@@ -89,8 +94,8 @@
         async function loadData() {
             if (!tourId) { document.body.innerHTML = '<p class="text-center text-white mt-10">Invalid Tournament ID</p>'; return; }
 
-            // 1. Get Details (Title)
             try {
+                // 1. Get Details & Check Registration
                 const res = await fetch('/api/official', { 
                     method: 'POST', 
                     headers: {'Content-Type':'application/json'},
@@ -98,17 +103,23 @@
                 });
                 const data = await res.json();
                 document.getElementById('tour_title').innerText = data.data.title;
-            } catch(e) {}
 
-            // 2. Load Matches (Stages)
-            loadMatches();
-            loadPoints();
-            loadTeams();
+                // ✅ FIX: Show Registered Status Only
+                if (data.is_registered) {
+                    document.getElementById('reg_status_bar').classList.remove('hidden');
+                } else {
+                    document.getElementById('reg_status_bar').classList.add('hidden');
+                }
+
+                loadMatches();
+                loadPoints();
+                loadTeams();
+
+            } catch(e) {}
         }
 
         async function loadMatches() {
             try {
-                // Reuse existing API that fetches stages and matches
                 const res = await fetch('/api/official', { 
                     method: 'POST', 
                     headers: {'Content-Type':'application/json'},
@@ -121,25 +132,15 @@
                 if(stages.length > 0) {
                     container.innerHTML = stages.map(s => {
                         const matchesHtml = s.matches.map(m => {
-                            // Check if user can see room (e.g. registered user logic needed? For now, public view or logic check)
-                            // Assuming all registered users can see room ID if match is open/live
-                            // We need a way to check if match is playable.
-                            
                             let btn = `<button disabled class="bg-gray-700 text-gray-500 px-3 py-1 rounded text-[10px] font-bold cursor-not-allowed">Upcoming</button>`;
-                            
                             if (m.status === 'live' || (m.room_id && m.room_id !== '')) {
                                 btn = `<button onclick='viewRoom("${m.room_id}", "${m.room_pass}")' class="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold shadow animate-pulse">Room ID</button>`;
                             }
-                            if (m.status === 'completed') {
-                                btn = `<button disabled class="bg-gray-700 text-gray-400 px-3 py-1 rounded text-[10px] font-bold">Completed</button>`;
-                            }
-
                             return `
                             <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 mb-2 flex justify-between items-center">
                                 <div>
                                     <p class="text-sm font-bold text-white">${m.match_title}</p>
                                     <p class="text-[10px] text-gray-400">${m.map_name} • <span class="text-blue-400">${new Date(m.schedule_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></p>
-                                    <p class="text-[9px] text-gray-500 mt-0.5">${m.participants || 'All Groups'}</p>
                                 </div>
                                 <div>${btn}</div>
                             </div>`;
@@ -187,9 +188,7 @@
                         <td class="px-3 py-3 text-center text-red-400 font-bold text-xs">${t.kills}</td>
                         <td class="px-3 py-3 text-center font-black text-yellow-400 text-sm">${t.total_points}</td>
                     </tr>`).join('');
-                } else {
-                    body.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-xs text-gray-600 opacity-50">No Data Available</td></tr>';
-                }
+                } else { body.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-xs text-gray-600 opacity-50">No Data Available</td></tr>'; }
             } catch(e){}
         }
 
@@ -200,15 +199,13 @@
                 const container = document.getElementById('view_teams');
                 if(data.length > 0) {
                     container.innerHTML = data.map((t, i) => `
-                    <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center justify-between">
+                    <div class="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center justify-between mb-2">
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-gray-500 w-5">#${i+1}</span>
                             <p class="text-sm font-bold text-white">${t.team_name}</p>
                         </div>
                     </div>`).join('');
-                } else {
-                    container.innerHTML = '<p class="text-center text-gray-500 text-xs mt-10">No teams registered.</p>';
-                }
+                } else { container.innerHTML = '<p class="text-center text-gray-500 text-xs mt-10">No teams registered.</p>'; }
             } catch(e){}
         }
 
