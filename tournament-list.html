@@ -65,7 +65,6 @@
         if (!user) window.location.href = '/';
         const params = new URLSearchParams(window.location.search);
         
-        // ✅ FIX: Get catId from URL OR Session Storage
         let catId = params.get('cat_id') || sessionStorage.getItem('last_cat_id');
         const catName = params.get('name');
         
@@ -82,16 +81,32 @@
 
         async function loadTournaments() {
             try {
+                // ✅ Using get_user_tournaments to check registration status
                 const res = await fetch('/api/official', { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ type: 'get_admin_tournaments', category_id: catId }) 
+                    body: JSON.stringify({ type: 'get_user_tournaments', category_id: catId, user_id: user.id }) 
                 });
                 const data = await res.json();
                 const list = document.getElementById('tour_list');
                 
                 if(data.length > 0) {
-                    list.innerHTML = data.map(t => `
+                    list.innerHTML = data.map(t => {
+                        // Logic: Check if user is registered
+                        let actionBtn = '';
+                        if (t.is_registered) {
+                            actionBtn = `
+                            <button class="flex-1 bg-green-600/20 text-green-500 border border-green-500/50 py-2.5 rounded-lg text-xs font-bold cursor-default uppercase tracking-wide flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-check-circle"></i> Joined
+                            </button>`;
+                        } else {
+                            actionBtn = `
+                            <button onclick="openRegister(${t.id})" class="flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 text-black py-2.5 rounded-lg text-xs font-bold hover:opacity-90 transition shadow-lg uppercase tracking-wide">
+                                Register
+                            </button>`;
+                        }
+
+                        return `
                         <div class="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700 group transition hover:border-yellow-500/50">
                             <div class="h-32 bg-gray-700 relative">
                                 <img src="https://placehold.co/600x300/1f2937/FFF?text=${encodeURIComponent(t.title)}" class="w-full h-full object-cover">
@@ -106,12 +121,15 @@
                                 </div>
 
                                 <div class="flex gap-2">
-                                    <button onclick="window.location.href='/official-tournaments?id=${t.id}'" class="flex-1 bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold hover:bg-gray-600 transition border border-gray-600">View Info</button>
-                                    <button onclick="openRegister(${t.id})" class="flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 text-black py-2.5 rounded-lg text-xs font-bold hover:opacity-90 transition shadow-lg uppercase tracking-wide">Register</button>
+                                    <button onclick="window.location.href='/official-tournaments?id=${t.id}'" class="flex-1 bg-gray-700 text-gray-300 py-2.5 rounded-lg text-xs font-bold hover:bg-gray-600 transition border border-gray-600">
+                                        View Info
+                                    </button>
+                                    ${actionBtn}
                                 </div>
                             </div>
                         </div>
-                    `).join('');
+                    `;
+                    }).join('');
                 } else {
                     list.innerHTML = '<div class="text-center text-gray-500 py-10">No upcoming tournaments.</div>';
                 }
@@ -163,8 +181,13 @@
                     body: JSON.stringify({ type: 'register_official_team', user_id: user.id, tournament_id: tid, team_name: teamName, players: players })
                 });
                 const d = await res.json();
-                if(d.success) { showToast("Registered Successfully!", "success"); closeModal(); }
-                else { showToast(d.error, "error"); }
+                if(d.success) { 
+                    showToast("Registered Successfully!", "success"); 
+                    closeModal();
+                    loadTournaments(); // Reload to update button state
+                } else { 
+                    showToast(d.error, "error"); 
+                }
             } catch(e) { showToast("Network Error", "error"); }
             
             btn.innerText = "Confirm & Pay"; btn.disabled = false;
