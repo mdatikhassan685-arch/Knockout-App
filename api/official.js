@@ -38,10 +38,49 @@ module.exports = async (req, res) => {
         }
 
         // --- ADMIN: STAGE & MATCH ---
-        if (type === 'get_stages_and_matches') {
+                if (type === 'get_stages_and_matches') {
             const [stages] = await db.execute('SELECT * FROM tournament_stages WHERE tournament_id = ? ORDER BY stage_order ASC', [tournament_id]);
+            
+            // Get User Team Info (Group, Elimination Status)
+            let userTeam = null;
+            if (user_id) {
+                const [team] = await db.execute(`
+                    SELECT p.team_name, s.group_name, s.qualified 
+                    FROM participants p 
+                    LEFT JOIN stage_standings s ON p.team_name = s.team_name AND s.tournament_id = p.tournament_id
+                    WHERE p.user_id = ? AND p.tournament_id = ?`, 
+                    [user_id, tournament_id]
+                );
+                if (team.length > 0) userTeam = team[0];
+            }
+
             for (let stage of stages) {
                 const [matches] = await db.execute('SELECT * FROM stage_matches WHERE stage_id = ? ORDER BY schedule_time ASC', [stage.id]);
+                
+                // Secure Room ID Logic
+                matches.forEach(m => {
+                    let canSee = false;
+                    
+                    if (userTeam) {
+                        // Logic: If match participants include User's Group OR 'All Groups'
+                        // AND User is not eliminated (optional logic based on your qualified column)
+                        
+                        const matchGroups = m.participants || 'All Groups'; // e.g. "Group A vs Group B"
+                        const userGroup = userTeam.group_name || 'Unassigned';
+
+                        if (matchGroups.includes(userGroup) || matchGroups.toLowerCase().includes('all')) {
+                            canSee = true;
+                        }
+                    }
+
+                    // If user cannot see, hide credentials
+                    if (!canSee) {
+                        m.room_id = null;
+                        m.room_pass = null;
+                        m.locked = true; // Flag for frontend
+                    }
+                });
+
                 stage.matches = matches;
             }
             return res.status(200).json(stages);
