@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
     const { type, user_id, tournament_id, category_id, team_name, players, tour_id, stage_id, match_id, title, map, time, room_id, room_pass, status, team_ids, target_group, next_stage_id, points_to_add, kills_to_add, team_id } = body;
 
     try {
-        // --- 1. ADMIN: TOURNAMENT MANAGEMENT ---
+        // --- ADMIN: TOURNAMENT ---
         if (type === 'get_admin_tournaments') {
             const [rows] = await db.execute('SELECT * FROM tournaments WHERE category_id = ? ORDER BY schedule_time DESC', [category_id]);
             return res.status(200).json(rows);
@@ -27,7 +27,6 @@ module.exports = async (req, res) => {
             
             const newTourId = result.insertId;
 
-            // Auto-Create Stages
             if (body.stages) {
                 const stageList = body.stages.split(',').map(s => s.trim());
                 for (let i = 0; i < stageList.length; i++) {
@@ -54,11 +53,11 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true });
         }
 
-        // --- 2. ADMIN: STAGE & MATCH MANAGEMENT ---
+        // --- ADMIN: STAGE & MATCH ---
         if (type === 'get_stages_and_matches') {
             const [stages] = await db.execute('SELECT * FROM tournament_stages WHERE tournament_id = ? ORDER BY stage_order ASC', [tournament_id]);
             
-            // Get User Team Info (For Room Security Logic)
+            // User Visibility Logic
             let userTeam = null;
             if (user_id) {
                 const [team] = await db.execute(`
@@ -73,22 +72,14 @@ module.exports = async (req, res) => {
 
             for (let stage of stages) {
                 const [matches] = await db.execute('SELECT * FROM stage_matches WHERE stage_id = ? ORDER BY schedule_time ASC', [stage.id]);
-                
-                // Secure Room ID Logic
                 matches.forEach(m => {
                     let canSee = false;
                     if (userTeam) {
                         const matchGroups = m.participants || 'All Groups'; 
                         const userGroup = userTeam.group_name || 'Unassigned';
-                        if (matchGroups.includes(userGroup) || matchGroups.toLowerCase().includes('all')) {
-                            canSee = true;
-                        }
+                        if (matchGroups.includes(userGroup) || matchGroups.toLowerCase().includes('all')) canSee = true;
                     }
-                    if (!canSee) {
-                        m.room_id = null;
-                        m.room_pass = null;
-                        m.locked = true; 
-                    }
+                    if (!canSee) { m.room_id = null; m.room_pass = null; m.locked = true; }
                 });
                 stage.matches = matches;
             }
@@ -122,10 +113,7 @@ module.exports = async (req, res) => {
         }
 
         if (type === 'update_stage_room') {
-            await db.execute(
-                `UPDATE stage_matches SET room_id=?, room_pass=?, status=? WHERE id=?`,
-                [room_id, room_pass, status, match_id]
-            );
+            await db.execute(`UPDATE stage_matches SET room_id=?, room_pass=?, status=? WHERE id=?`, [room_id, room_pass, status, match_id]);
             return res.status(200).json({ success: true });
         }
 
@@ -134,19 +122,9 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true });
         }
 
-        // --- 3. ADMIN: TEAM & GROUP MANAGEMENT ---
+        // --- ADMIN: TEAMS & GROUPS ---
         if (type === 'get_stage_teams') {
-            let [teams] = await db.execute('SELECT * FROM stage_standings WHERE stage_id = ? ORDER BY total_points DESC', [stage_id]);
-            if (teams.length === 0) {
-                const [stageInfo] = await db.execute('SELECT tournament_id, stage_order FROM tournament_stages WHERE id=?', [stage_id]);
-                if(stageInfo.length > 0 && stageInfo[0].stage_order === 1) {
-                    const [allParticipants] = await db.execute('SELECT team_name FROM participants WHERE tournament_id=?', [stageInfo[0].tournament_id]);
-                    for(let p of allParticipants) {
-                        await db.execute('INSERT INTO stage_standings (tournament_id, stage_id, team_name) VALUES (?, ?, ?)', [stageInfo[0].tournament_id, stage_id, p.team_name]);
-                    }
-                    [teams] = await db.execute('SELECT * FROM stage_standings WHERE stage_id = ?', [stage_id]);
-                }
-            }
+            const [teams] = await db.execute('SELECT * FROM stage_standings WHERE stage_id = ? ORDER BY id DESC', [stage_id]);
             return res.status(200).json(teams);
         }
 
@@ -181,10 +159,11 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true });
         }
 
-        // --- 4. ADMIN: KICK & DELETE ---
+        // --- ❌ KICK LOGIC (Fixed) ---
         if (type === 'kick_official_team') {
             const teamId = body.team_id;
             const [teamInfo] = await db.execute(`SELECT p.user_id, p.team_name, p.tournament_id, t.entry_fee FROM participants p JOIN tournaments t ON p.tournament_id = t.id WHERE p.id = ?`, [teamId]);
+
             if (teamInfo.length > 0) {
                 const { user_id, entry_fee, team_name, tournament_id } = teamInfo[0];
                 const refund = parseFloat(entry_fee);
@@ -194,7 +173,7 @@ module.exports = async (req, res) => {
                 }
                 await db.execute('DELETE FROM stage_standings WHERE tournament_id = ? AND team_name = ?', [tournament_id, team_name]);
                 await db.execute('DELETE FROM participants WHERE id = ?', [teamId]);
-                return res.status(200).json({ success: true, message: "Team Kicked & Refunded!" });
+                return res.status(200).json({ success: true, message: "Team Kicked!" });
             } else { return res.status(404).json({ error: "Team Not Found" }); }
         }
 
@@ -219,11 +198,16 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true, message: `${kickedCount} Teams Kicked!` });
         }
 
-        // --- 5. BOTS ---
+        // --- 🤖 ADD BOTS (Fixed: Insert to Both Tables) ---
         if (type === 'add_test_teams') {
             const count = parseInt(body.count) || 10;
             const prefixes = ["Dark", "Red", "Blue", "Team", "Pro", "BD", "Royal", "King", "Elite", "Max"];
             const suffixes = ["Warriors", "Snipers", "Esports", "Gaming", "Squad", "Killers", "Legends", "Hunters", "Army", "Boys"];
+            
+            // Get 1st Stage
+            const [stages] = await db.execute('SELECT id FROM tournament_stages WHERE tournament_id=? ORDER BY stage_order ASC LIMIT 1', [tournament_id]);
+            const firstStageId = stages.length > 0 ? stages[0].id : null;
+
             for (let i = 0; i < count; i++) {
                 const username = "Bot_" + Math.floor(Math.random() * 100000);
                 const email = `bot${Date.now()}_${i}@test.local`;
@@ -232,16 +216,18 @@ module.exports = async (req, res) => {
                 const botUserId = uRes.insertId;
                 const teamName = prefixes[Math.floor(Math.random() * prefixes.length)] + " " + suffixes[Math.floor(Math.random() * suffixes.length)] + " " + Math.floor(Math.random() * 999);
                 const members = `P1_${i}, P2_${i}, P3_${i}, P4_${i}`;
+                
                 await db.execute(`INSERT INTO participants (user_id, tournament_id, team_name, team_members, kills, prize_won, joined_at, \`rank\`) VALUES (?, ?, ?, ?, 0, 0, NOW(), 0)`, [botUserId, tournament_id, teamName, members]);
+                
+                if (firstStageId) {
+                    await db.execute(`INSERT INTO stage_standings (tournament_id, stage_id, team_name, group_name) VALUES (?, ?, ?, 'None')`, [tournament_id, firstStageId, teamName]);
+                }
             }
             return res.status(200).json({ success: true, message: `${count} Bots Added!` });
         }
 
-        /* ============================================================
-           👤 USER ACTIONS
-        ============================================================ */
-        
-        // ✅ NEW: User Tournament List (with Registration Check)
+        // --- USER ACTIONS ---
+        // ✅ NEW: User Tournament List
         if (type === 'get_user_tournaments') {
             const [tournaments] = await db.execute('SELECT * FROM tournaments WHERE category_id = ? ORDER BY schedule_time DESC', [category_id]);
             if (user_id) {
@@ -264,6 +250,7 @@ module.exports = async (req, res) => {
             return res.status(200).json({ data: rows[0], is_registered: isReg });
         }
 
+        // ✅ Register Team (Insert to Both Tables)
         if (type === 'register_official_team') {
             const connection = await db.getConnection();
             try {
@@ -271,18 +258,25 @@ module.exports = async (req, res) => {
                 const [tour] = await connection.execute('SELECT entry_fee, total_spots FROM tournaments WHERE id = ?', [tournament_id]);
                 if (tour.length === 0) throw new Error("Invalid Tournament");
                 const [count] = await connection.execute('SELECT COUNT(*) as c FROM participants WHERE tournament_id=?', [tournament_id]);
-                if (count[0].c >= tour[0].total_spots) throw new Error("Tournament Full");
+                if (count[0].c >= tour[0].total_spots) throw new Error("Full");
                 const [dup] = await connection.execute('SELECT id FROM participants WHERE tournament_id=? AND user_id=?', [tournament_id, user_id]);
-                if (dup.length > 0) throw new Error("Already Registered");
+                if (dup.length > 0) throw new Error("Registered");
                 const fee = parseFloat(tour[0].entry_fee);
                 const [u] = await connection.execute('SELECT wallet_balance FROM users WHERE id=?', [user_id]);
-                if (parseFloat(u[0].wallet_balance) < fee) throw new Error("Insufficient Balance");
+                if (parseFloat(u[0].wallet_balance) < fee) throw new Error("Low Balance");
                 if (fee > 0) {
                     await connection.execute('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id=?', [fee, user_id]);
                     await connection.execute('INSERT INTO transactions (user_id, amount, type, details, status, created_at) VALUES (?, ?, "Tournament Fee", ?, "completed", NOW())', [user_id, fee, `Reg: ${team_name}`]);
                 }
                 const memberString = players.join(', '); 
                 await connection.execute(`INSERT INTO participants (user_id, tournament_id, team_name, team_members, kills, prize_won, joined_at, \`rank\`) VALUES (?, ?, ?, ?, 0, 0, NOW(), 0)`, [user_id, tournament_id, team_name, memberString]);
+                
+                // Add to First Stage
+                const [stages] = await connection.execute('SELECT id FROM tournament_stages WHERE tournament_id=? ORDER BY stage_order ASC LIMIT 1', [tournament_id]);
+                if (stages.length > 0) {
+                    await connection.execute(`INSERT INTO stage_standings (tournament_id, stage_id, team_name, group_name) VALUES (?, ?, ?, 'None')`, [tournament_id, stages[0].id, team_name]);
+                }
+
                 await connection.commit();
                 connection.release();
                 return res.status(200).json({ success: true });
